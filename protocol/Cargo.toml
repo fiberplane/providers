@@ -1,0 +1,9 @@
+[package]
+name = "provider-protocol"
+version = "0.1.0"
+authors = ["Fiberplane <info@fiberplane.com>"]
+edition = "2018"
+
+[dependencies]
+fp-bindgen = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
+#fp-bindgen = { path = "../../fp-bindgen/fp-bindgen" }
