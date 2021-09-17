@@ -49,3 +49,8 @@ protocol (see below).
 The protocol that defines the API between providers and runtimes can be found in
 the `protocol/` directory. Running `cargo run` in that directory will regenerate
 the bindings used by the SDK library, as well as those for the runtimes.
+
+## License
+
+This project is licensed under Apache License, version 2.0
+([LICENSE.txt](https://github.com/fiberplane/fp-bindgen/blob/main/LICENSE.txt)).
