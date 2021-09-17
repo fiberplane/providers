@@ -7,6 +7,8 @@ In addition, you will find Fiberplane's first-party providers that you can build
 yourself and/or use for inspiration when creating your own provider, as well as
 the _protocol_ that defines the API between providers and host environments.
 
+Finally, you will find the runtimes for providers in the `runtimes/` directory.
+
 ## SDK
 
 In order to create your own provider, you should link to the `fp-provider`
@@ -33,11 +35,17 @@ Fiberplane offers several providers out of the box:
   which in turn delegates the request to another provider. Its implementation
   can be found in the `providers/proxy/` directory.
 
+## Runtimes
+
+The runtimes in which providers can be executed can be found in the `runtimes/`
+directory. The Wasmer runtime you can find there is also used as a dependency
+for our open-source [Proxy server](https://github.com/fiberplane/proxy).
+
+Please note that most of the code for the runtimes is again generated from the
+protocol (see below).
+
 ## Protocol
 
-The protocol defines the API between providers and host environments and can be
-found in the `protocol/` directory. Running `cargo run` will regenerate the
-bindings used by the SDK library.
-
-Developers that wish to build their own provider runtimes can use
-`cargo run -- --runtime` to generate the runtime bindings as well.
+The protocol that defines the API between providers and runtimes can be found in
+the `protocol/` directory. Running `cargo run` in that directory will regenerate
+the bindings used by the SDK library, as well as those for the runtimes.

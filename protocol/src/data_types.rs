@@ -23,7 +23,7 @@ pub struct TimeRange {
 
 /// Timestamp specified in seconds since the UNIX epoch, with subsecond
 /// precision.
-type Timestamp = f64;
+pub type Timestamp = f64;
 
 /// A single data-point in time.
 #[derive(Serializable)]

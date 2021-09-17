@@ -20,6 +20,9 @@ fp_import! {
     /// Performs an HTTP request.
     async fn make_request(request: Request) -> Result<Response, RequestError>;
 
+    /// Returns the current timestamp.
+    fn now() -> Timestamp;
+
     /// Generates random bytes.
     fn random(len: u32) -> Vec<u8>;
 }
@@ -40,10 +43,8 @@ fp_export! {
 
 fn main() {
     fp_bindgen!("rust-plugin", "../fp-provider/src/bindings");
-
-    if std::env::args().any(|arg| arg == "--runtime") {
-        fp_bindgen!("ts-runtime", "../bindings/ts-runtime");
-    }
+    fp_bindgen!("rust-wasmer-runtime", "../runtimes/fp-provider-runtime/src");
+    fp_bindgen!("ts-runtime", "../runtimes/ts-runtime");
 
     println!("Bindings generated.");
 }

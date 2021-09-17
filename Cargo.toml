@@ -1,2 +1,8 @@
 [workspace]
-members = ["fp-provider", "protocol", "providers/prometheus", "providers/proxy"]
+members = [
+    "fp-provider",
+    "protocol",
+    "providers/prometheus",
+    "providers/proxy",
+    "runtimes/fp-provider-runtime",
+]

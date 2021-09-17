@@ -8,6 +8,8 @@ extern "C" {
 
     fn __fp_gen_make_request(request: FatPtr) -> FatPtr;
 
+    fn __fp_gen_now() -> FatPtr;
+
     fn __fp_gen_random(len: u32) -> FatPtr;
 
     fn __fp_host_resolve_async_value(async_value_ptr: FatPtr);
@@ -16,7 +18,9 @@ extern "C" {
 /// Logs a message to the (development) console.
 pub fn log(message: String) {
     let message = export_value_to_host(&message);
-    unsafe { __fp_gen_log(message); }
+    unsafe {
+        __fp_gen_log(message);
+    }
 }
 
 /// Performs an HTTP request.
@@ -26,6 +30,14 @@ pub async fn make_request(request: Request) -> Result<Response, RequestError> {
         let ret = __fp_gen_make_request(request);
         let result_ptr = HostFuture::new(ret).await;
         import_value_from_host(result_ptr)
+    }
+}
+
+/// Returns the current timestamp.
+pub fn now() -> Timestamp {
+    unsafe {
+        let ret = __fp_gen_now();
+        import_value_from_host(ret)
     }
 }
 

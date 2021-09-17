@@ -25,12 +25,12 @@ pub enum RequestError {
 /// HTTP request method.
 #[derive(Serializable)]
 #[fp(rename_all = "SCREAMING_SNAKE_CASE")]
+#[allow(unused)]
 pub enum RequestMethod {
     Delete,
     Get,
-    Options,
+    Head,
     Post,
-    Update,
 }
 
 /// Response to an HTTP request.

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FetchError {
     #[serde(rename_all = "camelCase")]
@@ -12,40 +12,40 @@ pub enum FetchError {
     Other { message: String },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Instant {
     pub metric: Metric,
     pub point: Point,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Metric {
     pub name: String,
     pub labels: HashMap<String, String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Point {
     pub timestamp: Timestamp,
     pub value: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QueryInstantOptions {
     pub time: Timestamp,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QuerySeriesOptions {
     pub time_range: TimeRange,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Request {
     pub url: String,
@@ -62,17 +62,12 @@ pub enum RequestError {
     ConnectionRefused,
     Timeout,
     #[serde(rename_all = "camelCase")]
-    ServerError {
-        status_code: u16,
-        response: Vec<u8>,
-    },
+    ServerError { status_code: u16, response: Vec<u8> },
     #[serde(rename_all = "camelCase")]
-    Other {
-        reason: String,
-    },
+    Other { reason: String },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum RequestMethod {
     Delete,
@@ -81,7 +76,7 @@ pub enum RequestMethod {
     Post,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Response {
     pub body: Vec<u8>,
@@ -89,7 +84,7 @@ pub struct Response {
     pub status_code: u16,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Series {
     pub metric: Metric,
@@ -97,7 +92,7 @@ pub struct Series {
     pub visible: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TimeRange {
     pub from: Timestamp,
