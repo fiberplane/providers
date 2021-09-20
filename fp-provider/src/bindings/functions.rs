@@ -12,15 +12,13 @@ extern "C" {
 
     fn __fp_gen_random(len: u32) -> FatPtr;
 
-    fn __fp_host_resolve_async_value(async_value_ptr: FatPtr);
+    pub fn __fp_host_resolve_async_value(async_value_ptr: FatPtr);
 }
 
 /// Logs a message to the (development) console.
 pub fn log(message: String) {
     let message = export_value_to_host(&message);
-    unsafe {
-        __fp_gen_log(message);
-    }
+    unsafe { __fp_gen_log(message); }
 }
 
 /// Performs an HTTP request.
@@ -49,66 +47,63 @@ pub fn random(len: u32) -> Vec<u8> {
     }
 }
 
-#[doc(hidden)]
-pub unsafe fn _fp_host_resolve_async_value(async_value_ptr: FatPtr) {
-    __fp_host_resolve_async_value(async_value_ptr)
-}
-
 #[macro_export]
 macro_rules! fp_export {
-    (async fn fetch_instant($($param:ident: $ty:ty),*) -> $ret:ty $body:block) => {
+    (async fn fetch_instant$args:tt -> $ret:ty $body:block) => {
         #[no_mangle]
-        pub fn __fp_gen_fetch_instant(query: _FP_FatPtr, opts: _FP_FatPtr) -> _FP_FatPtr {
-            let len = std::mem::size_of::<_FP_AsyncValue>() as u32;
-            let ptr = _fp_malloc(len);
-            let fat_ptr = _fp_to_fat_ptr(ptr, len);
-            let ptr = ptr as *mut _FP_AsyncValue;
+        pub fn __fp_gen_fetch_instant(query: __fp_macro::FatPtr, opts: __fp_macro::FatPtr) -> __fp_macro::FatPtr {
+            use __fp_macro::*;
+            let len = std::mem::size_of::<AsyncValue>() as u32;
+            let ptr = malloc(len);
+            let fat_ptr = to_fat_ptr(ptr, len);
+            let ptr = ptr as *mut AsyncValue;
 
-            _FP_Task::spawn(Box::pin(async move {
-                let query = unsafe { _fp_import_value_from_host::<String>(query) };
-                let opts = unsafe { _fp_import_value_from_host::<QueryInstantOptions>(opts) };
+            Task::spawn(Box::pin(async move {
+                let query = unsafe { import_value_from_host::<String>(query) };
+                let opts = unsafe { import_value_from_host::<QueryInstantOptions>(opts) };
                 let ret = fetch_instant(query, opts).await;
                 unsafe {
                     let (result_ptr, result_len) =
-                        _fp_from_fat_ptr(_fp_export_value_to_host::<Result<Vec<Instant>, FetchError>>(&ret));
+                       from_fat_ptr(export_value_to_host::<Result<Vec<Instant>, FetchError>>(&ret));
                     (*ptr).ptr = result_ptr as u32;
                     (*ptr).len = result_len;
                     (*ptr).status = 1;
-                    _fp_host_resolve_async_value(fat_ptr);
+                    __fp_host_resolve_async_value(fat_ptr);
                 }
             }));
 
             fat_ptr
         }
 
-        async fn fetch_instant($($param: $ty),*) -> $ret $body
+        async fn fetch_instant$args -> $ret $body
     };
 
-    (async fn fetch_series($($param:ident: $ty:ty),*) -> $ret:ty $body:block) => {
+    (async fn fetch_series$args:tt -> $ret:ty $body:block) => {
         #[no_mangle]
-        pub fn __fp_gen_fetch_series(query: _FP_FatPtr, opts: _FP_FatPtr) -> _FP_FatPtr {
-            let len = std::mem::size_of::<_FP_AsyncValue>() as u32;
-            let ptr = _fp_malloc(len);
-            let fat_ptr = _fp_to_fat_ptr(ptr, len);
-            let ptr = ptr as *mut _FP_AsyncValue;
+        pub fn __fp_gen_fetch_series(query: __fp_macro::FatPtr, opts: __fp_macro::FatPtr) -> __fp_macro::FatPtr {
+            use __fp_macro::*;
+            let len = std::mem::size_of::<AsyncValue>() as u32;
+            let ptr = malloc(len);
+            let fat_ptr = to_fat_ptr(ptr, len);
+            let ptr = ptr as *mut AsyncValue;
 
-            _FP_Task::spawn(Box::pin(async move {
-                let query = unsafe { _fp_import_value_from_host::<String>(query) };
-                let opts = unsafe { _fp_import_value_from_host::<QuerySeriesOptions>(opts) };
+            Task::spawn(Box::pin(async move {
+                let query = unsafe { import_value_from_host::<String>(query) };
+                let opts = unsafe { import_value_from_host::<QuerySeriesOptions>(opts) };
                 let ret = fetch_series(query, opts).await;
                 unsafe {
                     let (result_ptr, result_len) =
-                        _fp_from_fat_ptr(_fp_export_value_to_host::<Result<Vec<Series>, FetchError>>(&ret));
+                       from_fat_ptr(export_value_to_host::<Result<Vec<Series>, FetchError>>(&ret));
                     (*ptr).ptr = result_ptr as u32;
                     (*ptr).len = result_len;
                     (*ptr).status = 1;
-                    _fp_host_resolve_async_value(fat_ptr);
+                    __fp_host_resolve_async_value(fat_ptr);
                 }
             }));
 
             fat_ptr
         }
 
-        async fn fetch_series($($param: $ty),*) -> $ret $body
+        async fn fetch_series$args -> $ret $body
     };
 }

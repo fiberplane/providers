@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 mod bindings;
-mod types;
+pub mod types;
 
 pub use bindings::*;
 use types::*;

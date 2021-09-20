@@ -62,14 +62,9 @@ pub enum RequestError {
     ConnectionRefused,
     Timeout,
     #[serde(rename_all = "camelCase")]
-    ServerError {
-        status_code: u16,
-        response: Vec<u8>,
-    },
+    ServerError { status_code: u16, response: Vec<u8> },
     #[serde(rename_all = "camelCase")]
-    Other {
-        reason: String,
-    },
+    Other { reason: String },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
