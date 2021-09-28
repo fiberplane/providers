@@ -1,3 +1,6 @@
+export type DataSource =
+    | { Prometheus: PrometheusDataSource };
+
 export type FetchError =
     | { type: "request_error"; payload: RequestError }
     | { type: "data_error"; message: string }
@@ -18,11 +21,17 @@ export type Point = {
     value: number;
 };
 
+export type PrometheusDataSource = {
+    url: string;
+};
+
 export type QueryInstantOptions = {
+    dataSource: DataSource;
     time: Timestamp;
 };
 
 export type QuerySeriesOptions = {
+    dataSource: DataSource;
     timeRange: TimeRange;
 };
 
@@ -60,7 +69,6 @@ export type Result<T, E> =
 export type Series = {
     metric: Metric;
     points: Array<Point>;
-    visible: boolean;
 };
 
 export type TimeRange = {

@@ -1,6 +1,12 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde()]
+pub enum DataSource {
+    Prometheus(PrometheusDataSource),
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FetchError {
@@ -35,13 +41,21 @@ pub struct Point {
 
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct PrometheusDataSource {
+    pub url: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct QueryInstantOptions {
+    pub data_source: DataSource,
     pub time: Timestamp,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QuerySeriesOptions {
+    pub data_source: DataSource,
     pub time_range: TimeRange,
 }
 
@@ -50,7 +64,9 @@ pub struct QuerySeriesOptions {
 pub struct Request {
     pub url: String,
     pub method: RequestMethod,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub headers: Option<HashMap<String, String>>,
+    #[serde(skip_serializing_if = "Option::is_none", with = "serde_bytes")]
     pub body: Option<Vec<u8>>,
 }
 
@@ -62,7 +78,11 @@ pub enum RequestError {
     ConnectionRefused,
     Timeout,
     #[serde(rename_all = "camelCase")]
-    ServerError { status_code: u16, response: Vec<u8> },
+    ServerError {
+        status_code: u16,
+        #[serde(with = "serde_bytes")]
+        response: Vec<u8>,
+    },
     #[serde(rename_all = "camelCase")]
     Other { reason: String },
 }
@@ -79,6 +99,7 @@ pub enum RequestMethod {
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Response {
+    #[serde(with = "serde_bytes")]
     pub body: Vec<u8>,
     pub headers: HashMap<String, String>,
     pub status_code: u16,
@@ -89,7 +110,6 @@ pub struct Response {
 pub struct Series {
     pub metric: Metric,
     pub points: Vec<Point>,
-    pub visible: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize)]

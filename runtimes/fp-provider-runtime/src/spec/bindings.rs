@@ -2,8 +2,8 @@ use super::types::*;
 use crate::errors::InvocationError;
 use crate::{
     support::{
-        assign_async_value, create_future_value, export_to_guest, import_from_guest,
-        resolve_async_value, FatPtr, ModuleFuture, FUTURE_STATUS_READY,
+        create_future_value, export_to_guest, import_from_guest, resolve_async_value,
+        FatPtr, ModuleFuture,
     },
     Runtime, RuntimeInstanceData,
 };
@@ -22,7 +22,7 @@ impl Runtime {
 
         let function = instance
             .exports
-            .get_function("fetch_instant")
+            .get_function("__fp_gen_fetch_instant")
             .map_err(|_| InvocationError::FunctionNotExported)?;
         let result = function.call(&[query.into(), opts.into()])?;
 
@@ -46,7 +46,7 @@ impl Runtime {
 
         let function = instance
             .exports
-            .get_function("fetch_series")
+            .get_function("__fp_gen_fetch_series")
             .map_err(|_| InvocationError::FunctionNotExported)?;
         let result = function.call(&[query.into(), opts.into()])?;
 
@@ -84,13 +84,12 @@ pub fn _make_request(env: &RuntimeInstanceData, request: FatPtr) -> FatPtr {
     let async_ptr = create_future_value(&env);
     let handle = tokio::runtime::Handle::current();
     handle.spawn(async move {
-        let ptr = export_to_guest(&env, &super::make_request(request).await);
-        assign_async_value(&env, async_ptr, FUTURE_STATUS_READY, ptr);
+        let result_ptr = export_to_guest(&env, &super::make_request(request).await);
 
         unsafe {
             env.__fp_guest_resolve_async_value
                 .get_unchecked()
-                .call(async_ptr)
+                .call(async_ptr, result_ptr)
                 .expect("Runtime error: Cannot resolve async value");
         }
     });
