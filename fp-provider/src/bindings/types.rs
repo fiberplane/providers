@@ -1,13 +1,15 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+/// A data-source represents all the configuration for a specific component or
+/// service. It will be used by provider.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde()]
 pub enum DataSource {
     Prometheus(PrometheusDataSource),
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FetchError {
     #[serde(rename_all = "camelCase")]
@@ -18,48 +20,58 @@ pub enum FetchError {
     Other { message: String },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+/// A single data point in time, with meta-data about the metric it was taken
+/// from.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Instant {
     pub metric: Metric,
     pub point: Point,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+/// Meta-data about a metric.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Metric {
     pub name: String,
     pub labels: HashMap<String, String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+/// A single data-point in time.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Point {
     pub timestamp: Timestamp,
     pub value: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+/// A data-source for Prometheus. Currently only requires a url. This should be
+/// a full URL starting with http:// or https:// the domain, and optionally a
+/// port and a path.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PrometheusDataSource {
     pub url: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+/// Options to specify which instant should be fetched.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QueryInstantOptions {
     pub data_source: DataSource,
     pub time: Timestamp,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+/// Options to specify what series should be fetched.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QuerySeriesOptions {
     pub data_source: DataSource,
     pub time_range: TimeRange,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+/// HTTP request options.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Request {
     pub url: String,
@@ -70,7 +82,8 @@ pub struct Request {
     pub body: Option<Vec<u8>>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// Possible errors that may happen during an HTTP request.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum RequestError {
     Offline,
@@ -87,7 +100,8 @@ pub enum RequestError {
     Other { reason: String },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+/// HTTP request method.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum RequestMethod {
     Delete,
@@ -96,7 +110,8 @@ pub enum RequestMethod {
     Post,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+/// Response to an HTTP request.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Response {
     #[serde(with = "serde_bytes")]
@@ -105,14 +120,18 @@ pub struct Response {
     pub status_code: u16,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+/// A series of data-points in time, with meta-data about the metric it was
+/// taken from.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Series {
     pub metric: Metric,
     pub points: Vec<Point>,
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize)]
+/// A range in time from a given timestamp (inclusive) up to another timestamp
+/// (exclusive).
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TimeRange {
     pub from: Timestamp,
