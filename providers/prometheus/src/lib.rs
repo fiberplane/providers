@@ -15,7 +15,12 @@ fp_export!(
         query: String,
         opts: QueryInstantOptions,
     ) -> Result<Vec<Instant>, FetchError> {
-        let DataSource::Prometheus(data_source) = opts.data_source;
+        let data_source = match opts.data_source {
+            DataSource::Prometheus(data_source) => Ok(data_source),
+            _ => Err(FetchError::Other {
+                message: "Incompatible data source".to_owned(),
+            }),
+        }?;
 
         let mut form_data = form_urlencoded::Serializer::new(String::new());
         form_data.append_pair("query", &query);
@@ -50,7 +55,12 @@ fp_export!(
         query: String,
         opts: QuerySeriesOptions,
     ) -> Result<Vec<Series>, FetchError> {
-        let DataSource::Prometheus(data_source) = opts.data_source;
+        let data_source = match opts.data_source {
+            DataSource::Prometheus(data_source) => Ok(data_source),
+            _ => Err(FetchError::Other {
+                message: "Incompatible data source".to_owned(),
+            }),
+        }?;
 
         let step = step_for_range(&opts.time_range);
         let start = to_iso_date(round_to_grid(

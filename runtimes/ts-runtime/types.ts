@@ -9,7 +9,8 @@
  * service. It will be used by provider.
  */
 export type DataSource =
-    | { Prometheus: PrometheusDataSource };
+    | { type: "prometheus" } & PrometheusDataSource
+    | { type: "proxy" } & ProxyDataSource;
 
 export type FetchError =
     | { type: "request_error"; payload: RequestError }
@@ -48,6 +49,21 @@ export type Point = {
  */
 export type PrometheusDataSource = {
     url: string;
+};
+
+/**
+ * Relays requests for a data-source to a proxy server registered with the API.
+ */
+export type ProxyDataSource = {
+    /**
+     * ID of the proxy as known by the API.
+     */
+    proxyId: string;
+
+    /**
+     * Name of the data source exposed by the proxy.
+     */
+    dataSourceName: string;
 };
 
 /**

@@ -4,9 +4,10 @@ use std::collections::HashMap;
 /// A data-source represents all the configuration for a specific component or
 /// service. It will be used by provider.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
-#[serde()]
+#[serde(tag = "type", rename_all = "snake_case")]
 pub enum DataSource {
     Prometheus(PrometheusDataSource),
+    Proxy(ProxyDataSource),
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -52,6 +53,17 @@ pub struct Point {
 #[serde(rename_all = "camelCase")]
 pub struct PrometheusDataSource {
     pub url: String,
+}
+
+/// Relays requests for a data-source to a proxy server registered with the API.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProxyDataSource {
+    /// ID of the proxy as known by the API.
+    pub proxy_id: String,
+
+    /// Name of the data source exposed by the proxy.
+    pub data_source_name: String,
 }
 
 /// Options to specify which instant should be fetched.

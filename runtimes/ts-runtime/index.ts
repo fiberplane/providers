@@ -13,6 +13,7 @@ import type {
     Metric,
     Point,
     PrometheusDataSource,
+    ProxyDataSource,
     QueryInstantOptions,
     QuerySeriesOptions,
     Request,
