@@ -46,9 +46,15 @@ fp_export!(
         .await;
         match result {
             Ok(response) => {
-                rmp_serde::decode::from_slice(&response.body).map_err(|err| FetchError::DataError {
-                    message: format!("Error parsing Proxy response: {}", err),
-                })
+                match rmp_serde::decode::from_slice::<Result<Vec<Instant>, FetchError>>(
+                    &response.body,
+                ) {
+                    Ok(Ok(instant)) => Ok(instant),
+                    Ok(Err(fetch_err)) => Err(fetch_err),
+                    Err(err) => Err(FetchError::DataError {
+                        message: format!("Error parsing Proxy response: {}", err),
+                    }),
+                }
             }
             Err(error) => Err(FetchError::RequestError { payload: error }),
         }
@@ -85,9 +91,15 @@ fp_export!(
         .await;
         match result {
             Ok(response) => {
-                rmp_serde::decode::from_slice(&response.body).map_err(|err| FetchError::DataError {
-                    message: format!("Error parsing Proxy response: {}", err),
-                })
+                match rmp_serde::decode::from_slice::<Result<Vec<Series>, FetchError>>(
+                    &response.body,
+                ) {
+                    Ok(Ok(series)) => Ok(series),
+                    Ok(Err(fetch_err)) => Err(fetch_err),
+                    Err(err) => Err(FetchError::DataError {
+                        message: format!("Error parsing Proxy response: {}", err),
+                    }),
+                }
             }
             Err(error) => Err(FetchError::RequestError { payload: error }),
         }
