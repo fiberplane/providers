@@ -10,12 +10,10 @@ struct QueryPayload {
 }
 
 #[derive(Serialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[serde(tag = "type", content = "payload", rename_all = "snake_case")]
 enum QueryType {
-    #[serde(rename_all = "camelCase")]
-    Instant { time: Timestamp },
-    #[serde(rename_all = "camelCase")]
-    Series { time_range: TimeRange },
+    Instant(Timestamp),
+    Series(TimeRange),
 }
 
 fp_export!(
@@ -32,7 +30,7 @@ fp_export!(
 
         let payload = QueryPayload {
             query,
-            query_type: QueryType::Instant { time: opts.time },
+            query_type: QueryType::Instant(opts.time),
         };
 
         let result = make_request(Request {
@@ -71,9 +69,7 @@ fp_export!(
 
         let payload = QueryPayload {
             query,
-            query_type: QueryType::Series {
-                time_range: opts.time_range,
-            },
+            query_type: QueryType::Series(opts.time_range),
         };
 
         let result = make_request(Request {
