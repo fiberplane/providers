@@ -109,7 +109,7 @@ fn create_url(data_source: &ProxyDataSource) -> String {
     use urlencoding::encode;
 
     format!(
-        "/api/proxies/{}/relay?dataSourceId={}",
+        "/api/proxies/{}/relay?dataSourceName={}",
         encode(&data_source.proxy_id),
         encode(&data_source.data_source_name)
     )
