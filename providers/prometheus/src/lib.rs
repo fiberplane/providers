@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use fp_provider::{fp_export, prelude::*};
+use fp_provider::*;
 use serde::Deserialize;
 use std::{
     collections::HashMap,
@@ -10,99 +10,94 @@ use std::{
 const ONE_MINUTE: u32 = 60; // seconds
 const ONE_HOUR: u32 = 60 * ONE_MINUTE; // seconds
 
-fp_export!(
-    async fn fetch_instant(
-        query: String,
-        opts: QueryInstantOptions,
-    ) -> Result<Vec<Instant>, FetchError> {
-        let data_source = match opts.data_source {
-            DataSource::Prometheus(data_source) => Ok(data_source),
-            _ => Err(FetchError::Other {
-                message: "Incompatible data source".to_owned(),
-            }),
-        }?;
+#[fp_export_impl(fp_provider)]
+async fn fetch_instant(
+    query: String,
+    opts: QueryInstantOptions,
+) -> Result<Vec<Instant>, FetchError> {
+    let data_source = match opts.data_source {
+        DataSource::Prometheus(data_source) => Ok(data_source),
+        _ => Err(FetchError::Other {
+            message: "Incompatible data source".to_owned(),
+        }),
+    }?;
 
-        let mut form_data = form_urlencoded::Serializer::new(String::new());
-        form_data.append_pair("query", &query);
-        form_data.append_pair("time", &to_iso_date(opts.time));
+    let mut form_data = form_urlencoded::Serializer::new(String::new());
+    form_data.append_pair("query", &query);
+    form_data.append_pair("time", &to_iso_date(opts.time));
 
-        let mut headers = HashMap::new();
-        headers.insert(
-            "Content-Type".to_owned(),
-            "application/x-www-form-urlencoded".to_owned(),
-        );
+    let mut headers = HashMap::new();
+    headers.insert(
+        "Content-Type".to_owned(),
+        "application/x-www-form-urlencoded".to_owned(),
+    );
 
-        let url = format!("{}/api/v1/query", data_source.url);
+    let url = format!("{}/api/v1/query", data_source.url);
 
-        let result = make_request(Request {
-            body: Some(form_data.finish().into()),
-            headers: Some(headers),
-            method: RequestMethod::Post,
-            url,
-        })
-        .await;
-        match result {
-            Ok(response) => from_vector(&response.body).ok_or(FetchError::DataError {
-                message: "Error parsing Prometheus response".to_owned(),
-            }),
-            Err(error) => Err(FetchError::RequestError { payload: error }),
-        }
+    let result = make_request(Request {
+        body: Some(form_data.finish().into()),
+        headers: Some(headers),
+        method: RequestMethod::Post,
+        url,
+    })
+    .await;
+    match result {
+        Ok(response) => from_vector(&response.body).ok_or(FetchError::DataError {
+            message: "Error parsing Prometheus response".to_owned(),
+        }),
+        Err(error) => Err(FetchError::RequestError { payload: error }),
     }
-);
+}
 
-fp_export!(
-    async fn fetch_series(
-        query: String,
-        opts: QuerySeriesOptions,
-    ) -> Result<Vec<Series>, FetchError> {
-        let data_source = match opts.data_source {
-            DataSource::Prometheus(data_source) => Ok(data_source),
-            _ => Err(FetchError::Other {
-                message: "Incompatible data source".to_owned(),
-            }),
-        }?;
+#[fp_export_impl(fp_provider)]
+async fn fetch_series(query: String, opts: QuerySeriesOptions) -> Result<Vec<Series>, FetchError> {
+    let data_source = match opts.data_source {
+        DataSource::Prometheus(data_source) => Ok(data_source),
+        _ => Err(FetchError::Other {
+            message: "Incompatible data source".to_owned(),
+        }),
+    }?;
 
-        let step = step_for_range(&opts.time_range);
-        let start = to_iso_date(round_to_grid(
-            opts.time_range.from,
-            step,
-            RoundToGridEdge::Start,
-        ));
-        let end = to_iso_date(round_to_grid(
-            opts.time_range.to,
-            step,
-            RoundToGridEdge::End,
-        ));
+    let step = step_for_range(&opts.time_range);
+    let start = to_iso_date(round_to_grid(
+        opts.time_range.from,
+        step,
+        RoundToGridEdge::Start,
+    ));
+    let end = to_iso_date(round_to_grid(
+        opts.time_range.to,
+        step,
+        RoundToGridEdge::End,
+    ));
 
-        let mut form_data = form_urlencoded::Serializer::new(String::new());
-        form_data.append_pair("query", &query);
-        form_data.append_pair("start", &start);
-        form_data.append_pair("end", &end);
-        form_data.append_pair("step", &step.to_string());
+    let mut form_data = form_urlencoded::Serializer::new(String::new());
+    form_data.append_pair("query", &query);
+    form_data.append_pair("start", &start);
+    form_data.append_pair("end", &end);
+    form_data.append_pair("step", &step.to_string());
 
-        let mut headers = HashMap::new();
-        headers.insert(
-            "Content-Type".to_owned(),
-            "application/x-www-form-urlencoded".to_owned(),
-        );
+    let mut headers = HashMap::new();
+    headers.insert(
+        "Content-Type".to_owned(),
+        "application/x-www-form-urlencoded".to_owned(),
+    );
 
-        let url = format!("{}/api/v1/query_range", data_source.url);
+    let url = format!("{}/api/v1/query_range", data_source.url);
 
-        let result = make_request(Request {
-            body: Some(form_data.finish().into()),
-            headers: Some(headers),
-            method: RequestMethod::Post,
-            url,
-        })
-        .await;
-        match result {
-            Ok(response) => from_matrix(&response.body).ok_or(FetchError::DataError {
-                message: "Error parsing Prometheus response".to_owned(),
-            }),
-            Err(error) => Err(FetchError::RequestError { payload: error }),
-        }
+    let result = make_request(Request {
+        body: Some(form_data.finish().into()),
+        headers: Some(headers),
+        method: RequestMethod::Post,
+        url,
+    })
+    .await;
+    match result {
+        Ok(response) => from_matrix(&response.body).ok_or(FetchError::DataError {
+            message: "Error parsing Prometheus response".to_owned(),
+        }),
+        Err(error) => Err(FetchError::RequestError { payload: error }),
     }
-);
+}
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]

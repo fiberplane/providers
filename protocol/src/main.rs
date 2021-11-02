@@ -41,10 +41,30 @@ fp_export! {
     ) -> Result<Vec<Series>, FetchError>;
 }
 
+const NAME: &str = "fp-provider";
+const VERSION: &str = "1.0.0-alpha.1";
+const AUTHORS: &str = r#"["Fiberplane <info@fiberplane.com>"]"#;
+
 fn main() {
-    fp_bindgen!("rust-plugin", "../fp-provider/src/bindings");
-    fp_bindgen!("rust-wasmer-runtime", "../runtimes/fp-provider-runtime/src");
-    fp_bindgen!("ts-runtime", "../runtimes/ts-runtime");
+    const BINDINGS: &[(BindingsType, &str)] = &[
+        (BindingsType::RustPlugin, "../fp-provider"),
+        (
+            BindingsType::RustWasmerRuntime,
+            "../runtimes/fp-provider-runtime/src",
+        ),
+        (BindingsType::TsRuntime, "../runtimes/ts-runtime"),
+    ];
+
+    for (bindings_type, path) in BINDINGS {
+        fp_bindgen!(BindingConfig {
+            bindings_type: *bindings_type,
+            path,
+            name: NAME,
+            authors: AUTHORS,
+            version: VERSION
+        });
+        println!("Generated bindings written to `{}/`.", path);
+    }
 
     println!("Bindings generated.");
 }
