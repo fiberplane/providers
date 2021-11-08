@@ -10,45 +10,20 @@ use crate::{
 use wasmer::{imports, Function, ImportObject, Instance, Store, Value, WasmerEnv};
 
 impl Runtime {
-    /// Fetches a data instant based on the given query and options.
-    pub async fn fetch_instant(&self, query: String, opts: QueryInstantOptions) -> Result<Result<Vec<Instant>, FetchError>, InvocationError> {
+    pub async fn invoke(&self, request: ProviderRequest, config: Config) -> Result<ProviderResponse, InvocationError> {
         let mut env = RuntimeInstanceData::default();
         let import_object = create_import_object(self.module.store(), &env);
         let instance = Instance::new(&self.module, &import_object).unwrap();
         env.init_with_instance(&instance).unwrap();
 
-        let query = export_to_guest(&env, &query);
-        let opts = export_to_guest(&env, &opts);
+        let request = export_to_guest(&env, &request);
+        let config = export_to_guest(&env, &config);
 
         let function = instance
             .exports
-            .get_function("__fp_gen_fetch_instant")
+            .get_function("__fp_gen_invoke")
             .map_err(|_| InvocationError::FunctionNotExported)?;
-        let result = function.call(&[query.into(), opts.into()])?;
-
-        let async_ptr: FatPtr = match result[0] {
-            Value::I64(v) => unsafe { std::mem::transmute(v) },
-            _ => return Err(InvocationError::UnexpectedReturnType),
-        };
-
-        Ok(ModuleFuture::new(env.clone(), async_ptr).await)
-    }
-
-    /// Fetches a series of data based on the given query and options.
-    pub async fn fetch_series(&self, query: String, opts: QuerySeriesOptions) -> Result<Result<Vec<Series>, FetchError>, InvocationError> {
-        let mut env = RuntimeInstanceData::default();
-        let import_object = create_import_object(self.module.store(), &env);
-        let instance = Instance::new(&self.module, &import_object).unwrap();
-        env.init_with_instance(&instance).unwrap();
-
-        let query = export_to_guest(&env, &query);
-        let opts = export_to_guest(&env, &opts);
-
-        let function = instance
-            .exports
-            .get_function("__fp_gen_fetch_series")
-            .map_err(|_| InvocationError::FunctionNotExported)?;
-        let result = function.call(&[query.into(), opts.into()])?;
+        let result = function.call(&[request.into(), config.into()])?;
 
         let async_ptr: FatPtr = match result[0] {
             Value::I64(v) => unsafe { std::mem::transmute(v) },
@@ -64,7 +39,7 @@ fn create_import_object(store: &Store, env: &RuntimeInstanceData) -> ImportObjec
         "fp" => {
             "__fp_host_resolve_async_value" => Function::new_native_with_env(store, env.clone(), resolve_async_value),
             "__fp_gen_log" => Function::new_native_with_env(store, env.clone(), _log),
-            "__fp_gen_make_request" => Function::new_native_with_env(store, env.clone(), _make_request),
+            "__fp_gen_make_http_request" => Function::new_native_with_env(store, env.clone(), _make_http_request),
             "__fp_gen_now" => Function::new_native_with_env(store, env.clone(), _now),
             "__fp_gen_random" => Function::new_native_with_env(store, env.clone(), _random),
         }
@@ -77,14 +52,14 @@ pub fn _log(env: &RuntimeInstanceData, message: FatPtr) {
     super::log(message);
 }
 
-pub fn _make_request(env: &RuntimeInstanceData, request: FatPtr) -> FatPtr {
-    let request = import_from_guest::<Request>(env, request);
+pub fn _make_http_request(env: &RuntimeInstanceData, request: FatPtr) -> FatPtr {
+    let request = import_from_guest::<HttpRequest>(env, request);
 
     let env = env.clone();
     let async_ptr = create_future_value(&env);
     let handle = tokio::runtime::Handle::current();
     handle.spawn(async move {
-        let result_ptr = export_to_guest(&env, &super::make_request(request).await);
+        let result_ptr = export_to_guest(&env, &super::make_http_request(request).await);
 
         unsafe {
             env.__fp_guest_resolve_async_value

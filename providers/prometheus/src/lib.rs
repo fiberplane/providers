@@ -11,20 +11,47 @@ const ONE_MINUTE: u32 = 60; // seconds
 const ONE_HOUR: u32 = 60 * ONE_MINUTE; // seconds
 
 #[fp_export_impl(fp_provider)]
-async fn fetch_instant(
-    query: String,
-    opts: QueryInstantOptions,
-) -> Result<Vec<Instant>, FetchError> {
-    let data_source = match opts.data_source {
-        DataSource::Prometheus(data_source) => Ok(data_source),
-        _ => Err(FetchError::Other {
-            message: "Incompatible data source".to_owned(),
-        }),
-    }?;
+async fn invoke(request: ProviderRequest, config: Config) -> ProviderResponse {
+    log(format!(
+        "prometheus provider invoked with request: {:?}, config: {:?}",
+        request, config
+    ));
 
+    let url = if let Some(url) = config.url {
+        url
+    } else {
+        return ProviderResponse::Error {
+            error: Error::Config {
+                message: "url is required".to_string(),
+            },
+        };
+    };
+
+    match request {
+        ProviderRequest::Instant(query) => fetch_instant(query, url)
+            .await
+            .map(|instants| ProviderResponse::Instant { instants })
+            .unwrap_or_else(|error| ProviderResponse::Error { error }),
+        ProviderRequest::Series(query) => fetch_series(query, url)
+            .await
+            .map(|series| ProviderResponse::Series { series })
+            .unwrap_or_else(|error| ProviderResponse::Error { error }),
+        request => {
+            log(format!(
+                "prometheus provider got unsupported request type: {:?}",
+                request
+            ));
+            ProviderResponse::Error {
+                error: Error::UnsupportedRequest,
+            }
+        }
+    }
+}
+
+async fn fetch_instant(request: QueryInstant, url: String) -> Result<Vec<Instant>, Error> {
     let mut form_data = form_urlencoded::Serializer::new(String::new());
-    form_data.append_pair("query", &query);
-    form_data.append_pair("time", &to_iso_date(opts.time));
+    form_data.append_pair("query", &request.query);
+    form_data.append_pair("time", &to_iso_date(request.timestamp));
 
     let mut headers = HashMap::new();
     headers.insert(
@@ -32,46 +59,44 @@ async fn fetch_instant(
         "application/x-www-form-urlencoded".to_owned(),
     );
 
-    let url = format!("{}/api/v1/query", data_source.url);
+    let url = format!("{}/api/v1/query", url);
+    log(format!(
+        "prometheus provider fetching instant from: {}, query: {}",
+        &url, &request.query
+    ));
 
-    let result = make_request(Request {
+    let result = make_http_request(HttpRequest {
         body: Some(form_data.finish().into()),
         headers: Some(headers),
-        method: RequestMethod::Post,
+        method: HttpRequestMethod::Post,
         url,
     })
     .await;
+    log(format!(
+        "prometheus provider got HTTP response: {:?}",
+        result
+    ));
     match result {
-        Ok(response) => from_vector(&response.body).ok_or(FetchError::DataError {
-            message: "Error parsing Prometheus response".to_owned(),
-        }),
-        Err(error) => Err(FetchError::RequestError { payload: error }),
+        Ok(response) => from_vector(&response.body),
+        Err(error) => Err(Error::Http { error }),
     }
 }
 
-#[fp_export_impl(fp_provider)]
-async fn fetch_series(query: String, opts: QuerySeriesOptions) -> Result<Vec<Series>, FetchError> {
-    let data_source = match opts.data_source {
-        DataSource::Prometheus(data_source) => Ok(data_source),
-        _ => Err(FetchError::Other {
-            message: "Incompatible data source".to_owned(),
-        }),
-    }?;
-
-    let step = step_for_range(&opts.time_range);
+async fn fetch_series(request: QueryTimeRange, url: String) -> Result<Vec<Series>, Error> {
+    let step = step_for_range(&request.time_range);
     let start = to_iso_date(round_to_grid(
-        opts.time_range.from,
+        request.time_range.from,
         step,
         RoundToGridEdge::Start,
     ));
     let end = to_iso_date(round_to_grid(
-        opts.time_range.to,
+        request.time_range.to,
         step,
         RoundToGridEdge::End,
     ));
 
     let mut form_data = form_urlencoded::Serializer::new(String::new());
-    form_data.append_pair("query", &query);
+    form_data.append_pair("query", &request.query);
     form_data.append_pair("start", &start);
     form_data.append_pair("end", &end);
     form_data.append_pair("step", &step.to_string());
@@ -82,20 +107,26 @@ async fn fetch_series(query: String, opts: QuerySeriesOptions) -> Result<Vec<Ser
         "application/x-www-form-urlencoded".to_owned(),
     );
 
-    let url = format!("{}/api/v1/query_range", data_source.url);
+    let url = format!("{}/api/v1/query_range", url);
+    log(format!(
+        "prometheus provider fetching series from: {}, query: {}",
+        &url, &request.query
+    ));
 
-    let result = make_request(Request {
+    let result = make_http_request(HttpRequest {
         body: Some(form_data.finish().into()),
         headers: Some(headers),
-        method: RequestMethod::Post,
+        method: HttpRequestMethod::Post,
         url,
     })
     .await;
+    log(format!(
+        "prometheus provider got HTTP response: {:?}",
+        result
+    ));
     match result {
-        Ok(response) => from_matrix(&response.body).ok_or(FetchError::DataError {
-            message: "Error parsing Prometheus response".to_owned(),
-        }),
-        Err(error) => Err(FetchError::RequestError { payload: error }),
+        Ok(response) => from_matrix(&response.body),
+        Err(error) => Err(Error::Http { error }),
     }
 }
 
@@ -127,22 +158,20 @@ struct RangeVector {
 #[derive(Deserialize)]
 struct PrometheusPoint(f64, String);
 
-fn from_vector(response: &[u8]) -> Option<Vec<Instant>> {
+fn from_vector(response: &[u8]) -> Result<Vec<Instant>, Error> {
     let response = match serde_json::from_slice::<PrometheusResponse>(response)
         .map(|response| response.data)
     {
-        Ok(PrometheusData::Vector(response)) => response,
-        Ok(_) => {
-            log("Unexpected response type".to_owned());
-            return None;
-        }
-        Err(error) => {
-            log(format!("Error parsing response: {}", error));
-            return None;
-        }
-    };
+        Ok(PrometheusData::Vector(response)) => Ok(response),
+        Ok(_) => Err(Error::Data {
+            message: "Unexpected response type".to_owned(),
+        }),
+        Err(error) => Err(Error::Data {
+            message: format!("Error parsing response: {}", error),
+        }),
+    }?;
 
-    match response
+    response
         .into_iter()
         .map(|instant| {
             let metric = to_metric(instant.metric);
@@ -150,31 +179,25 @@ fn from_vector(response: &[u8]) -> Option<Vec<Instant>> {
             Ok(Instant { metric, point })
         })
         .collect::<Result<Vec<_>, ParseFloatError>>()
-    {
-        Ok(vector) => Some(vector),
-        Err(error) => {
-            log(format!("Error parsing response: {}", error));
-            None
-        }
-    }
+        .map_err(|error| Error::Data {
+            message: format!("Error parsing response: {}", error),
+        })
 }
 
-fn from_matrix(response: &[u8]) -> Option<Vec<Series>> {
+fn from_matrix(response: &[u8]) -> Result<Vec<Series>, Error> {
     let response = match serde_json::from_slice::<PrometheusResponse>(response)
         .map(|response| response.data)
     {
-        Ok(PrometheusData::Matrix(response)) => response,
-        Ok(_) => {
-            log("Unexpected response type".to_owned());
-            return None;
-        }
-        Err(error) => {
-            log(format!("Error parsing response: {}", error));
-            return None;
-        }
-    };
+        Ok(PrometheusData::Matrix(response)) => Ok(response),
+        Ok(_) => Err(Error::Data {
+            message: "Unexpected response type".to_owned(),
+        }),
+        Err(error) => Err(Error::Data {
+            message: format!("Error parsing response: {}", error),
+        }),
+    }?;
 
-    match response
+    response
         .into_iter()
         .map(|range| {
             let metric = to_metric(range.metric);
@@ -186,13 +209,9 @@ fn from_matrix(response: &[u8]) -> Option<Vec<Series>> {
             Ok(Series { metric, points })
         })
         .collect::<Result<Vec<_>, ParseFloatError>>()
-    {
-        Ok(vector) => Some(vector),
-        Err(error) => {
-            log(format!("Error parsing response: {}", error));
-            None
-        }
-    }
+        .map_err(|error| Error::Data {
+            message: format!("Error parsing response: {}", error),
+        })
 }
 
 #[derive(Clone, Copy)]

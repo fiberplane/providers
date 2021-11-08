@@ -1,6 +1,7 @@
 use rand::Rng;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
+use tracing::{debug, trace};
 
 mod bindings;
 pub mod types;
@@ -8,15 +9,18 @@ pub mod types;
 pub use bindings::*;
 use types::*;
 
-pub async fn make_request(req: Request) -> Result<Response, RequestError> {
+pub async fn make_http_request(req: HttpRequest) -> Result<HttpResponse, HttpRequestError> {
     let url = req.url;
+    let method = req.method;
+
+    trace!(?url, ?method, "making HTTP request");
 
     let client = reqwest::Client::new();
-    let mut builder = match req.method {
-        RequestMethod::Delete => client.delete(url.clone()),
-        RequestMethod::Get => client.get(url.clone()),
-        RequestMethod::Head => client.head(url.clone()),
-        RequestMethod::Post => client.post(url.clone()),
+    let mut builder = match method {
+        HttpRequestMethod::Delete => client.delete(url.clone()),
+        HttpRequestMethod::Get => client.get(url.clone()),
+        HttpRequestMethod::Head => client.head(url.clone()),
+        HttpRequestMethod::Post => client.post(url.clone()),
     };
     if let Some(body) = req.body {
         builder = builder.body(body);
@@ -30,6 +34,8 @@ pub async fn make_request(req: Request) -> Result<Response, RequestError> {
     match builder.send().await {
         Ok(res) => {
             let status_code = res.status().as_u16();
+
+            trace!("HTTP request had status code: {}", status_code);
 
             let mut headers = HashMap::new();
             for (key, value) in res.headers().iter() {
@@ -47,13 +53,13 @@ pub async fn make_request(req: Request) -> Result<Response, RequestError> {
                 Ok(body) => {
                     let body = body.to_vec();
                     if (200..300).contains(&status_code) {
-                        Ok(Response {
+                        Ok(HttpResponse {
                             body,
                             headers,
                             status_code,
                         })
                     } else {
-                        Err(RequestError::ServerError {
+                        Err(HttpRequestError::ServerError {
                             response: body,
                             status_code,
                         })
@@ -61,16 +67,18 @@ pub async fn make_request(req: Request) -> Result<Response, RequestError> {
                 }
                 Err(error) => {
                     eprintln!("Could not read HTTP response from \"{}\": {:?}", url, error);
-                    Err(RequestError::Other {
+                    Err(HttpRequestError::Other {
                         reason: "Unexpected end of data".to_owned(),
                     })
                 }
             }
         }
         Err(error) => Err(if error.is_timeout() {
-            RequestError::Timeout
+            debug!("HTTP request timed out");
+            HttpRequestError::Timeout
         } else {
-            RequestError::Other {
+            debug!(?error, "HTTP request error");
+            HttpRequestError::Other {
                 reason: error.to_string(),
             }
         }),

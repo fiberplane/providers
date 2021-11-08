@@ -7,19 +7,20 @@
 import { encode, decode } from "@msgpack/msgpack";
 
 import type {
-    DataSource,
-    FetchError,
+    Config,
+    Error,
+    HttpRequest,
+    HttpRequestError,
+    HttpRequestMethod,
+    HttpResponse,
     Instant,
     Metric,
     Point,
-    PrometheusDataSource,
-    ProxyDataSource,
-    QueryInstantOptions,
-    QuerySeriesOptions,
-    Request,
-    RequestError,
-    RequestMethod,
-    Response,
+    ProviderRequest,
+    ProviderResponse,
+    ProxyRequest,
+    QueryInstant,
+    QueryTimeRange,
     Result,
     Series,
     TimeRange,
@@ -30,14 +31,13 @@ type FatPtr = bigint;
 
 export type Imports = {
     log: (message: string) => void;
-    makeRequest: (request: Request) => Promise<Result<Response, RequestError>>;
+    makeHttpRequest: (request: HttpRequest) => Promise<Result<HttpResponse, HttpRequestError>>;
     now: () => Timestamp;
     random: (len: number) => Array<number>;
 };
 
 export type Exports = {
-    fetchInstant?: (query: string, opts: QueryInstantOptions) => Promise<Result<Array<Instant>, FetchError>>;
-    fetchSeries?: (query: string, opts: QuerySeriesOptions) => Promise<Result<Array<Series>, FetchError>>;
+    invoke?: (request: ProviderRequest, config: Config) => Promise<ProviderResponse>;
 };
 
 /**
@@ -107,21 +107,20 @@ export async function createRuntime(
 
     const { instance } = await WebAssembly.instantiate(plugin, {
         fp: {
-            __fp_host_resolve_async_value: resolvePromise,
             __fp_gen_log: (message_ptr: FatPtr) => {
                 const message = parseObject<string>(message_ptr);
                 importFunctions.log(message);
             },
-            __fp_gen_make_request: (request_ptr: FatPtr): FatPtr => {
-                const request = parseObject<Request>(request_ptr);
+            __fp_gen_make_http_request: (request_ptr: FatPtr): FatPtr => {
+                const request = parseObject<HttpRequest>(request_ptr);
                 const _async_result_ptr = createAsyncValue();
-                importFunctions.makeRequest(request)
+                importFunctions.makeHttpRequest(request)
                     .then((result) => {
                         resolveFuture(_async_result_ptr, serializeObject(result));
                     })
                     .catch((error) => {
                         console.error(
-                            'Unrecoverable exception trying to call async host function "make_request"',
+                            'Unrecoverable exception trying to call async host function "make_http_request"',
                             error
                         );
                     });
@@ -133,6 +132,7 @@ export async function createRuntime(
             __fp_gen_random: (len: number): FatPtr => {
                 return serializeObject(importFunctions.random(len));
             },
+            __fp_host_resolve_async_value: resolvePromise,
         },
     });
 
@@ -150,24 +150,14 @@ export async function createRuntime(
     const resolveFuture = getExport<(asyncValuePtr: FatPtr, resultPtr: FatPtr) => void>("__fp_guest_resolve_async_value");
 
     return {
-        fetchInstant: (() => {
-            const export_fn = instance.exports.__fp_gen_fetch_instant as any;
+        invoke: (() => {
+            const export_fn = instance.exports.__fp_gen_invoke as any;
             if (!export_fn) return;
 
-            return (query: string, opts: QueryInstantOptions) => {
-                const query_ptr = serializeObject(query);
-                const opts_ptr = serializeObject(opts);
-                return promiseFromPtr<Result<Array<Instant>, FetchError>>(export_fn(query_ptr, opts_ptr));
-            };
-        })(),
-        fetchSeries: (() => {
-            const export_fn = instance.exports.__fp_gen_fetch_series as any;
-            if (!export_fn) return;
-
-            return (query: string, opts: QuerySeriesOptions) => {
-                const query_ptr = serializeObject(query);
-                const opts_ptr = serializeObject(opts);
-                return promiseFromPtr<Result<Array<Series>, FetchError>>(export_fn(query_ptr, opts_ptr));
+            return (request: ProviderRequest, config: Config) => {
+                const request_ptr = serializeObject(request);
+                const config_ptr = serializeObject(config);
+                return promiseFromPtr<ProviderResponse>(export_fn(request_ptr, config_ptr));
             };
         })(),
     };

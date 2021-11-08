@@ -4,7 +4,7 @@ use crate::types::*;
 extern "C" {
     fn __fp_gen_log(message: fp_bindgen_support::FatPtr);
 
-    fn __fp_gen_make_request(request: fp_bindgen_support::FatPtr) -> fp_bindgen_support::FatPtr;
+    fn __fp_gen_make_http_request(request: fp_bindgen_support::FatPtr) -> fp_bindgen_support::FatPtr;
 
     fn __fp_gen_now() -> fp_bindgen_support::FatPtr;
 
@@ -18,10 +18,10 @@ pub fn log(message: String) {
 }
 
 /// Performs an HTTP request.
-pub async fn make_request(request: Request) -> Result<Response, RequestError> {
+pub async fn make_http_request(request: HttpRequest) -> Result<HttpResponse, HttpRequestError> {
     let request = fp_bindgen_support::export_value_to_host(&request);
     unsafe {
-        let ret = __fp_gen_make_request(request);
+        let ret = __fp_gen_make_http_request(request);
         let result_ptr = fp_bindgen_support::HostFuture::new(ret).await;
         fp_bindgen_support::import_value_from_host(result_ptr)
     }

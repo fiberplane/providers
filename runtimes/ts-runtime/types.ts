@@ -4,18 +4,56 @@
 // This file is generated. PLEASE DO NOT MODIFY. //
 // ============================================= //
 
-/**
- * A data-source represents all the configuration for a specific component or
- * service. It will be used by provider.
- */
-export type DataSource =
-    | { type: "prometheus" } & PrometheusDataSource
-    | { type: "proxy" } & ProxyDataSource;
+export type Config = {
+    url?: string;
+};
 
-export type FetchError =
-    | { type: "request_error"; payload: RequestError }
-    | { type: "data_error"; message: string }
+export type Error =
+    | { type: "unsupported_request" }
+    | { type: "http"; error: HttpRequestError }
+    | { type: "data"; message: string }
+    | { type: "deserialization"; message: string }
+    | { type: "config"; message: string }
     | { type: "other"; message: string };
+
+/**
+ * HTTP request options.
+ */
+export type HttpRequest = {
+    url: string;
+    method: HttpRequestMethod;
+    headers?: Record<string, string>;
+    body?: ArrayBuffer;
+};
+
+/**
+ * Possible errors that may happen during an HTTP request.
+ */
+export type HttpRequestError =
+    | { type: "offline" }
+    | { type: "no_route" }
+    | { type: "connection_refused" }
+    | { type: "timeout" }
+    | { type: "server_error"; statusCode: number;response: ArrayBuffer }
+    | { type: "other"; reason: string };
+
+/**
+ * HTTP request method.
+ */
+export type HttpRequestMethod =
+    | "DELETE"
+    | "GET"
+    | "HEAD"
+    | "POST";
+
+/**
+ * Response to an HTTP request.
+ */
+export type HttpResponse = {
+    body: ArrayBuffer;
+    headers: Record<string, string>;
+    statusCode: number;
+};
 
 /**
  * A single data point in time, with meta-data about the metric it was taken
@@ -42,19 +80,20 @@ export type Point = {
     value: number;
 };
 
-/**
- * A data-source for Prometheus. Currently only requires a url. This should be
- * a full URL starting with http:// or https:// the domain, and optionally a
- * port and a path.
- */
-export type PrometheusDataSource = {
-    url: string;
-};
+export type ProviderRequest =
+    | { type: "instant" } & QueryInstant
+    | { type: "series" } & QueryTimeRange
+    | { type: "proxy" } & ProxyRequest;
+
+export type ProviderResponse =
+    | { type: "error"; error: Error }
+    | { type: "instant"; instants: Array<Instant> }
+    | { type: "series"; series: Array<Series> };
 
 /**
  * Relays requests for a data-source to a proxy server registered with the API.
  */
-export type ProxyDataSource = {
+export type ProxyRequest = {
     /**
      * ID of the proxy as known by the API.
      */
@@ -64,61 +103,21 @@ export type ProxyDataSource = {
      * Name of the data source exposed by the proxy.
      */
     dataSourceName: string;
+
+    /**
+     * Request data to send to the proxy
+     */
+    request: ArrayBuffer;
 };
 
-/**
- * Options to specify which instant should be fetched.
- */
-export type QueryInstantOptions = {
-    dataSource: DataSource;
-    time: Timestamp;
+export type QueryInstant = {
+    query: string;
+    timestamp: Timestamp;
 };
 
-/**
- * Options to specify what series should be fetched.
- */
-export type QuerySeriesOptions = {
-    dataSource: DataSource;
+export type QueryTimeRange = {
+    query: string;
     timeRange: TimeRange;
-};
-
-/**
- * HTTP request options.
- */
-export type Request = {
-    url: string;
-    method: RequestMethod;
-    headers?: Record<string, string>;
-    body?: ArrayBuffer;
-};
-
-/**
- * Possible errors that may happen during an HTTP request.
- */
-export type RequestError =
-    | { type: "offline" }
-    | { type: "no_route" }
-    | { type: "connection_refused" }
-    | { type: "timeout" }
-    | { type: "server_error"; statusCode: number;response: ArrayBuffer }
-    | { type: "other"; reason: string };
-
-/**
- * HTTP request method.
- */
-export type RequestMethod =
-    | "DELETE"
-    | "GET"
-    | "HEAD"
-    | "POST";
-
-/**
- * Response to an HTTP request.
- */
-export type Response = {
-    body: ArrayBuffer;
-    headers: Record<string, string>;
-    statusCode: number;
 };
 
 /**

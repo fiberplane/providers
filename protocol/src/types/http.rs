@@ -2,18 +2,20 @@ use fp_bindgen::prelude::*;
 use std::collections::HashMap;
 
 /// HTTP request options.
-#[derive(Serializable)]
-pub struct Request {
+#[derive(Serializable, Debug)]
+#[fp(rename_all = "camelCase")]
+pub struct HttpRequest {
     pub url: String,
-    pub method: RequestMethod,
+    pub method: HttpRequestMethod,
     pub headers: Option<HashMap<String, String>>,
     pub body: Option<Vec<u8>>,
 }
 
 /// Possible errors that may happen during an HTTP request.
-#[derive(Serializable)]
+#[derive(Serializable, Debug)]
 #[fp(tag = "type", rename_all = "snake_case")]
-pub enum RequestError {
+#[allow(dead_code)]
+pub enum HttpRequestError {
     Offline,
     NoRoute,
     ConnectionRefused,
@@ -23,10 +25,12 @@ pub enum RequestError {
 }
 
 /// HTTP request method.
-#[derive(Serializable)]
+// Note: we use SCREAMING_SNAKE_CASE here because this is
+// effectively a constant
+#[derive(Serializable, Debug)]
 #[fp(rename_all = "SCREAMING_SNAKE_CASE")]
 #[allow(unused)]
-pub enum RequestMethod {
+pub enum HttpRequestMethod {
     Delete,
     Get,
     Head,
@@ -34,8 +38,9 @@ pub enum RequestMethod {
 }
 
 /// Response to an HTTP request.
-#[derive(Serializable)]
-pub struct Response {
+#[derive(Serializable, Debug)]
+#[fp(rename_all = "camelCase")]
+pub struct HttpResponse {
     pub body: Vec<u8>,
     pub headers: HashMap<String, String>,
     pub status_code: u16,

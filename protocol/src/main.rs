@@ -1,24 +1,15 @@
-mod data_types;
-mod request_types;
+mod types;
 
-use data_types::*;
-use fp_bindgen::prelude::*;
-use request_types::*;
-
-#[derive(Serializable)]
-#[fp(tag = "type", rename_all = "snake_case")]
-pub enum FetchError {
-    RequestError { payload: RequestError },
-    DataError { message: String },
-    Other { message: String },
-}
+use fp_bindgen::{prelude::*, RustPluginConfig};
+use std::collections::BTreeMap;
+use types::*;
 
 fp_import! {
     /// Logs a message to the (development) console.
     fn log(message: String);
 
     /// Performs an HTTP request.
-    async fn make_request(request: Request) -> Result<Response, RequestError>;
+    async fn make_http_request(request: HttpRequest) -> Result<HttpResponse, HttpRequestError>;
 
     /// Returns the current timestamp.
     fn now() -> Timestamp;
@@ -28,22 +19,8 @@ fp_import! {
 }
 
 fp_export! {
-    /// Fetches a data instant based on the given query and options.
-    async fn fetch_instant(
-        query: String,
-        opts: QueryInstantOptions
-    ) -> Result<Vec<Instant>, FetchError>;
-
-    /// Fetches a series of data based on the given query and options.
-    async fn fetch_series(
-        query: String,
-        opts: QuerySeriesOptions
-    ) -> Result<Vec<Series>, FetchError>;
+    async fn invoke(request: ProviderRequest, config: Config) -> ProviderResponse;
 }
-
-const NAME: &str = "fp-provider";
-const VERSION: &str = "1.0.0-alpha.1";
-const AUTHORS: &str = r#"["Fiberplane <info@fiberplane.com>"]"#;
 
 fn main() {
     const BINDINGS: &[(BindingsType, &str)] = &[
@@ -59,9 +36,12 @@ fn main() {
         fp_bindgen!(BindingConfig {
             bindings_type: *bindings_type,
             path,
-            name: NAME,
-            authors: AUTHORS,
-            version: VERSION
+            rust_plugin_config: Some(RustPluginConfig {
+                name: "fp-provider",
+                authors: r#"["Fiberplane <info@fiberplane.com>"]"#,
+                version: "1.0.0-alpha.1",
+                dependencies: BTreeMap::new()
+            })
         });
         println!("Generated bindings written to `{}/`.", path);
     }
