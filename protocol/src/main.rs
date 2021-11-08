@@ -1,6 +1,6 @@
 mod types;
 
-use fp_bindgen::{prelude::*, RustPluginConfig};
+use fp_bindgen::{prelude::*, RustPluginConfig, WasmerRuntimeConfig};
 use std::collections::BTreeMap;
 use types::*;
 
@@ -23,28 +23,39 @@ fp_export! {
 }
 
 fn main() {
-    const BINDINGS: &[(BindingsType, &str)] = &[
-        (BindingsType::RustPlugin, "../fp-provider"),
-        (
-            BindingsType::RustWasmerRuntime,
-            "../runtimes/fp-provider-runtime/src",
-        ),
-        (BindingsType::TsRuntime, "../runtimes/ts-runtime"),
-    ];
-
-    for (bindings_type, path) in BINDINGS {
+    {
+        let path = "../fp-provider";
         fp_bindgen!(BindingConfig {
-            bindings_type: *bindings_type,
-            path,
-            rust_plugin_config: Some(RustPluginConfig {
+            bindings_type: BindingsType::RustPlugin(RustPluginConfig {
                 name: "fp-provider",
                 authors: r#"["Fiberplane <info@fiberplane.com>"]"#,
                 version: "1.0.0-alpha.1",
-                dependencies: BTreeMap::new()
-            })
+                dependencies: BTreeMap::new(),
+            }),
+            path,
         });
-        println!("Generated bindings written to `{}/`.", path);
+        println!("Rust plugin bindings written to `{}/`.", path);
     }
 
-    println!("Bindings generated.");
+    {
+        let path = "../runtimes/fp-provider-runtime/src";
+        fp_bindgen!(BindingConfig {
+            bindings_type: BindingsType::RustWasmerRuntime(WasmerRuntimeConfig {
+                generate_raw_export_wrappers: true,
+            }),
+            path,
+        });
+        println!("Rust Wasmer runtime bindings written to `{}/`.", path);
+    }
+
+    {
+        let path = "../runtimes/ts-runtime";
+        fp_bindgen!(BindingConfig {
+            bindings_type: BindingsType::TsRuntime(TsRuntimeConfig {
+                generate_raw_export_wrappers: true,
+            }),
+            path,
+        });
+        println!("TypeScript runtime bindings written to `{}/`.", path);
+    }
 }

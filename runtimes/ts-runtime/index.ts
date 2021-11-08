@@ -38,6 +38,7 @@ export type Imports = {
 
 export type Exports = {
     invoke?: (request: ProviderRequest, config: Config) => Promise<ProviderResponse>;
+    invokeRaw?: (request: Uint8Array, config: Uint8Array) => Promise<Uint8Array>;
 };
 
 /**
@@ -62,7 +63,7 @@ export async function createRuntime(
     plugin: ArrayBuffer,
     importFunctions: Imports
 ): Promise<Exports> {
-    const promises = new Map<FatPtr, (result: unknown) => void>();
+    const promises = new Map<FatPtr, (result: FatPtr) => void>();
 
     function createAsyncValue(): FatPtr {
         const len = 12; // std::mem::size_of::<AsyncValue>()
@@ -81,9 +82,9 @@ export async function createRuntime(
         return object;
     }
 
-    function promiseFromPtr<T>(ptr: FatPtr): Promise<T> {
-        return new Promise<T>((resolve) => {
-            promises.set(ptr, resolve as (result: unknown) => void);
+    function promiseFromPtr(ptr: FatPtr): Promise<FatPtr> {
+        return new Promise((resolve) => {
+            promises.set(ptr, resolve as (result: FatPtr) => void);
         });
     }
 
@@ -93,16 +94,28 @@ export async function createRuntime(
             throw new FPRuntimeError("Tried to resolve unknown promise");
         }
 
-        resolve(resultPtr ? parseObject(resultPtr) : undefined);
+        resolve(resultPtr);
     }
 
     function serializeObject<T>(object: T): FatPtr {
-        const serialized = encode(object);
+        return exportToMemory(encode(object));
+    }
+
+    function exportToMemory(serialized: Uint8Array): FatPtr {
         const fatPtr = malloc(serialized.length);
         const [ptr, len] = fromFatPtr(fatPtr);
         const buffer = new Uint8Array(memory.buffer, ptr, len);
         buffer.set(serialized);
         return fatPtr;
+    }
+
+    function importFromMemory(fatPtr: FatPtr): Uint8Array {
+        const [ptr, len] = fromFatPtr(fatPtr);
+        const buffer = new Uint8Array(memory.buffer, ptr, len);
+        const copy = new Uint8Array(len);
+        copy.set(buffer);
+        free(fatPtr);
+        return copy;
     }
 
     const { instance } = await WebAssembly.instantiate(plugin, {
@@ -157,7 +170,17 @@ export async function createRuntime(
             return (request: ProviderRequest, config: Config) => {
                 const request_ptr = serializeObject(request);
                 const config_ptr = serializeObject(config);
-                return promiseFromPtr<ProviderResponse>(export_fn(request_ptr, config_ptr));
+                return promiseFromPtr(export_fn(request_ptr, config_ptr)).then((ptr) => parseObject<ProviderResponse>(ptr));
+            };
+        })(),
+        invokeRaw: (() => {
+            const export_fn = instance.exports.__fp_gen_invoke as any;
+            if (!export_fn) return;
+
+            return (request: Uint8Array, config: Uint8Array) => {
+                const request_ptr = exportToMemory(request);
+                const config_ptr = exportToMemory(config);
+                return promiseFromPtr(export_fn(request_ptr, config_ptr)).then(importFromMemory);
             };
         })(),
     };

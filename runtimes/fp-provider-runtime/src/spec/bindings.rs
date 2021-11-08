@@ -2,8 +2,8 @@ use super::types::*;
 use crate::errors::InvocationError;
 use crate::{
     support::{
-        create_future_value, export_to_guest, import_from_guest, resolve_async_value,
-        FatPtr, ModuleFuture,
+        create_future_value, export_to_guest, export_to_guest_raw, import_from_guest,
+        resolve_async_value, FatPtr, ModuleRawFuture,
     },
     Runtime, RuntimeInstanceData,
 };
@@ -30,7 +30,31 @@ impl Runtime {
             _ => return Err(InvocationError::UnexpectedReturnType),
         };
 
-        Ok(ModuleFuture::new(env.clone(), async_ptr).await)
+        let raw_result = ModuleRawFuture::new(env.clone(), async_ptr).await;
+        Ok(rmp_serde::from_slice(&raw_result).unwrap())
+    }
+
+    pub async fn invoke_raw(&self, request: Vec<u8>, config: Vec<u8>) -> Result<Vec<u8>, InvocationError> {
+        let mut env = RuntimeInstanceData::default();
+        let import_object = create_import_object(self.module.store(), &env);
+        let instance = Instance::new(&self.module, &import_object).unwrap();
+        env.init_with_instance(&instance).unwrap();
+
+        let request = export_to_guest_raw(&env, request);
+        let config = export_to_guest_raw(&env, config);
+
+        let function = instance
+            .exports
+            .get_function("__fp_gen_invoke")
+            .map_err(|_| InvocationError::FunctionNotExported)?;
+        let result = function.call(&[request.into(), config.into()])?;
+
+        let async_ptr: FatPtr = match result[0] {
+            Value::I64(v) => unsafe { std::mem::transmute(v) },
+            _ => return Err(InvocationError::UnexpectedReturnType),
+        };
+
+        Ok(ModuleRawFuture::new(env.clone(), async_ptr).await)
     }
 }
 
