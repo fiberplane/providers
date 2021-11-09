@@ -1,4 +1,3 @@
-use chrono::{DateTime, Utc};
 use fp_provider::*;
 use serde::Deserialize;
 use std::{
@@ -6,6 +5,7 @@ use std::{
     num::ParseFloatError,
     time::{Duration, SystemTime},
 };
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 const ONE_MINUTE: u32 = 60; // seconds
 const ONE_HOUR: u32 = 60 * ONE_MINUTE; // seconds
@@ -293,7 +293,9 @@ fn step_for_range(range: &TimeRange) -> StepSize {
 
 fn to_iso_date(timestamp: Timestamp) -> String {
     let time = SystemTime::UNIX_EPOCH + Duration::from_millis((timestamp * 1000.0) as u64);
-    DateTime::<Utc>::from(time).format("%+").to_string()
+    OffsetDateTime::from(time)
+        .format(&Rfc3339)
+        .expect("Error formatting timestamp as RFC3339 timestamp")
 }
 
 fn to_metric(mut labels: HashMap<String, String>) -> Metric {
