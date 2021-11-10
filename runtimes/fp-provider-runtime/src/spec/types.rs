@@ -4,7 +4,7 @@ use std::collections::HashMap;
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
 }
 
@@ -30,9 +30,9 @@ pub enum Error {
 pub struct HttpRequest {
     pub url: String,
     pub method: HttpRequestMethod,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub headers: Option<HashMap<String, String>>,
-    #[serde(skip_serializing_if = "Option::is_none", with = "serde_bytes")]
+    #[serde(default, skip_serializing_if = "Option::is_none", with = "serde_bytes")]
     pub body: Option<Vec<u8>>,
 }
 
@@ -168,7 +168,7 @@ pub struct Suggestion {
     pub text: String,
 
     /// Optional description to go along with this suggestion.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 
