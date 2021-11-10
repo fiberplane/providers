@@ -23,6 +23,7 @@ import type {
     QueryTimeRange,
     Result,
     Series,
+    Suggestion,
     TimeRange,
     Timestamp,
 } from "./types";

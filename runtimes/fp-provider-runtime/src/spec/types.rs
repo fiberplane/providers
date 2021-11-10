@@ -105,6 +105,9 @@ pub enum ProviderRequest {
     Instant(QueryInstant),
     Series(QueryTimeRange),
     Proxy(ProxyRequest),
+    /// Requests a list of auto-suggestions. Note that these are
+    /// context-unaware.
+    AutoSuggest,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -116,6 +119,8 @@ pub enum ProviderResponse {
     Instant { instants: Vec<Instant> },
     #[serde(rename_all = "camelCase")]
     Series { series: Vec<Series> },
+    #[serde(rename_all = "camelCase")]
+    AutoSuggest { suggestions: Vec<Suggestion> },
 }
 
 /// Relays requests for a data-source to a proxy server registered with the API.
@@ -154,6 +159,17 @@ pub struct QueryTimeRange {
 pub struct Series {
     pub metric: Metric,
     pub points: Vec<Point>,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Suggestion {
+    /// Suggested text.
+    pub text: String,
+
+    /// Optional description to go along with this suggestion.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
 }
 
 /// A range in time from a given timestamp (inclusive) up to another timestamp

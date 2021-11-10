@@ -12,6 +12,7 @@ pub enum ProviderResponse {
     Error { error: Error },
     Instant { instants: Vec<Instant> },
     Series { series: Vec<Series> },
+    AutoSuggest { suggestions: Vec<Suggestion> },
 }
 
 // TODO derive Error trait
@@ -61,4 +62,14 @@ pub struct Series {
 pub struct Metric {
     pub name: String,
     pub labels: HashMap<String, String>,
+}
+
+#[derive(Serializable, Debug)]
+#[fp(rename_all = "camelCase")]
+pub struct Suggestion {
+    /// Suggested text.
+    text: String,
+
+    /// Optional description to go along with this suggestion.
+    description: Option<String>,
 }

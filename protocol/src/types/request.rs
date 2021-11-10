@@ -11,6 +11,9 @@ pub enum ProviderRequest {
     Instant(QueryInstant),
     Series(QueryTimeRange),
     Proxy(ProxyRequest),
+    /// Requests a list of auto-suggestions. Note that these are
+    /// context-unaware.
+    AutoSuggest,
 }
 
 #[derive(Serializable, Debug)]

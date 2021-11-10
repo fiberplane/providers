@@ -83,12 +83,18 @@ export type Point = {
 export type ProviderRequest =
     | { type: "instant" } & QueryInstant
     | { type: "series" } & QueryTimeRange
-    | { type: "proxy" } & ProxyRequest;
+    | { type: "proxy" } & ProxyRequest
+    /**
+     * Requests a list of auto-suggestions. Note that these are
+     * context-unaware.
+     */
+    | { type: "auto_suggest" };
 
 export type ProviderResponse =
     | { type: "error"; error: Error }
     | { type: "instant"; instants: Array<Instant> }
-    | { type: "series"; series: Array<Series> };
+    | { type: "series"; series: Array<Series> }
+    | { type: "auto_suggest"; suggestions: Array<Suggestion> };
 
 /**
  * Relays requests for a data-source to a proxy server registered with the API.
@@ -140,6 +146,18 @@ export type Result<T, E> =
 export type Series = {
     metric: Metric;
     points: Array<Point>;
+};
+
+export type Suggestion = {
+    /**
+     * Suggested text.
+     */
+    text: string;
+
+    /**
+     * Optional description to go along with this suggestion.
+     */
+    description?: string;
 };
 
 /**

@@ -1,7 +1,7 @@
 use fp_provider::*;
 use serde::Deserialize;
 use std::{
-    collections::HashMap,
+    collections::{BTreeMap, HashMap},
     num::ParseFloatError,
     time::{Duration, SystemTime},
 };
@@ -35,6 +35,10 @@ async fn invoke(request: ProviderRequest, config: Config) -> ProviderResponse {
         ProviderRequest::Series(query) => fetch_series(query, url)
             .await
             .map(|series| ProviderResponse::Series { series })
+            .unwrap_or_else(|error| ProviderResponse::Error { error }),
+        ProviderRequest::AutoSuggest => fetch_suggestions(url)
+            .await
+            .map(|suggestions| ProviderResponse::AutoSuggest { suggestions })
             .unwrap_or_else(|error| ProviderResponse::Error { error }),
         request => {
             log(format!(
@@ -72,10 +76,6 @@ async fn fetch_instant(request: QueryInstant, url: String) -> Result<Vec<Instant
         url,
     })
     .await;
-    log(format!(
-        "prometheus provider got HTTP response: {:?}",
-        result
-    ));
     match result {
         Ok(response) => from_vector(&response.body),
         Err(error) => Err(Error::Http { error }),
@@ -120,12 +120,24 @@ async fn fetch_series(request: QueryTimeRange, url: String) -> Result<Vec<Series
         url,
     })
     .await;
-    log(format!(
-        "prometheus provider got HTTP response: {:?}",
-        result
-    ));
     match result {
         Ok(response) => from_matrix(&response.body),
+        Err(error) => Err(Error::Http { error }),
+    }
+}
+
+async fn fetch_suggestions(url: String) -> Result<Vec<Suggestion>, Error> {
+    let url = format!("{}/api/v1/metadata", url);
+
+    let result = make_http_request(HttpRequest {
+        body: None,
+        headers: None,
+        method: HttpRequestMethod::Get,
+        url,
+    })
+    .await;
+    match result {
+        Ok(response) => from_metadata(&response.body),
         Err(error) => Err(Error::Http { error }),
     }
 }
@@ -147,6 +159,17 @@ enum PrometheusData {
 struct InstantVector {
     metric: HashMap<String, String>,
     value: PrometheusPoint,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PrometheusMetadataResponse {
+    data: BTreeMap<String, Vec<Metadata>>,
+}
+
+#[derive(Deserialize)]
+struct Metadata {
+    help: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -212,6 +235,27 @@ fn from_matrix(response: &[u8]) -> Result<Vec<Series>, Error> {
         .map_err(|error| Error::Data {
             message: format!("Error parsing response: {}", error),
         })
+}
+
+fn from_metadata(response: &[u8]) -> Result<Vec<Suggestion>, Error> {
+    let response = match serde_json::from_slice::<PrometheusMetadataResponse>(response) {
+        Ok(response) => response.data,
+        Err(error) => {
+            return Err(Error::Data {
+                message: format!("Error parsing response: {}", error),
+            })
+        }
+    };
+
+    Ok(response
+        .into_iter()
+        .filter_map(|(name, values)| {
+            values.into_iter().next().map(|value| Suggestion {
+                text: name,
+                description: value.help,
+            })
+        })
+        .collect())
 }
 
 #[derive(Clone, Copy)]
