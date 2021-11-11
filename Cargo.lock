@@ -109,20 +109,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "chrono"
-version = "0.4.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
-dependencies = [
- "libc",
- "num-integer",
- "num-traits",
- "serde",
- "time 0.1.44",
- "winapi",
-]
-
-[[package]]
 name = "cranelift-bforest"
 version = "0.74.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -357,7 +343,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#f1e24487c41f7337bdfe110ce80e64e8e2f7fa4a"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#f85ad9d164cc872f135457ad7316ced3bdd1afa1"
 dependencies = [
  "Inflector",
  "dashmap",
@@ -366,13 +352,15 @@ dependencies = [
  "pretty_assertions",
  "proc-macro2",
  "quote",
+ "serde_bytes",
  "syn",
+ "time",
 ]
 
 [[package]]
 name = "fp-bindgen-macros"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#f1e24487c41f7337bdfe110ce80e64e8e2f7fa4a"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#f85ad9d164cc872f135457ad7316ced3bdd1afa1"
 dependencies = [
  "once_cell",
  "proc-macro-error",
@@ -384,9 +372,8 @@ dependencies = [
 [[package]]
 name = "fp-bindgen-support"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#f1e24487c41f7337bdfe110ce80e64e8e2f7fa4a"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#f85ad9d164cc872f135457ad7316ced3bdd1afa1"
 dependencies = [
- "chrono",
  "fp-bindgen-macros",
  "once_cell",
  "rmp-serde",
@@ -812,16 +799,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num-integer"
-version = "0.1.44"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"
-dependencies = [
- "autocfg",
- "num-traits",
-]
-
-[[package]]
 name = "num-traits"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -964,7 +941,7 @@ dependencies = [
  "fp-provider",
  "serde",
  "serde_json",
- "time 0.3.4",
+ "time",
 ]
 
 [[package]]
@@ -1431,17 +1408,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "time"
-version = "0.1.44"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6db9e6914ab8b1ae1c260a4ae7a49b6c5611b40328a735b21862567685e73255"
-dependencies = [
- "libc",
- "wasi",
- "winapi",
 ]
 
 [[package]]
