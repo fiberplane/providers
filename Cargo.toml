@@ -10,3 +10,6 @@ members = [
     "providers/proxy",
     "runtimes/fp-provider-runtime",
 ]
+
+# [patch."ssh://git@github.com/fiberplane/fp-bindgen.git"]
+# fp-bindgen = { path = "../fp-bindgen/fp-bindgen" }

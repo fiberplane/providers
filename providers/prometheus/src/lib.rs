@@ -1,5 +1,6 @@
 use fp_provider::*;
 use serde::Deserialize;
+use serde_bytes::ByteBuf;
 use std::{
     collections::{BTreeMap, HashMap},
     num::ParseFloatError,
@@ -70,7 +71,7 @@ async fn fetch_instant(request: QueryInstant, url: String) -> Result<Vec<Instant
     ));
 
     let result = make_http_request(HttpRequest {
-        body: Some(form_data.finish().into()),
+        body: Some(ByteBuf::from(form_data.finish())),
         headers: Some(headers),
         method: HttpRequestMethod::Post,
         url,
@@ -114,7 +115,7 @@ async fn fetch_series(request: QueryTimeRange, url: String) -> Result<Vec<Series
     ));
 
     let result = make_http_request(HttpRequest {
-        body: Some(form_data.finish().into()),
+        body: Some(ByteBuf::from(form_data.finish())),
         headers: Some(headers),
         method: HttpRequestMethod::Post,
         url,

@@ -1,4 +1,5 @@
 use rand::Rng;
+use serde_bytes::ByteBuf;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{debug, trace};
@@ -23,7 +24,7 @@ pub async fn make_http_request(req: HttpRequest) -> Result<HttpResponse, HttpReq
         HttpRequestMethod::Post => client.post(url.clone()),
     };
     if let Some(body) = req.body {
-        builder = builder.body(body);
+        builder = builder.body(body.into_vec());
     }
     if let Some(headers) = req.headers {
         for (key, value) in headers.iter() {
@@ -54,13 +55,13 @@ pub async fn make_http_request(req: HttpRequest) -> Result<HttpResponse, HttpReq
                     let body = body.to_vec();
                     if (200..300).contains(&status_code) {
                         Ok(HttpResponse {
-                            body,
+                            body: ByteBuf::from(body),
                             headers,
                             status_code,
                         })
                     } else {
                         Err(HttpRequestError::ServerError {
-                            response: body,
+                            response: ByteBuf::from(body),
                             status_code,
                         })
                     }

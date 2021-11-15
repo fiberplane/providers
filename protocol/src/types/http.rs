@@ -1,4 +1,5 @@
 use fp_bindgen::prelude::*;
+use serde_bytes::ByteBuf;
 use std::collections::HashMap;
 
 /// HTTP request options.
@@ -8,7 +9,7 @@ pub struct HttpRequest {
     pub url: String,
     pub method: HttpRequestMethod,
     pub headers: Option<HashMap<String, String>>,
-    pub body: Option<Vec<u8>>,
+    pub body: Option<ByteBuf>,
 }
 
 /// Possible errors that may happen during an HTTP request.
@@ -20,7 +21,7 @@ pub enum HttpRequestError {
     NoRoute,
     ConnectionRefused,
     Timeout,
-    ServerError { status_code: u16, response: Vec<u8> },
+    ServerError { status_code: u16, response: ByteBuf },
     Other { reason: String },
 }
 
@@ -41,7 +42,7 @@ pub enum HttpRequestMethod {
 #[derive(Serializable, Debug)]
 #[fp(rename_all = "camelCase")]
 pub struct HttpResponse {
-    pub body: Vec<u8>,
+    pub body: ByteBuf,
     pub headers: HashMap<String, String>,
     pub status_code: u16,
 }

@@ -283,6 +283,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e25ea47919b1560c4e3b7fe0aaab9becf5b84a10325ddf7db0f0ba5e1026499"
 
 [[package]]
+name = "dynasm"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cdc2d9a5e44da60059bd38db2d05cbb478619541b8c79890547861ec1e3194f0"
+dependencies = [
+ "bitflags",
+ "byteorder",
+ "lazy_static",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "dynasmrt"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42276e3f205fe63887cca255aa9a65a63fb72764c30b9a6252a7c7e46994f689"
+dependencies = [
+ "byteorder",
+ "dynasm",
+ "memmap2",
+]
+
+[[package]]
 name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -343,7 +369,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#f85ad9d164cc872f135457ad7316ced3bdd1afa1"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#e503a4ac58bc7d9133b3a638c17e9227577ee2c3"
 dependencies = [
  "Inflector",
  "dashmap",
@@ -360,7 +386,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen-macros"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#f85ad9d164cc872f135457ad7316ced3bdd1afa1"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#e503a4ac58bc7d9133b3a638c17e9227577ee2c3"
 dependencies = [
  "once_cell",
  "proc-macro-error",
@@ -372,13 +398,12 @@ dependencies = [
 [[package]]
 name = "fp-bindgen-support"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#f85ad9d164cc872f135457ad7316ced3bdd1afa1"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#e503a4ac58bc7d9133b3a638c17e9227577ee2c3"
 dependencies = [
  "fp-bindgen-macros",
  "once_cell",
  "rmp-serde",
  "serde",
- "serde_bytes",
 ]
 
 [[package]]
@@ -940,6 +965,7 @@ dependencies = [
  "form_urlencoded",
  "fp-provider",
  "serde",
+ "serde_bytes",
  "serde_json",
  "time",
 ]
@@ -1666,6 +1692,7 @@ dependencies = [
  "thiserror",
  "wasmer-compiler",
  "wasmer-compiler-cranelift",
+ "wasmer-compiler-singlepass",
  "wasmer-derive",
  "wasmer-engine",
  "wasmer-engine-dylib",
@@ -1710,6 +1737,25 @@ dependencies = [
  "rayon",
  "smallvec",
  "tracing",
+ "wasmer-compiler",
+ "wasmer-types",
+ "wasmer-vm",
+]
+
+[[package]]
+name = "wasmer-compiler-singlepass"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9429b9f7708c582d855b1787f09c7029ff23fb692550d4a1cc351c8ea84c3014"
+dependencies = [
+ "byteorder",
+ "dynasm",
+ "dynasmrt",
+ "lazy_static",
+ "loupe",
+ "more-asserts",
+ "rayon",
+ "smallvec",
  "wasmer-compiler",
  "wasmer-types",
  "wasmer-vm",

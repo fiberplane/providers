@@ -32,8 +32,8 @@ pub struct HttpRequest {
     pub method: HttpRequestMethod,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub headers: Option<HashMap<String, String>>,
-    #[serde(default, skip_serializing_if = "Option::is_none", with = "serde_bytes")]
-    pub body: Option<Vec<u8>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub body: Option<serde_bytes::ByteBuf>,
 }
 
 /// Possible errors that may happen during an HTTP request.
@@ -45,11 +45,7 @@ pub enum HttpRequestError {
     ConnectionRefused,
     Timeout,
     #[serde(rename_all = "camelCase")]
-    ServerError {
-        status_code: u16,
-        #[serde(with = "serde_bytes")]
-        response: Vec<u8>,
-    },
+    ServerError { status_code: u16, response: serde_bytes::ByteBuf },
     #[serde(rename_all = "camelCase")]
     Other { reason: String },
 }
@@ -68,8 +64,7 @@ pub enum HttpRequestMethod {
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HttpResponse {
-    #[serde(with = "serde_bytes")]
-    pub body: Vec<u8>,
+    pub body: serde_bytes::ByteBuf,
     pub headers: HashMap<String, String>,
     pub status_code: u16,
 }
@@ -134,8 +129,7 @@ pub struct ProxyRequest {
     pub data_source_name: String,
 
     /// Request data to send to the proxy
-    #[serde(with = "serde_bytes")]
-    pub request: Vec<u8>,
+    pub request: serde_bytes::ByteBuf,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]

@@ -1,5 +1,6 @@
 use super::Timestamp;
 use fp_bindgen::prelude::Serializable;
+use serde_bytes::ByteBuf;
 
 #[non_exhaustive]
 #[derive(Serializable, Debug)]
@@ -41,7 +42,7 @@ pub struct ProxyRequest {
     pub data_source_name: String,
 
     /// Request data to send to the proxy
-    pub request: Vec<u8>,
+    pub request: ByteBuf,
 }
 
 /// A range in time from a given timestamp (inclusive) up to another timestamp
