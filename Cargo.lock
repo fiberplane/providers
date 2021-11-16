@@ -360,7 +360,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#5285384aa04a7289b599182a20b6a0937a522f9a"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#9d2ce11b69efb7bf04f5d24c45f57e0e41d1f3c1"
 dependencies = [
  "Inflector",
  "dashmap",
@@ -377,7 +377,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen-macros"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#5285384aa04a7289b599182a20b6a0937a522f9a"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#9d2ce11b69efb7bf04f5d24c45f57e0e41d1f3c1"
 dependencies = [
  "once_cell",
  "proc-macro-error",
@@ -389,7 +389,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen-support"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#5285384aa04a7289b599182a20b6a0937a522f9a"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#9d2ce11b69efb7bf04f5d24c45f57e0e41d1f3c1"
 dependencies = [
  "fp-bindgen-macros",
  "once_cell",
@@ -423,6 +423,7 @@ dependencies = [
  "wasmer",
  "wasmer-compiler-cranelift",
  "wasmer-compiler-singlepass",
+ "wasmer-engine-universal",
 ]
 
 [[package]]
@@ -1633,7 +1634,6 @@ dependencies = [
  "wasmer-compiler",
  "wasmer-derive",
  "wasmer-engine",
- "wasmer-engine-universal",
  "wasmer-types",
  "wasmer-vm",
  "winapi",
