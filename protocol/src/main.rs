@@ -1,6 +1,6 @@
 mod types;
 
-use fp_bindgen::{prelude::*, RustPluginConfig, WasmerRuntimeConfig};
+use fp_bindgen::{prelude::*, RustPluginConfig};
 use std::collections::BTreeMap;
 use types::*;
 
@@ -40,9 +40,7 @@ fn main() {
     {
         let path = "../runtimes/fp-provider-runtime/src";
         fp_bindgen!(BindingConfig {
-            bindings_type: BindingsType::RustWasmerRuntime(WasmerRuntimeConfig {
-                generate_raw_export_wrappers: true,
-            }),
+            bindings_type: BindingsType::RustWasmerRuntime,
             path,
         });
         println!("Rust Wasmer runtime bindings written to `{}/`.", path);

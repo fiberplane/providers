@@ -5,6 +5,10 @@ authors = ["Fiberplane <info@fiberplane.com>"]
 edition = "2018"
 
 [dependencies]
+fp-bindgen-support = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main", features = [
+    "async",
+    "host",
+] }
 rand = "0.8.0"
 reqwest = { version = "0.11.4", default-features = false, features = [
     "rustls-tls",
