@@ -38,7 +38,7 @@ fn main() {
     }
 
     {
-        let path = "../runtimes/fp-provider-runtime/src";
+        let path = "../runtimes/fp-provider-runtime/src/spec";
         fp_bindgen!(BindingConfig {
             bindings_type: BindingsType::RustWasmerRuntime,
             path,

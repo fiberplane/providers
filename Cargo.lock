@@ -369,7 +369,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#5cdc020db550262542e73d942d17d85149112d8d"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#0e35fe492f91ce589db6d03e42016d520f615827"
 dependencies = [
  "Inflector",
  "dashmap",
@@ -387,7 +387,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen-macros"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#5cdc020db550262542e73d942d17d85149112d8d"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#0e35fe492f91ce589db6d03e42016d520f615827"
 dependencies = [
  "once_cell",
  "proc-macro-error",
@@ -399,7 +399,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen-support"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#5cdc020db550262542e73d942d17d85149112d8d"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#0e35fe492f91ce589db6d03e42016d520f615827"
 dependencies = [
  "fp-bindgen-macros",
  "once_cell",
