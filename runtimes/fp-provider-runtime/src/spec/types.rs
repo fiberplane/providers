@@ -78,6 +78,20 @@ pub struct Instant {
     pub point: Point,
 }
 
+/// An individual log record
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LogRecord {
+    pub timestamp: Timestamp,
+    pub body: String,
+    pub attributes: HashMap<String, String>,
+    pub resource: HashMap<String, String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trace_id: Option<serde_bytes::ByteBuf>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub span_id: Option<serde_bytes::ByteBuf>,
+}
+
 /// Meta-data about a metric.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -103,6 +117,7 @@ pub enum ProviderRequest {
     /// Requests a list of auto-suggestions. Note that these are
     /// context-unaware.
     AutoSuggest,
+    Logs(QueryLogs),
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -116,6 +131,8 @@ pub enum ProviderResponse {
     Series { series: Vec<Series> },
     #[serde(rename_all = "camelCase")]
     AutoSuggest { suggestions: Vec<Suggestion> },
+    #[serde(rename_all = "camelCase")]
+    LogRecords { log_records: Vec<LogRecord> },
 }
 
 /// Relays requests for a data-source to a proxy server registered with the API.
@@ -137,6 +154,15 @@ pub struct ProxyRequest {
 pub struct QueryInstant {
     pub query: String,
     pub timestamp: Timestamp,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QueryLogs {
+    pub query: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub limit: Option<u32>,
+    pub time_range: TimeRange,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]

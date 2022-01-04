@@ -1,0 +1,18 @@
+[package]
+name = "elasticsearch-provider"
+version = "0.1.0"
+authors = ["Fiberplane <info@fiberplane.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+elasticsearch-dsl = "0.1"
+fp-provider = { version = "1.0.0-alpha.1", path = "../../fp-provider" }
+hex = "0.4.3"
+serde = { version = "1", features = ["derive"] }
+serde_bytes = "0.11.5"
+serde_json = "1"
+time = { git = "https://github.com/time-rs/time.git", rev = "740c606e71bafad70c0242f0e850b8fc6cf5f4ab", features = ["serde", "serde-well-known"] }
+url = "2.2.2"

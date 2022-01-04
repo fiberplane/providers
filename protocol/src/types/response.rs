@@ -1,5 +1,6 @@
 use super::{HttpRequestError, Timestamp};
 use fp_bindgen::prelude::Serializable;
+use serde_bytes::ByteBuf;
 use std::collections::HashMap;
 
 #[non_exhaustive]
@@ -13,6 +14,7 @@ pub enum ProviderResponse {
     Instant { instants: Vec<Instant> },
     Series { series: Vec<Series> },
     AutoSuggest { suggestions: Vec<Suggestion> },
+    LogRecords { log_records: Vec<LogRecord> },
 }
 
 // TODO derive Error trait
@@ -72,4 +74,18 @@ pub struct Suggestion {
 
     /// Optional description to go along with this suggestion.
     description: Option<String>,
+}
+
+/// An individual log record
+#[derive(Serializable, Debug)]
+#[fp(rename_all = "camelCase")]
+pub struct LogRecord {
+    pub timestamp: Timestamp,
+    pub body: String,
+    pub attributes: HashMap<String, String>,
+    pub resource: HashMap<String, String>,
+    // TODO these should really be [u8; 16], but arrays are
+    // not currently supported by fp-bindgen
+    pub trace_id: Option<ByteBuf>,
+    pub span_id: Option<ByteBuf>,
 }

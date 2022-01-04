@@ -1,6 +1,6 @@
 mod types;
 
-use fp_bindgen::{prelude::*, RustPluginConfig};
+use fp_bindgen::prelude::*;
 use std::collections::BTreeMap;
 use types::*;
 

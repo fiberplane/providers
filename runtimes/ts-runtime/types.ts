@@ -65,6 +65,18 @@ export type Instant = {
 };
 
 /**
+ * An individual log record
+ */
+export type LogRecord = {
+    timestamp: Timestamp;
+    body: string;
+    attributes: Record<string, string>;
+    resource: Record<string, string>;
+    traceId?: ArrayBuffer;
+    spanId?: ArrayBuffer;
+};
+
+/**
  * Meta-data about a metric.
  */
 export type Metric = {
@@ -88,13 +100,15 @@ export type ProviderRequest =
      * Requests a list of auto-suggestions. Note that these are
      * context-unaware.
      */
-    | { type: "auto_suggest" };
+    | { type: "auto_suggest" }
+    | { type: "logs" } & QueryLogs;
 
 export type ProviderResponse =
     | { type: "error"; error: Error }
     | { type: "instant"; instants: Array<Instant> }
     | { type: "series"; series: Array<Series> }
-    | { type: "auto_suggest"; suggestions: Array<Suggestion> };
+    | { type: "auto_suggest"; suggestions: Array<Suggestion> }
+    | { type: "log_records"; logRecords: Array<LogRecord> };
 
 /**
  * Relays requests for a data-source to a proxy server registered with the API.
@@ -119,6 +133,12 @@ export type ProxyRequest = {
 export type QueryInstant = {
     query: string;
     timestamp: Timestamp;
+};
+
+export type QueryLogs = {
+    query: string;
+    limit?: number;
+    timeRange: TimeRange;
 };
 
 export type QueryTimeRange = {

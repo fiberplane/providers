@@ -8,6 +8,7 @@ members = [
     "protocol",
     "providers/prometheus",
     "providers/proxy",
+    "providers/elasticsearch",
     "runtimes/fp-provider-runtime",
 ]
 

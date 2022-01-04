@@ -15,6 +15,7 @@ pub enum ProviderRequest {
     /// Requests a list of auto-suggestions. Note that these are
     /// context-unaware.
     AutoSuggest,
+    Logs(QueryLogs),
 }
 
 #[derive(Serializable, Debug)]
@@ -52,4 +53,12 @@ pub struct ProxyRequest {
 pub struct TimeRange {
     pub from: Timestamp,
     pub to: Timestamp,
+}
+
+#[derive(Serializable, Debug)]
+#[fp(rename_all = "camelCase")]
+pub struct QueryLogs {
+    pub query: String,
+    pub limit: Option<u32>,
+    pub time_range: TimeRange,
 }

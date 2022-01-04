@@ -43,8 +43,8 @@ impl Runtime {
         request: ProviderRequest,
         config: Config,
     ) -> Result<ProviderResponse, InvocationError> {
-        let request = rmp_serde::to_vec(&request).unwrap();
-        let config = rmp_serde::to_vec(&config).unwrap();
+        let request = serialize_to_vec(&request);
+        let config = serialize_to_vec(&config);
         let result = self.invoke_raw(request, config);
         let result = result.await;
         let result = result.map(|ref data| deserialize_from_slice(data));

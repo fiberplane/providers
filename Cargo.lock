@@ -109,6 +109,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "chrono"
+version = "0.4.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
+dependencies = [
+ "num-integer",
+ "num-traits",
+ "serde",
+]
+
+[[package]]
 name = "cranelift-bforest"
 version = "0.74.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -315,6 +326,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
+name = "elasticsearch-dsl"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2020c32f32e64d2960131d8cd4cacb74caec932cd8f2569fb36ae68bb60c50a2"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "elasticsearch-provider"
+version = "0.1.0"
+dependencies = [
+ "elasticsearch-dsl",
+ "fp-provider",
+ "hex",
+ "serde",
+ "serde_bytes",
+ "serde_json",
+ "time 0.3.5 (git+https://github.com/time-rs/time.git?rev=740c606e71bafad70c0242f0e850b8fc6cf5f4ab)",
+ "url",
+]
+
+[[package]]
 name = "encoding_rs"
 version = "0.8.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -369,7 +405,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#0e35fe492f91ce589db6d03e42016d520f615827"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#e0eac6f12eba9bb184e55311b3e4a3323259efa6"
 dependencies = [
  "Inflector",
  "dashmap",
@@ -381,13 +417,13 @@ dependencies = [
  "rustfmt-wrapper",
  "serde_bytes",
  "syn",
- "time",
+ "time 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "fp-bindgen-macros"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#0e35fe492f91ce589db6d03e42016d520f615827"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#e0eac6f12eba9bb184e55311b3e4a3323259efa6"
 dependencies = [
  "once_cell",
  "proc-macro-error",
@@ -399,7 +435,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen-support"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#0e35fe492f91ce589db6d03e42016d520f615827"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#e0eac6f12eba9bb184e55311b3e4a3323259efa6"
 dependencies = [
  "fp-bindgen-macros",
  "once_cell",
@@ -553,6 +589,12 @@ checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "home"
@@ -845,6 +887,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-integer"
+version = "0.1.44"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"
+dependencies = [
+ "autocfg",
+ "num-traits",
+]
+
+[[package]]
 name = "num-traits"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -860,6 +912,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "05499f3756671c15885fee9034446956fff3f243d6077b91e5767df161f766b3"
 dependencies = [
  "hermit-abi",
+ "libc",
+]
+
+[[package]]
+name = "num_threads"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71a1eb3a36534514077c1e079ada2fb170ef30c47d203aa6916138cf882ecd52"
+dependencies = [
  "libc",
 ]
 
@@ -985,7 +1046,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_json",
- "time",
+ "time 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1500,6 +1561,17 @@ checksum = "41effe7cfa8af36f439fac33861b66b049edc6f9a32331e2312660529c1c24ad"
 dependencies = [
  "itoa",
  "libc",
+ "serde",
+]
+
+[[package]]
+name = "time"
+version = "0.3.5"
+source = "git+https://github.com/time-rs/time.git?rev=740c606e71bafad70c0242f0e850b8fc6cf5f4ab#740c606e71bafad70c0242f0e850b8fc6cf5f4ab"
+dependencies = [
+ "itoa",
+ "libc",
+ "num_threads",
  "serde",
 ]
 
