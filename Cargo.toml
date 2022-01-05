@@ -6,9 +6,7 @@ opt-level = 'z'
 members = [
     "fp-provider",
     "protocol",
-    "providers/prometheus",
-    "providers/proxy",
-    "providers/elasticsearch",
+    "providers/*",
     "runtimes/fp-provider-runtime",
 ]
 

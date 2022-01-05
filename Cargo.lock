@@ -765,6 +765,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "loki-provider"
+version = "0.1.0"
+dependencies = [
+ "fp-provider",
+ "serde",
+ "serde_json",
+ "url",
+]
+
+[[package]]
 name = "loupe"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
