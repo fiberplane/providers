@@ -405,7 +405,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#bee60708db97351e8b72f86f82cdaf22cbbe0420"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#ae9261df63ca262aaa00d230c6588b8f9ab19a08"
 dependencies = [
  "Inflector",
  "dashmap",
@@ -424,7 +424,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen-macros"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#bee60708db97351e8b72f86f82cdaf22cbbe0420"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#ae9261df63ca262aaa00d230c6588b8f9ab19a08"
 dependencies = [
  "once_cell",
  "proc-macro-error",
@@ -436,7 +436,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen-support"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#bee60708db97351e8b72f86f82cdaf22cbbe0420"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#ae9261df63ca262aaa00d230c6588b8f9ab19a08"
 dependencies = [
  "fp-bindgen-macros",
  "once_cell",
@@ -1315,9 +1315,9 @@ dependencies = [
 
 [[package]]
 name = "rmp-serde"
-version = "1.0.0-beta.2"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05d18f64792a930cdb215b849eb75d8d7ffaaf70c3b9bd594b5ccc5ab63b4f70"
+checksum = "f3eedffbfcc6a428f230c04baf8f59bd73c1781361e4286111fe900849aaddaf"
 dependencies = [
  "byteorder",
  "rmp",
@@ -1423,9 +1423,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.130"
+version = "1.0.133"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f12d06de37cf59146fbdecab66aa99f9fe4f78722e3607577a5375d66bd0c913"
+checksum = "97565067517b60e2d1ea8b268e59ce036de907ac523ad83a0475da04e818989a"
 dependencies = [
  "serde_derive",
 ]
@@ -1441,9 +1441,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.130"
+version = "1.0.133"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7bc1a1ab1961464eae040d96713baa5a724a8152c1222492465b54322ec508b"
+checksum = "ed201699328568d8d08208fdd080e3ff594e6c422e438b6705905da01005d537"
 dependencies = [
  "proc-macro2",
  "quote",

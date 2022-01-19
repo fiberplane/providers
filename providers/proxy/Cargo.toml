@@ -9,5 +9,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 fp-provider = { version = "1.0.0-alpha.1", path = "../../fp-provider" }
-rmp-serde = "=1.0.0-beta.2"
+rmp-serde = "1.0.0"
 urlencoding = "2"
