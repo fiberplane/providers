@@ -6,6 +6,7 @@
 
 export type Config = {
     url?: string;
+    options: Record<string, string>;
 };
 
 export type Error =

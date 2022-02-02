@@ -46,12 +46,8 @@ impl From<Timestamp> for OffsetDateTime {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct Document {
-    #[serde(alias = "@timestamp")]
-    timestamp: Timestamp,
-    #[serde(alias = "@message", alias = "body", default)]
-    message: String,
     #[serde(flatten)]
     fields: Map<String, Value>,
     // TODO parse fields from elastic common schema
@@ -75,6 +71,19 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, 
     let url = config.url.ok_or_else(|| Error::Config {
         message: "URL is required".to_string(),
     })?;
+    let timestamp_field = config
+        .options
+        .get("timestamp_name")
+        .ok_or_else(|| Error::Config {
+            message: "'timestamp_name' is required".to_string(),
+        })?;
+    let body_field = config
+        .options
+        .get("body_name")
+        .ok_or_else(|| Error::Config {
+            message: "'body_name' is required".to_string(),
+        })?;
+
     let mut url = Url::parse(&url).map_err(|e| Error::Config {
         message: format!("Invalid ElasticSearch URL: {:?}", e),
     })?;
@@ -93,8 +102,9 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, 
     // Lucene Query Syntax: https://www.elastic.co/guide/en/kibana/current/lucene-query.html
     // TODO should we determine timestamp field name from API?
     let query_string = format!(
-        "{} AND @timestamp:[{} TO {}]",
+        "{} AND {}:[{} TO {}]",
         query.query,
+        timestamp_field,
         timestamp_to_rfc3339(query.time_range.from),
         timestamp_to_rfc3339(query.time_range.to)
     );
@@ -131,13 +141,22 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, 
 
     log(format!("Got {} results", response.hits.hits.len()));
 
-    let logs = response.hits.hits.into_iter().map(parse_hit).collect();
+    let logs = response
+        .hits
+        .hits
+        .into_iter()
+        .filter_map(|hit| parse_hit(hit, &timestamp_field, &body_field))
+        .collect();
 
     Ok(logs)
 }
 
-fn parse_hit(hit: Hit<Document, Document>) -> LogRecord {
-    let source = hit.source.unwrap();
+fn parse_hit(
+    hit: Hit<Document, Document>,
+    timestamp_field: &String,
+    body_field: &String,
+) -> Option<LogRecord> {
+    let source = hit.source?;
     let mut flattened_fields = HashMap::new();
     for (key, val) in source.fields.into_iter() {
         flatten_nested_value(&mut flattened_fields, key, val);
@@ -146,7 +165,7 @@ fn parse_hit(hit: Hit<Document, Document>) -> LogRecord {
     // Parse the trace ID and span ID from hex if they exist
     let mut parse_id = |key: &str| {
         if let Some((key, val)) = flattened_fields.remove_entry(key) {
-            if let Ok(bytes) = hex::decode(val.replace("-", "")) {
+            if let Ok(bytes) = hex::decode(val.to_string().replace("-", "")) {
                 Some(ByteBuf::from(bytes))
             } else {
                 log(format!("unable to decode ID as hex in log: {}", val));
@@ -161,45 +180,39 @@ fn parse_hit(hit: Hit<Document, Document>) -> LogRecord {
     let trace_id = parse_id("trace.id");
     let span_id = parse_id("span.id");
 
+    let timestamp: Timestamp =
+        serde_json::from_value(flattened_fields.remove(timestamp_field)?).ok()?;
+    let timestamp: OffsetDateTime = timestamp.into();
+    let timestamp = timestamp.unix_timestamp() as f64;
+
+    let body: String = serde_json::from_value(flattened_fields.remove(body_field)?).ok()?;
+
     // All fields that are not mapped to the resource field
     // become part of the attributes field
     // TODO refactor this so we only make one pass over the fields
     let (resource, attributes): (HashMap<String, String>, HashMap<String, String>) =
-        flattened_fields.into_iter().partition(|(key, _)| {
-            RESOURCE_FIELD_PREFIXES
-                .iter()
-                .any(|prefix| key.starts_with(prefix))
-                && !RESOURCE_FIELD_EXCEPTIONS.contains(&key.as_str())
-        });
+        flattened_fields
+            .into_iter()
+            .map(|(k, v)| (k, v.to_string()))
+            .partition(|(key, _)| {
+                RESOURCE_FIELD_PREFIXES
+                    .iter()
+                    .any(|prefix| key.starts_with(prefix))
+                    && !RESOURCE_FIELD_EXCEPTIONS.contains(&key.as_str())
+            });
 
-    let timestamp: OffsetDateTime = source.timestamp.into();
-    let timestamp = timestamp.unix_timestamp() as f64;
-
-    LogRecord {
-        body: source.message,
+    Some(LogRecord {
+        body,
         timestamp,
         attributes,
         resource,
         trace_id,
         span_id,
-    }
+    })
 }
 
-fn flatten_nested_value(output: &mut HashMap<String, String>, key: String, value: Value) {
+fn flatten_nested_value(output: &mut HashMap<String, Value>, key: String, value: Value) {
     match value {
-        Value::Bool(v) => {
-            output.insert(key, v.to_string());
-        }
-        Value::String(v) => {
-            output.insert(key, v.to_string());
-        }
-        Value::Number(v) => {
-            output.insert(key, v.to_string());
-        }
-        Value::Null => {
-            // TODO should this be "null" or "(null)" instead?
-            output.insert(key, String::new());
-        }
         Value::Object(v) => {
             for (sub_key, val) in v.into_iter() {
                 flatten_nested_value(output, format!("{}.{}", key, sub_key), val);
@@ -210,6 +223,9 @@ fn flatten_nested_value(output: &mut HashMap<String, String>, key: String, value
                 // TODO should the separator be dots instead?
                 flatten_nested_value(output, format!("{}[{}]", key, index), val);
             }
+        }
+        v => {
+            output.insert(key, v);
         }
     };
 }
