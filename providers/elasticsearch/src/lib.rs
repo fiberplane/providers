@@ -74,15 +74,14 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, 
     let timestamp_field = config
         .options
         .get("timestamp_name")
-        .ok_or_else(|| Error::Config {
-            message: "'timestamp_name' is required".to_string(),
-        })?;
+        .cloned()
+        .unwrap_or_else(|| "@timestamp".to_owned());
+
     let body_field = config
         .options
         .get("body_name")
-        .ok_or_else(|| Error::Config {
-            message: "'body_name' is required".to_string(),
-        })?;
+        .cloned()
+        .unwrap_or_else(|| "message".to_owned());
 
     let mut url = Url::parse(&url).map_err(|e| Error::Config {
         message: format!("Invalid ElasticSearch URL: {:?}", e),
