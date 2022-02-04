@@ -278,16 +278,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dashmap"
-version = "4.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e77a43b28d0668df09411cb0bc9a8c2adc40f9a048afe863e05fd43251e8e39c"
-dependencies = [
- "cfg-if",
- "num_cpus",
-]
-
-[[package]]
 name = "diff"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -405,13 +395,11 @@ dependencies = [
 [[package]]
 name = "fp-bindgen"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#ae9261df63ca262aaa00d230c6588b8f9ab19a08"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#885fc473d023a7d152d2521fb63936fac88935d4"
 dependencies = [
  "Inflector",
- "dashmap",
  "fp-bindgen-macros",
  "http",
- "once_cell",
  "pretty_assertions",
  "proc-macro2",
  "quote",
@@ -424,9 +412,8 @@ dependencies = [
 [[package]]
 name = "fp-bindgen-macros"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#ae9261df63ca262aaa00d230c6588b8f9ab19a08"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#885fc473d023a7d152d2521fb63936fac88935d4"
 dependencies = [
- "once_cell",
  "proc-macro-error",
  "proc-macro2",
  "quote",
@@ -436,7 +423,7 @@ dependencies = [
 [[package]]
 name = "fp-bindgen-support"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#ae9261df63ca262aaa00d230c6588b8f9ab19a08"
+source = "git+ssh://git@github.com/fiberplane/fp-bindgen.git?branch=main#885fc473d023a7d152d2521fb63936fac88935d4"
 dependencies = [
  "fp-bindgen-macros",
  "once_cell",

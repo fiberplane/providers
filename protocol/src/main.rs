@@ -19,6 +19,8 @@ fp_import! {
 }
 
 fp_export! {
+    type Timestamp = f64;
+
     async fn invoke(request: ProviderRequest, config: Config) -> ProviderResponse;
 }
 
