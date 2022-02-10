@@ -21,7 +21,9 @@ pub enum HttpRequestError {
     NoRoute,
     ConnectionRefused,
     Timeout,
+    #[fp(rename_all = "camelCase")]
     ServerError { status_code: u16, response: ByteBuf },
+    #[fp(rename_all = "camelCase")]
     Other { reason: String },
 }
 

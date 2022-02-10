@@ -8,12 +8,15 @@ use std::collections::HashMap;
 #[fp(tag = "type", rename_all = "snake_case")]
 #[allow(dead_code)]
 pub enum ProviderResponse {
-    // Note that enum variants must be structs because
-    // we are using serde's internally tagged representation
+    #[fp(rename_all = "camelCase")]
     Error { error: Error },
+    #[fp(rename_all = "camelCase")]
     Instant { instants: Vec<Instant> },
+    #[fp(rename_all = "camelCase")]
     Series { series: Vec<Series> },
+    #[fp(rename_all = "camelCase")]
     AutoSuggest { suggestions: Vec<Suggestion> },
+    #[fp(rename_all = "camelCase")]
     LogRecords { log_records: Vec<LogRecord> },
 }
 
@@ -22,13 +25,16 @@ pub enum ProviderResponse {
 #[fp(tag = "type", rename_all = "snake_case")]
 #[allow(dead_code)]
 pub enum Error {
-    // Note that enum variants must be structs because
-    // we are using serde's internally tagged representation
     UnsupportedRequest,
+    #[fp(rename_all = "camelCase")]
     Http { error: HttpRequestError },
+    #[fp(rename_all = "camelCase")]
     Data { message: String },
+    #[fp(rename_all = "camelCase")]
     Deserialization { message: String },
+    #[fp(rename_all = "camelCase")]
     Config { message: String },
+    #[fp(rename_all = "camelCase")]
     Other { message: String },
 }
 
