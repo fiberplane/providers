@@ -19,11 +19,11 @@ serde_bytes = "0.11"
 thiserror = "1.0.26"
 tokio = "1.9.0"
 tracing = "0.1.29"
-wasmer = { version = "2.0", default-features = false }
-wasmer-engine-universal = { version = "2.0", features = ["compiler"] }
+wasmer = { version = "2.1", default-features = false }
+wasmer-engine-universal = { version = "2.1", features = ["compiler"] }
 
 [target.'cfg(any(target_arch = "arm", target_arch = "aarch64"))'.dependencies]
-wasmer-compiler-cranelift = { version = "2.0" }
+wasmer-compiler-cranelift = { version = "2.1" }
 
 [target.'cfg(not(any(target_arch = "arm", target_arch = "aarch64")))'.dependencies]
-wasmer-compiler-singlepass = { version = "2.0" }
+wasmer-compiler-singlepass = { version = "2.1" }
