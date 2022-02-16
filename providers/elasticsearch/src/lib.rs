@@ -6,7 +6,7 @@ use fp_provider::{
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 use serde_json::{Map, Value};
-use std::collections::HashMap;
+use std::{cmp::Ordering, collections::HashMap};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use url::Url;
 
@@ -140,20 +140,33 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, 
 
     log(format!("Got {} results", response.hits.hits.len()));
 
-    let logs = response
+    parse_response(&timestamp_field, &body_field, response)
+}
+
+fn parse_response(
+    timestamp_field: &str,
+    body_field: &str,
+    response: SearchResponse<Document, Document>,
+) -> Result<Vec<LogRecord>, Error> {
+    let mut logs: Vec<LogRecord> = response
         .hits
         .hits
         .into_iter()
         .filter_map(|hit| parse_hit(hit, &timestamp_field, &body_field))
         .collect();
-
+    // Sort logs so the newest ones are first
+    logs.sort_by(|a, b| {
+        b.timestamp
+            .partial_cmp(&a.timestamp)
+            .unwrap_or(Ordering::Equal)
+    });
     Ok(logs)
 }
 
 fn parse_hit(
     hit: Hit<Document, Document>,
-    timestamp_field: &String,
-    body_field: &String,
+    timestamp_field: &str,
+    body_field: &str,
 ) -> Option<LogRecord> {
     let source = hit.source?;
     let mut flattened_fields = HashMap::new();

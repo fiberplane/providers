@@ -1,6 +1,8 @@
 use super::*;
+use elasticsearch_dsl::{Hit, Hits, Relation, SearchResponse, Shards, Total};
 use fp_provider::common::mem::FatPtr;
 use serde_json::json;
+use std::iter::FromIterator;
 use time::OffsetDateTime;
 
 #[no_mangle]
@@ -49,4 +51,52 @@ fn timestamp_deserializes_from_rfc3339() {
             .unwrap()
             .unix_timestamp() as f64
     );
+}
+
+#[test]
+fn sorts_logs_by_timestamp_newest_first() {
+    let hit = |timestamp: &str, body: &str| Hit {
+        index: None,
+        id: "".to_string(),
+        score: None,
+        source: Some(Document {
+            fields: Map::from_iter([
+                ("timestamp".to_string(), json!(timestamp)),
+                ("body".to_string(), json!(body)),
+            ]),
+        }),
+        highlight: Default::default(),
+        inner_hits: None,
+        matched_queries: Default::default(),
+        sort: Default::default(),
+        fields: Default::default(),
+    };
+    let response: SearchResponse<Document, Document> = SearchResponse {
+        took: 0,
+        timed_out: false,
+        shards: Shards {
+            skipped: 0,
+            failures: None,
+            total: 0,
+            successful: 0,
+            failed: 0,
+        },
+        aggregations: None,
+        hits: Hits {
+            total: Some(Total {
+                value: 3,
+                relation: Relation::Equal,
+            }),
+            max_score: None,
+            hits: vec![
+                hit("2020-12-20T16:59:32.739Z", "2"),
+                hit("2020-12-20T15:59:32.739Z", "3"),
+                hit("2020-12-25T15:59:32.739Z", "1"),
+            ],
+        },
+    };
+    let logs = parse_response("timestamp", "body", response).unwrap();
+    assert_eq!(logs[0].body, "1");
+    assert_eq!(logs[1].body, "2");
+    assert_eq!(logs[2].body, "3");
 }
