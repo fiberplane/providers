@@ -111,7 +111,7 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, 
         QueryData::Matrix(d) => d,
         _ => {
             return Err(Error::Data {
-                message: format!("Query didn't return a stream or matrix"),
+                message: "Query didn't return a stream or matrix".to_string(),
             })
         }
     };

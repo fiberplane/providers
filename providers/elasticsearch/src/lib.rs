@@ -6,7 +6,7 @@ use fp_provider::{
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 use serde_json::{Map, Value};
-use std::{cmp::Ordering, collections::HashMap};
+use std::{cmp::Ordering, collections::HashMap, str::FromStr};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use url::Url;
 
@@ -23,27 +23,6 @@ static RESOURCE_FIELD_EXCEPTIONS: &[&str] = &["container.labels", "host.uptime",
 struct SearchRequestBody {
     #[serde(skip_serializing_if = "Option::is_none")]
     size: Option<u32>,
-}
-
-// Try parsing all of the different formats the timestamp might
-// be in when coming from ElasticSearch
-#[derive(Deserialize, Debug, PartialEq)]
-#[serde(untagged)]
-enum Timestamp {
-    #[serde(with = "time::serde::rfc3339")]
-    Rfc3339(OffsetDateTime),
-    #[serde(with = "time::serde::timestamp")]
-    Unix(OffsetDateTime),
-    // TODO support parsing epoch from milliseconds and/or nanoseconds
-}
-
-impl From<Timestamp> for OffsetDateTime {
-    fn from(t: Timestamp) -> Self {
-        match t {
-            Timestamp::Rfc3339(t) => t,
-            Timestamp::Unix(t) => t,
-        }
-    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -152,7 +131,7 @@ fn parse_response(
         .hits
         .hits
         .into_iter()
-        .filter_map(|hit| parse_hit(hit, &timestamp_field, &body_field))
+        .filter_map(|hit| parse_hit(hit, timestamp_field, body_field))
         .collect();
     // Sort logs so the newest ones are first
     logs.sort_by(|a, b| {
@@ -192,26 +171,43 @@ fn parse_hit(
     let trace_id = parse_id("trace.id");
     let span_id = parse_id("span.id");
 
-    let timestamp: Timestamp =
-        serde_json::from_value(flattened_fields.remove(timestamp_field)?).ok()?;
-    let timestamp: OffsetDateTime = timestamp.into();
-    let timestamp = timestamp.unix_timestamp() as f64;
+    let timestamp = flattened_fields.remove(timestamp_field).or_else(|| {
+        log(format!(
+            "missing timestamp field ({}) in log. ignoring record: {:?}",
+            timestamp_field, flattened_fields
+        ));
+        None
+    })?;
+    let timestamp = if let Ok(timestamp) = OffsetDateTime::parse(&timestamp, &Rfc3339) {
+        timestamp.unix_timestamp() as f64
+    } else if let Ok(timestamp) = f64::from_str(&timestamp) {
+        timestamp
+    } else {
+        log(format!(
+            "unable to parse timestamp field ({}: {}) in log. ignoring record: {:?}",
+            timestamp_field, timestamp, flattened_fields
+        ));
+        return None;
+    };
 
-    let body: String = serde_json::from_value(flattened_fields.remove(body_field)?).ok()?;
+    let body = flattened_fields.remove(body_field).or_else(|| {
+        log(format!(
+            "missing body field ({}) in log. ignoring record: {:?}",
+            body_field, flattened_fields
+        ));
+        None
+    })?;
 
     // All fields that are not mapped to the resource field
     // become part of the attributes field
     // TODO refactor this so we only make one pass over the fields
     let (resource, attributes): (HashMap<String, String>, HashMap<String, String>) =
-        flattened_fields
-            .into_iter()
-            .map(|(k, v)| (k, v.to_string()))
-            .partition(|(key, _)| {
-                RESOURCE_FIELD_PREFIXES
-                    .iter()
-                    .any(|prefix| key.starts_with(prefix))
-                    && !RESOURCE_FIELD_EXCEPTIONS.contains(&key.as_str())
-            });
+        flattened_fields.into_iter().partition(|(key, _)| {
+            RESOURCE_FIELD_PREFIXES
+                .iter()
+                .any(|prefix| key.starts_with(prefix))
+                && !RESOURCE_FIELD_EXCEPTIONS.contains(&key.as_str())
+        });
 
     Some(LogRecord {
         body,
@@ -223,7 +219,7 @@ fn parse_hit(
     })
 }
 
-fn flatten_nested_value(output: &mut HashMap<String, Value>, key: String, value: Value) {
+fn flatten_nested_value(output: &mut HashMap<String, String>, key: String, value: Value) {
     match value {
         Value::Object(v) => {
             for (sub_key, val) in v.into_iter() {
@@ -236,8 +232,17 @@ fn flatten_nested_value(output: &mut HashMap<String, Value>, key: String, value:
                 flatten_nested_value(output, format!("{}[{}]", key, index), val);
             }
         }
-        v => {
+        Value::String(v) => {
             output.insert(key, v);
+        }
+        Value::Number(v) => {
+            output.insert(key, v.to_string());
+        }
+        Value::Bool(v) => {
+            output.insert(key, v.to_string());
+        }
+        Value::Null => {
+            output.insert(key, "".to_string());
         }
     };
 }
