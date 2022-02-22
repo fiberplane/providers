@@ -35,6 +35,7 @@ export type HttpRequestError =
     | { type: "no_route" }
     | { type: "connection_refused" }
     | { type: "timeout" }
+    | { type: "response_too_big" }
     | { type: "server_error"; statusCode: number;response: ArrayBuffer }
     | { type: "other"; reason: string };
 

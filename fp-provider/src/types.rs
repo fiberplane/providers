@@ -46,6 +46,7 @@ pub enum HttpRequestError {
     NoRoute,
     ConnectionRefused,
     Timeout,
+    ResponseTooBig,
     #[serde(rename_all = "camelCase")]
     ServerError { status_code: u16, response: serde_bytes::ByteBuf },
     #[serde(rename_all = "camelCase")]
