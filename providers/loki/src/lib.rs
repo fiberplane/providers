@@ -14,6 +14,10 @@ async fn invoke(request: ProviderRequest, config: Config) -> ProviderResponse {
             .await
             .map(|log_records| ProviderResponse::LogRecords { log_records })
             .unwrap_or_else(|error| ProviderResponse::Error { error }),
+        ProviderRequest::Status => check_status(config)
+            .await
+            .map(|_| ProviderResponse::StatusOk)
+            .unwrap_or_else(|error| ProviderResponse::Error { error }),
         _ => ProviderResponse::Error {
             error: Error::UnsupportedRequest,
         },
@@ -142,6 +146,42 @@ fn data_mapper<'a>(
             resource: HashMap::default(),
         })
     })
+}
+
+async fn check_status(config: Config) -> Result<(), Error> {
+    let url = config.url.ok_or_else(|| Error::Config {
+        message: "URL is required".to_string(),
+    })?;
+    let mut url = Url::parse(&url).map_err(|e| Error::Config {
+        message: format!("Invalid LOKI URL: {:?}", e),
+    })?;
+
+    {
+        let mut path_segments = url.path_segments_mut().map_err(|_| Error::Config {
+            message: "Invalid LOKI URL: cannot-be-a-base".to_string(),
+        })?;
+        path_segments
+            .push("loki")
+            .push("api")
+            .push("v1")
+            .push("status")
+            .push("buildinfo");
+    }
+
+    let request = HttpRequest {
+        body: None,
+        headers: None,
+        method: HttpRequestMethod::Get,
+        url: url.to_string(),
+    };
+
+    let _ = make_http_request(request)
+        .await
+        .map_err(|error| Error::Http { error })?;
+
+    // At this point we don't care to validate the info LOKI sends back
+    // We just care it responded with 200 OK
+    Ok(())
 }
 
 #[cfg(test)]

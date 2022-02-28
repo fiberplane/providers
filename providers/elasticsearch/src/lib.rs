@@ -40,6 +40,10 @@ async fn invoke(request: ProviderRequest, config: Config) -> ProviderResponse {
             .await
             .map(|log_records| ProviderResponse::LogRecords { log_records })
             .unwrap_or_else(|error| ProviderResponse::Error { error }),
+        ProviderRequest::Status => check_status(config)
+            .await
+            .map(|_| ProviderResponse::StatusOk)
+            .unwrap_or_else(|error| ProviderResponse::Error { error }),
         _ => ProviderResponse::Error {
             error: Error::UnsupportedRequest,
         },
@@ -245,6 +249,42 @@ fn flatten_nested_value(output: &mut HashMap<String, String>, key: String, value
             output.insert(key, "".to_string());
         }
     };
+}
+
+async fn check_status(config: Config) -> Result<(), Error> {
+    let url = config.url.ok_or_else(|| Error::Config {
+        message: "URL is required".to_string(),
+    })?;
+
+    let mut url = Url::parse(&url).map_err(|e| Error::Config {
+        message: format!("Invalid ElasticSearch URL: {:?}", e),
+    })?;
+
+    // Add "_xpack" to the path
+    {
+        let mut path_segments = url.path_segments_mut().map_err(|_| Error::Config {
+            message: "Invalid ElasticSearch URL: cannot-be-a-base".to_string(),
+        })?;
+        path_segments.push("_xpack");
+    }
+
+    let mut headers = HashMap::new();
+    headers.insert("Content-Type".to_string(), "application/json".to_string());
+
+    let request = HttpRequest {
+        body: None,
+        headers: Some(headers),
+        method: HttpRequestMethod::Get,
+        url: url.to_string(),
+    };
+
+    let _ = make_http_request(request)
+        .await
+        .map_err(|error| Error::Http { error })?;
+
+    // At this point we don't care to validate the info LOKI sends back
+    // We just care it responded with 200 OK
+    Ok(())
 }
 
 fn timestamp_to_rfc3339(timestamp: f64) -> String {

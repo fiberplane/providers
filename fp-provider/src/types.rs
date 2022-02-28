@@ -121,6 +121,8 @@ pub enum ProviderRequest {
     /// context-unaware.
     AutoSuggest,
     Logs(QueryLogs),
+    /// Check data source status, any issue will be returned as `Error`
+    Status,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -136,6 +138,7 @@ pub enum ProviderResponse {
     AutoSuggest { suggestions: Vec<Suggestion> },
     #[serde(rename_all = "camelCase")]
     LogRecords { log_records: Vec<LogRecord> },
+    StatusOk,
 }
 
 /// Relays requests for a data-source to a proxy server registered with the API.

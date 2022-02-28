@@ -16,6 +16,8 @@ pub enum ProviderRequest {
     /// context-unaware.
     AutoSuggest,
     Logs(QueryLogs),
+    /// Check data source status, any issue will be returned as `Error`
+    Status,
 }
 
 #[derive(Serializable, Debug)]

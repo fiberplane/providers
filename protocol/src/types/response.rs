@@ -9,15 +9,26 @@ use std::collections::HashMap;
 #[allow(dead_code)]
 pub enum ProviderResponse {
     #[fp(rename_all = "camelCase")]
-    Error { error: Error },
+    Error {
+        error: Error,
+    },
     #[fp(rename_all = "camelCase")]
-    Instant { instants: Vec<Instant> },
+    Instant {
+        instants: Vec<Instant>,
+    },
     #[fp(rename_all = "camelCase")]
-    Series { series: Vec<Series> },
+    Series {
+        series: Vec<Series>,
+    },
     #[fp(rename_all = "camelCase")]
-    AutoSuggest { suggestions: Vec<Suggestion> },
+    AutoSuggest {
+        suggestions: Vec<Suggestion>,
+    },
     #[fp(rename_all = "camelCase")]
-    LogRecords { log_records: Vec<LogRecord> },
+    LogRecords {
+        log_records: Vec<LogRecord>,
+    },
+    StatusOk,
 }
 
 // TODO derive Error trait
@@ -27,15 +38,25 @@ pub enum ProviderResponse {
 pub enum Error {
     UnsupportedRequest,
     #[fp(rename_all = "camelCase")]
-    Http { error: HttpRequestError },
+    Http {
+        error: HttpRequestError,
+    },
     #[fp(rename_all = "camelCase")]
-    Data { message: String },
+    Data {
+        message: String,
+    },
     #[fp(rename_all = "camelCase")]
-    Deserialization { message: String },
+    Deserialization {
+        message: String,
+    },
     #[fp(rename_all = "camelCase")]
-    Config { message: String },
+    Config {
+        message: String,
+    },
     #[fp(rename_all = "camelCase")]
-    Other { message: String },
+    Other {
+        message: String,
+    },
 }
 
 /// A single data-point in time.
@@ -76,10 +97,10 @@ pub struct Metric {
 #[fp(rename_all = "camelCase")]
 pub struct Suggestion {
     /// Suggested text.
-    text: String,
+    pub text: String,
 
     /// Optional description to go along with this suggestion.
-    description: Option<String>,
+    pub description: Option<String>,
 }
 
 /// An individual log record

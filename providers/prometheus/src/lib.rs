@@ -7,6 +7,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
+use url::Url;
 
 const ONE_MINUTE: u32 = 60; // seconds
 const ONE_HOUR: u32 = 60 * ONE_MINUTE; // seconds
@@ -40,6 +41,10 @@ async fn invoke(request: ProviderRequest, config: Config) -> ProviderResponse {
         ProviderRequest::AutoSuggest => fetch_suggestions(url)
             .await
             .map(|suggestions| ProviderResponse::AutoSuggest { suggestions })
+            .unwrap_or_else(|error| ProviderResponse::Error { error }),
+        ProviderRequest::Status => check_status(&url)
+            .await
+            .map(|_| ProviderResponse::StatusOk)
             .unwrap_or_else(|error| ProviderResponse::Error { error }),
         request => {
             log(format!(
@@ -141,6 +146,37 @@ async fn fetch_suggestions(url: String) -> Result<Vec<Suggestion>, Error> {
         Ok(response) => from_metadata(&response.body),
         Err(error) => Err(Error::Http { error }),
     }
+}
+
+async fn check_status(url: &str) -> Result<(), Error> {
+    let mut url = Url::parse(url).map_err(|e| Error::Config {
+        message: format!("Invalid prometheus URL: {:?}", e),
+    })?;
+
+    // Append path
+    {
+        let mut path_segments = url.path_segments_mut().map_err(|_| Error::Config {
+            message: "Invalid prometheus URL: cannot-be-a-base".to_string(),
+        })?;
+        path_segments
+            .push("api")
+            .push("v1")
+            .push("status")
+            .push("buildinfo");
+    }
+
+    let _ = make_http_request(HttpRequest {
+        body: None,
+        headers: None,
+        method: HttpRequestMethod::Get,
+        url: url.to_string(),
+    })
+    .await
+    .map_err(|error| Error::Http { error })?;
+
+    // At this point we don't care to validate the info LOKI sends back
+    // We just care it responded with 200 OK
+    Ok(())
 }
 
 #[derive(Deserialize)]

@@ -103,14 +103,19 @@ export type ProviderRequest =
      * context-unaware.
      */
     | { type: "auto_suggest" }
-    | { type: "logs" } & QueryLogs;
+    | { type: "logs" } & QueryLogs
+    /**
+     * Check data source status, any issue will be returned as `Error`
+     */
+    | { type: "status" };
 
 export type ProviderResponse =
     | { type: "error"; error: Error }
     | { type: "instant"; instants: Array<Instant> }
     | { type: "series"; series: Array<Series> }
     | { type: "auto_suggest"; suggestions: Array<Suggestion> }
-    | { type: "log_records"; logRecords: Array<LogRecord> };
+    | { type: "log_records"; logRecords: Array<LogRecord> }
+    | { type: "status_ok" };
 
 /**
  * Relays requests for a data-source to a proxy server registered with the API.
