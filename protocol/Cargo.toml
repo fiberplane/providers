@@ -8,4 +8,5 @@ edition = "2018"
 fp-bindgen = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main", features = [
     "generators",
 ] }
+rmpv = "1.0.0"
 serde_bytes = "0.11"

@@ -1,12 +1,11 @@
-mod config;
 mod http;
 mod request;
 mod response;
 
-pub use config::*;
 pub use http::*;
 pub use request::*;
 pub use response::*;
+pub use rmpv::Value;
 
 /// Timestamp specified in seconds since the UNIX epoch, with subsecond
 /// precision.

@@ -41,7 +41,7 @@ impl Runtime {
     pub async fn invoke(
         &self,
         request: ProviderRequest,
-        config: Config,
+        config: rmpv::Value,
     ) -> Result<ProviderResponse, InvocationError> {
         let request = serialize_to_vec(&request);
         let config = serialize_to_vec(&config);

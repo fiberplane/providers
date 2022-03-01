@@ -7,7 +7,6 @@
 import { encode, decode } from "@msgpack/msgpack";
 
 import type {
-    Config,
     Error,
     HttpRequest,
     HttpRequestError,
@@ -28,6 +27,7 @@ import type {
     Suggestion,
     TimeRange,
     Timestamp,
+    Value,
 } from "./types";
 
 type FatPtr = bigint;
@@ -40,7 +40,7 @@ export type Imports = {
 };
 
 export type Exports = {
-    invoke?: (request: ProviderRequest, config: Config) => Promise<ProviderResponse>;
+    invoke?: (request: ProviderRequest, config: rmpv::Value) => Promise<ProviderResponse>;
     invokeRaw?: (request: Uint8Array, config: Uint8Array) => Promise<Uint8Array>;
 };
 
@@ -170,7 +170,7 @@ export async function createRuntime(
             const export_fn = instance.exports.__fp_gen_invoke as any;
             if (!export_fn) return;
 
-            return (request: ProviderRequest, config: Config) => {
+            return (request: ProviderRequest, config: rmpv::Value) => {
                 const request_ptr = serializeObject(request);
                 const config_ptr = serializeObject(config);
                 return promiseFromPtr(export_fn(request_ptr, config_ptr)).then((ptr) => parseObject<ProviderResponse>(ptr));

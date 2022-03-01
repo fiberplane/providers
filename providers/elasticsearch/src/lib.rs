@@ -1,8 +1,10 @@
 use elasticsearch_dsl::{Hit, SearchResponse};
+use fiberplane::protocols::core::ElasticsearchDataSource;
 use fp_provider::{
-    fp_export_impl, log, make_http_request, Config, Error, HttpRequest, HttpRequestMethod,
-    LogRecord, ProviderRequest, ProviderResponse, QueryLogs,
+    fp_export_impl, log, make_http_request, Error, HttpRequest, HttpRequestMethod, LogRecord,
+    ProviderRequest, ProviderResponse, QueryLogs,
 };
+use rmpv::ext::from_value;
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 use serde_json::{Map, Value};
@@ -13,6 +15,9 @@ use url::Url;
 #[cfg(test)]
 mod tests;
 
+pub(crate) static TIMESTAMP_FIELDS: &[&str] = &["@timestamp", "timestamp", "fields.timestamp"];
+pub(crate) static BODY_FIELDS: &[&str] =
+    &["body", "message", "fields.body", "fields.message", "log"];
 // This mapping is based on the recommended mapping from the
 // Elastic Common Schema to the OpenTelemetry Log specification
 // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#elastic-common-schema
@@ -33,7 +38,17 @@ struct Document {
 }
 
 #[fp_export_impl(fp_provider)]
-async fn invoke(request: ProviderRequest, config: Config) -> ProviderResponse {
+async fn invoke(request: ProviderRequest, config: rmpv::Value) -> ProviderResponse {
+    let config: ElasticsearchDataSource = match from_value(config) {
+        Ok(config) => config,
+        Err(err) => {
+            return ProviderResponse::Error {
+                error: Error::Config {
+                    message: format!("Error parsing config: {:?}", err),
+                },
+            }
+        }
+    };
     match request {
         // TODO implement AutoSuggest
         ProviderRequest::Logs(query) => fetch_logs(query, config)
@@ -50,25 +65,26 @@ async fn invoke(request: ProviderRequest, config: Config) -> ProviderResponse {
     }
 }
 
-async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, Error> {
-    let url = config.url.ok_or_else(|| Error::Config {
-        message: "URL is required".to_string(),
-    })?;
-    let timestamp_field = config
-        .options
-        .get("timestamp_name")
-        .cloned()
-        .unwrap_or_else(|| "@timestamp".to_owned());
-
-    let body_field = config
-        .options
-        .get("body_name")
-        .cloned()
-        .unwrap_or_else(|| "message".to_owned());
-
-    let mut url = Url::parse(&url).map_err(|e| Error::Config {
+async fn fetch_logs(
+    query: QueryLogs,
+    config: ElasticsearchDataSource,
+) -> Result<Vec<LogRecord>, Error> {
+    let mut url = Url::parse(&config.url).map_err(|e| Error::Config {
         message: format!("Invalid ElasticSearch URL: {:?}", e),
     })?;
+    // Look for the timestamp and body first in the configured fields and then in the default fields
+    let timestamp_field_names = config
+        .timestamp_field_names
+        .iter()
+        .map(|s| s.as_str())
+        .chain(TIMESTAMP_FIELDS.iter().copied())
+        .collect::<Vec<_>>();
+    let body_field_names = config
+        .body_field_names
+        .iter()
+        .map(|s| s.as_str())
+        .chain(BODY_FIELDS.iter().copied())
+        .collect::<Vec<_>>();
 
     // Add "_search" to the path
     let mut path_segments = url.path_segments_mut().map_err(|_| Error::Config {
@@ -86,7 +102,7 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, 
     let query_string = format!(
         "{} AND {}:[{} TO {}]",
         query.query,
-        timestamp_field,
+        timestamp_field_names[0],
         timestamp_to_rfc3339(query.time_range.from),
         timestamp_to_rfc3339(query.time_range.to)
     );
@@ -123,19 +139,19 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, 
 
     log(format!("Got {} results", response.hits.hits.len()));
 
-    parse_response(&timestamp_field, &body_field, response)
+    parse_response(response, &timestamp_field_names, &body_field_names)
 }
 
 fn parse_response(
-    timestamp_field: &str,
-    body_field: &str,
     response: SearchResponse<Document, Document>,
+    timestamp_field_names: &[&str],
+    body_field_names: &[&str],
 ) -> Result<Vec<LogRecord>, Error> {
     let mut logs: Vec<LogRecord> = response
         .hits
         .hits
         .into_iter()
-        .filter_map(|hit| parse_hit(hit, timestamp_field, body_field))
+        .filter_map(|hit| parse_hit(hit, timestamp_field_names, body_field_names))
         .collect();
     // Sort logs so the newest ones are first
     logs.sort_by(|a, b| {
@@ -148,8 +164,8 @@ fn parse_response(
 
 fn parse_hit(
     hit: Hit<Document, Document>,
-    timestamp_field: &str,
-    body_field: &str,
+    timestamp_field_names: &[&str],
+    body_field_names: &[&str],
 ) -> Option<LogRecord> {
     let source = hit.source?;
     let mut flattened_fields = HashMap::new();
@@ -175,32 +191,33 @@ fn parse_hit(
     let trace_id = parse_id("trace.id");
     let span_id = parse_id("span.id");
 
-    let timestamp = flattened_fields.remove(timestamp_field).or_else(|| {
-        log(format!(
-            "missing timestamp field ({}) in log. ignoring record: {:?}",
-            timestamp_field, flattened_fields
-        ));
-        None
-    })?;
-    let timestamp = if let Ok(timestamp) = OffsetDateTime::parse(&timestamp, &Rfc3339) {
-        timestamp.unix_timestamp() as f64
-    } else if let Ok(timestamp) = f64::from_str(&timestamp) {
-        timestamp
-    } else {
-        log(format!(
-            "unable to parse timestamp field ({}: {}) in log. ignoring record: {:?}",
-            timestamp_field, timestamp, flattened_fields
-        ));
-        return None;
-    };
+    // Find the timestamp field (or set it to NaN if none is found)
+    // Note: this will leave the original timestamp field in the flattened_fields
+    let mut timestamp = None;
+    for field_name in timestamp_field_names {
+        if let Some(ts) = flattened_fields.get(*field_name) {
+            // Try parsing the field either as an RFC 3339 timestamp or a unix timestamp
+            if let Ok(ts) = OffsetDateTime::parse(ts, &Rfc3339) {
+                timestamp = Some(ts.unix_timestamp() as f64);
+                break;
+            } else if let Ok(ts) = f64::from_str(ts) {
+                timestamp = Some(ts);
+                break;
+            }
+        }
+    }
+    let timestamp = timestamp.unwrap_or(f64::NAN);
 
-    let body = flattened_fields.remove(body_field).or_else(|| {
-        log(format!(
-            "missing body field ({}) in log. ignoring record: {:?}",
-            body_field, flattened_fields
-        ));
-        None
-    })?;
+    // Find the body field (or set it to an empty string if none is found)
+    // Note: this will leave the body field in the flattened_fields and copy
+    // it into the body of the LogRecord
+    let mut body = String::new();
+    for field_name in body_field_names {
+        if let Some(b) = flattened_fields.get(*field_name) {
+            body = b.to_string();
+            break;
+        }
+    }
 
     // All fields that are not mapped to the resource field
     // become part of the attributes field
@@ -251,12 +268,8 @@ fn flatten_nested_value(output: &mut HashMap<String, String>, key: String, value
     };
 }
 
-async fn check_status(config: Config) -> Result<(), Error> {
-    let url = config.url.ok_or_else(|| Error::Config {
-        message: "URL is required".to_string(),
-    })?;
-
-    let mut url = Url::parse(&url).map_err(|e| Error::Config {
+async fn check_status(config: ElasticsearchDataSource) -> Result<(), Error> {
+    let mut url = Url::parse(&config.url).map_err(|e| Error::Config {
         message: format!("Invalid ElasticSearch URL: {:?}", e),
     })?;
 

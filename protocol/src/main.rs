@@ -1,7 +1,7 @@
 mod types;
 
-use fp_bindgen::prelude::*;
-use std::collections::BTreeMap;
+use fp_bindgen::{prelude::*, types::CargoDependency};
+use std::collections::{BTreeMap, BTreeSet};
 use types::*;
 
 fp_import! {
@@ -20,8 +20,9 @@ fp_import! {
 
 fp_export! {
     type Timestamp = f64;
+    type Value = rmpv::Value;
 
-    async fn invoke(request: ProviderRequest, config: Config) -> ProviderResponse;
+    async fn invoke(request: ProviderRequest, config: rmpv::Value) -> ProviderResponse;
 }
 
 fn main() {
@@ -32,7 +33,16 @@ fn main() {
                 name: "fp-provider",
                 authors: r#"["Fiberplane <info@fiberplane.com>"]"#,
                 version: "1.0.0-alpha.1",
-                dependencies: BTreeMap::new(),
+                dependencies: BTreeMap::from([(
+                    "rmpv",
+                    CargoDependency {
+                        version: Some("1.0.0"),
+                        features: BTreeSet::from(["with-serde"]),
+                        git: None,
+                        branch: None,
+                        path: None,
+                    }
+                )]),
             }),
             path,
         });

@@ -1,13 +1,25 @@
+use fiberplane::protocols::core::LokiDataSource;
 use fp_provider::{
-    fp_export_impl, make_http_request, Config, Error, HttpRequest, HttpRequestMethod, LogRecord,
-    ProviderRequest, ProviderResponse, QueryLogs, Timestamp,
+    fp_export_impl, make_http_request, Error, HttpRequest, HttpRequestMethod, LogRecord,
+    ProviderRequest, ProviderResponse, QueryLogs, Timestamp, Value,
 };
+use rmpv::ext::from_value;
 use serde::Deserialize;
 use std::{collections::HashMap, str::FromStr};
 use url::Url;
 
 #[fp_export_impl(fp_provider)]
-async fn invoke(request: ProviderRequest, config: Config) -> ProviderResponse {
+async fn invoke(request: ProviderRequest, config: Value) -> ProviderResponse {
+    let config: LokiDataSource = match from_value(config) {
+        Ok(config) => config,
+        Err(err) => {
+            return ProviderResponse::Error {
+                error: Error::Config {
+                    message: format!("Error parsing config: {:?}", err),
+                },
+            }
+        }
+    };
     match request {
         // TODO implement AutoSuggest
         ProviderRequest::Logs(query) => fetch_logs(query, config)
@@ -48,11 +60,8 @@ struct Data {
     values: Vec<(String, String)>,
 }
 
-async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, Error> {
-    let url = config.url.ok_or_else(|| Error::Config {
-        message: "URL is required".to_string(),
-    })?;
-    let mut url = Url::parse(&url).map_err(|e| Error::Config {
+async fn fetch_logs(query: QueryLogs, config: LokiDataSource) -> Result<Vec<LogRecord>, Error> {
+    let mut url = Url::parse(&config.url).map_err(|e| Error::Config {
         message: format!("Invalid LOKI URL: {:?}", e),
     })?;
 
@@ -131,9 +140,9 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, 
     Ok(logs)
 }
 
-fn data_mapper<'a>(
-    d: &'a Data,
-) -> impl Iterator<Item = Result<LogRecord, <Timestamp as FromStr>::Err>> + 'a {
+fn data_mapper(
+    d: &Data,
+) -> impl Iterator<Item = Result<LogRecord, <Timestamp as FromStr>::Err>> + '_ {
     let att = &d.labels;
     d.values.iter().map(move |(ts, v)| {
         let timestamp = Timestamp::from_str(ts)?;
@@ -148,11 +157,8 @@ fn data_mapper<'a>(
     })
 }
 
-async fn check_status(config: Config) -> Result<(), Error> {
-    let url = config.url.ok_or_else(|| Error::Config {
-        message: "URL is required".to_string(),
-    })?;
-    let mut url = Url::parse(&url).map_err(|e| Error::Config {
+async fn check_status(config: LokiDataSource) -> Result<(), Error> {
+    let mut url = Url::parse(&config.url).map_err(|e| Error::Config {
         message: format!("Invalid LOKI URL: {:?}", e),
     })?;
 

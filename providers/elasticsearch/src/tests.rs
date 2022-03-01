@@ -48,7 +48,7 @@ fn flatten_nested_values() {
 }
 
 #[test]
-fn extracts_timestamp_and_body_fields() {
+fn extracts_timestamp_and_body_from_fields() {
     let hit = serde_json::from_value(json!({
         "_index": "index",
         "_type": "type",
@@ -60,7 +60,7 @@ fn extracts_timestamp_and_body_fields() {
         }
     }))
     .unwrap();
-    let record = parse_hit(hit, &"timestamp".to_string(), &"body".to_string()).unwrap();
+    let record = parse_hit(hit, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
     assert_eq!(
         record.timestamp,
         OffsetDateTime::parse("2020-01-01T00:00:00Z", &Rfc3339)
@@ -82,12 +82,7 @@ fn extracts_timestamp_and_body_fields() {
         }
     }))
     .unwrap();
-    let record = parse_hit(
-        hit,
-        &"@timestamp".to_string(),
-        &"fields.my_body".to_string(),
-    )
-    .unwrap();
+    let record = parse_hit(hit, TIMESTAMP_FIELDS, &["body", "fields.my_body"]).unwrap();
     assert_eq!(
         record.timestamp,
         OffsetDateTime::parse("2020-01-01T00:00:00Z", &Rfc3339)
@@ -95,6 +90,24 @@ fn extracts_timestamp_and_body_fields() {
             .unix_timestamp() as f64
     );
     assert_eq!(record.body, "test");
+}
+
+#[test]
+fn uses_default_values_if_timestamp_or_body_extraction_fails() {
+    let hit = serde_json::from_value(json!({
+        "_index": "index",
+        "_type": "type",
+        "_id": "id",
+        "_score": 1.0,
+        "_source": {
+            "other-timestamp": "2020-01-01T00:00:00Z",
+            "other-body": "test",
+        }
+    }))
+    .unwrap();
+    let record = parse_hit(hit, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
+    assert!(record.timestamp.is_nan());
+    assert_eq!(record.body, "");
 }
 
 #[test]
@@ -108,7 +121,7 @@ fn timestamp_deserializes_from_unix_epoch() {
     });
 
     let document: Hit<Document, Document> = serde_json::from_value(js).unwrap();
-    let record = parse_hit(document, &"@timestamp".to_string(), &"my_body".to_string()).unwrap();
+    let record = parse_hit(document, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
 
     assert_eq!(record.timestamp, 1640010678f64);
 }
@@ -124,7 +137,7 @@ fn timestamp_deserializes_from_rfc3339() {
     });
 
     let document: Hit<Document, Document> = serde_json::from_value(js).unwrap();
-    let record = parse_hit(document, &"@timestamp".to_string(), &"my_body".to_string()).unwrap();
+    let record = parse_hit(document, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
 
     assert_eq!(
         record.timestamp,
@@ -176,7 +189,7 @@ fn sorts_logs_by_timestamp_newest_first() {
             ],
         },
     };
-    let logs = parse_response("timestamp", "body", response).unwrap();
+    let logs = parse_response(response, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
     assert_eq!(logs[0].body, "1");
     assert_eq!(logs[1].body, "2");
     assert_eq!(logs[2].body, "3");

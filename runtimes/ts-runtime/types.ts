@@ -4,11 +4,6 @@
 // This file is generated. PLEASE DO NOT MODIFY. //
 // ============================================= //
 
-export type Config = {
-    url?: string;
-    options: Record<string, string>;
-};
-
 export type Error =
     | { type: "unsupported_request" }
     | { type: "http"; error: HttpRequestError }
@@ -197,3 +192,5 @@ export type TimeRange = {
 };
 
 export type Timestamp = number;
+
+export type Value = rmpv :: Value;

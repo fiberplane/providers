@@ -1,3 +1,4 @@
+use fiberplane::protocols::core::PrometheusDataSource;
 use fp_provider::*;
 use serde::Deserialize;
 use serde_bytes::ByteBuf;
@@ -13,20 +14,21 @@ const ONE_MINUTE: u32 = 60; // seconds
 const ONE_HOUR: u32 = 60 * ONE_MINUTE; // seconds
 
 #[fp_export_impl(fp_provider)]
-async fn invoke(request: ProviderRequest, config: Config) -> ProviderResponse {
+async fn invoke(request: ProviderRequest, config: Value) -> ProviderResponse {
     log(format!(
         "prometheus provider invoked with request: {:?}, config: {:?}",
         request, config
     ));
 
-    let url = if let Some(url) = config.url {
-        url
-    } else {
-        return ProviderResponse::Error {
-            error: Error::Config {
-                message: "url is required".to_string(),
-            },
-        };
+    let url = match rmpv::ext::from_value(config) {
+        Ok(PrometheusDataSource { url }) => url,
+        Err(err) => {
+            return ProviderResponse::Error {
+                error: Error::Config {
+                    message: format!("Error parsing config: {:?}", err),
+                },
+            }
+        }
     };
 
     match request {

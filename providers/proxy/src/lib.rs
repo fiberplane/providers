@@ -2,7 +2,7 @@ use fp_provider::*;
 use std::collections::HashMap;
 
 #[fp_export_impl(fp_provider)]
-async fn invoke(request: ProviderRequest, _config: Config) -> ProviderResponse {
+async fn invoke(request: ProviderRequest, _config: Value) -> ProviderResponse {
     match request {
         ProviderRequest::Proxy(request) => proxy_request(request).await,
         _ => ProviderResponse::Error {

@@ -2,15 +2,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Config {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub url: Option<String>,
-    #[serde(default)]
-    pub options: HashMap<String, String>,
-}
-
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Error {
     UnsupportedRequest,
@@ -208,3 +199,5 @@ pub struct TimeRange {
 }
 
 pub type Timestamp = f64;
+
+pub type Value = rmpv :: Value;
