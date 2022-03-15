@@ -8,6 +8,8 @@ use serde::Deserialize;
 use std::{collections::HashMap, str::FromStr};
 use url::Url;
 
+const CONVERSION_FACTOR: f64 = 1e9;
+
 #[fp_export_impl(fp_provider)]
 async fn invoke(request: ProviderRequest, config: Value) -> ProviderResponse {
     let config: LokiDataSource = match from_value(config) {
@@ -76,6 +78,10 @@ async fn fetch_logs(query: QueryLogs, config: LokiDataSource) -> Result<Vec<LogR
             .push("query_range");
     }
 
+    //convert unix epoch in seconds to epoch in nanoseconds
+    let from = (query.time_range.from * CONVERSION_FACTOR).to_string();
+    let to = (query.time_range.to * CONVERSION_FACTOR).to_string();
+
     let qstr: String =
         url::form_urlencoded::Serializer::new(String::with_capacity(query.query.capacity()))
             .append_pair("query", &query.query)
@@ -83,8 +89,8 @@ async fn fetch_logs(query: QueryLogs, config: LokiDataSource) -> Result<Vec<LogR
                 "limit",
                 &query.limit.map_or("".to_owned(), |l| l.to_string()),
             )
-            .append_pair("start", &((query.time_range.from) as u64).to_string())
-            .append_pair("end", &((query.time_range.to) as u64).to_string())
+            .append_pair("start", &from)
+            .append_pair("end", &to)
             .finish();
     url.set_query(Some(&qstr));
 
@@ -145,7 +151,9 @@ fn data_mapper(
 ) -> impl Iterator<Item = Result<LogRecord, <Timestamp as FromStr>::Err>> + '_ {
     let att = &d.labels;
     d.values.iter().map(move |(ts, v)| {
-        let timestamp = Timestamp::from_str(ts)?;
+        //convert unix epoch in nanoseconds to unix epoch in seconds
+        //https://grafana.com/docs/loki/latest/api/#get-lokiapiv1query_range
+        let timestamp = Timestamp::from_str(ts)? / CONVERSION_FACTOR;
         Ok(LogRecord {
             timestamp,
             body: v.clone(),
@@ -192,42 +200,43 @@ async fn check_status(config: LokiDataSource) -> Result<(), Error> {
 
 #[cfg(test)]
 mod test {
-    use crate::{Data, QueryData, QueryResponse};
+    use crate::{data_mapper, Data, QueryData, QueryResponse};
+    use fp_provider::LogRecord;
     use serde::Deserialize;
     use serde_json::Deserializer;
     use std::collections::HashMap;
 
+    const DATA: &str = r#"{
+        "status": "success",
+        "data": {
+          "resultType": "streams",
+          "result": [
+            {
+              "stream": {
+                "filename": "/var/log/myproject.log",
+                "job": "varlogs",
+                "level": "info"
+              },
+              "values": [
+                [
+                  "1569266497240578000",
+                  "foo"
+                ],
+                [
+                  "1569266492548155000",
+                  "bar"
+                ]
+              ]
+            }
+          ],
+          "stats": {
+          }
+        }
+      }"#;
+
     #[test]
     fn test_deserialization() {
-        let data = r#"{
-            "status": "success",
-            "data": {
-              "resultType": "streams",
-              "result": [
-                {
-                  "stream": {
-                    "filename": "/var/log/myproject.log",
-                    "job": "varlogs",
-                    "level": "info"
-                  },
-                  "values": [
-                    [
-                      "1569266497240578000",
-                      "foo"
-                    ],
-                    [
-                      "1569266492548155000",
-                      "bar"
-                    ]
-                  ]
-                }
-              ],
-              "stats": {
-              }
-            }
-          }"#;
-
-        let value = QueryResponse::deserialize(&mut Deserializer::from_str(data)).unwrap();
+        let value = QueryResponse::deserialize(&mut Deserializer::from_str(DATA)).unwrap();
 
         assert_eq!(
             value,
@@ -246,5 +255,38 @@ mod test {
                 status: "success".to_owned(),
             },
         )
+    }
+
+    #[test]
+    fn test_data_mapper() {
+        let value = QueryResponse::deserialize(&mut Deserializer::from_str(DATA)).unwrap();
+        if let QueryData::Streams(data) = &value.data {
+            let mapped = data_mapper(&data[0])
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap();
+            assert_eq!(
+                mapped,
+                vec![
+                    LogRecord {
+                        timestamp: 1569266497.240578000,
+                        body: "foo".to_owned(),
+                        attributes: data[0].labels.clone(),
+                        span_id: None,
+                        trace_id: None,
+                        resource: HashMap::default(),
+                    },
+                    LogRecord {
+                        timestamp: 1569266492.5481548, //not the exact value due to floating point precision
+                        body: "bar".to_owned(),
+                        attributes: data[0].labels.clone(),
+                        span_id: None,
+                        trace_id: None,
+                        resource: HashMap::default(),
+                    }
+                ]
+            );
+        } else {
+            panic!("unexpected query data type");
+        }
     }
 }
