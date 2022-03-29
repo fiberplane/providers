@@ -5,8 +5,6 @@ authors = ["Fiberplane <info@fiberplane.com>"]
 edition = "2018"
 
 [dependencies]
-fp-bindgen = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main", features = [
-    "generators",
-] }
+fp-bindgen = { version = "1.0.0", features = ["generators"] }
 rmpv = "1.0.0"
 serde_bytes = "0.11"
