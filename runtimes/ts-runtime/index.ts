@@ -3,44 +3,23 @@
 //                                               //
 // This file is generated. PLEASE DO NOT MODIFY. //
 // ============================================= //
+// deno-lint-ignore-file no-explicit-any no-unused-vars
 
 import { encode, decode } from "@msgpack/msgpack";
 
-import type {
-    Error,
-    HttpRequest,
-    HttpRequestError,
-    HttpRequestMethod,
-    HttpResponse,
-    Instant,
-    LogRecord,
-    Metric,
-    Point,
-    ProviderRequest,
-    ProviderResponse,
-    ProxyRequest,
-    QueryInstant,
-    QueryLogs,
-    QueryTimeRange,
-    Result,
-    Series,
-    Suggestion,
-    TimeRange,
-    Timestamp,
-    Value,
-} from "./types";
+import type * as types from "./types";
 
 type FatPtr = bigint;
 
 export type Imports = {
     log: (message: string) => void;
-    makeHttpRequest: (request: HttpRequest) => Promise<Result<HttpResponse, HttpRequestError>>;
-    now: () => Timestamp;
+    makeHttpRequest: (request: types.HttpRequest) => Promise<types.Result<types.HttpResponse, types.HttpRequestError>>;
+    now: () => types.Timestamp;
     random: (len: number) => Array<number>;
 };
 
 export type Exports = {
-    invoke?: (request: ProviderRequest, config: rmpv::Value) => Promise<ProviderResponse>;
+    invoke?: (request: types.ProviderRequest, config: rmpv::Value) => Promise<types.ProviderResponse>;
     invokeRaw?: (request: Uint8Array, config: Uint8Array) => Promise<Uint8Array>;
 };
 
@@ -66,7 +45,7 @@ export async function createRuntime(
     plugin: ArrayBuffer,
     importFunctions: Imports
 ): Promise<Exports> {
-    const promises = new Map<FatPtr, (result: FatPtr) => void>();
+    const promises = new Map<FatPtr, ((result: FatPtr) => void) | FatPtr>();
 
     function createAsyncValue(): FatPtr {
         const len = 12; // std::mem::size_of::<AsyncValue>()
@@ -77,27 +56,58 @@ export async function createRuntime(
         return fatPtr;
     }
 
+    function interpretSign(num: number, cap: number) {
+        if (num < cap) {
+            return num;
+        } else {
+            return num - (cap << 1);
+        }
+    }
+
+    function interpretBigSign(num: bigint, cap: bigint) {
+        if (num < cap) {
+            return num;
+        } else {
+            return num - (cap << 1n);
+        }
+    }
+
     function parseObject<T>(fatPtr: FatPtr): T {
         const [ptr, len] = fromFatPtr(fatPtr);
         const buffer = new Uint8Array(memory.buffer, ptr, len);
-        const object = decode<T>(buffer) as T;
+        const object = decode(buffer) as unknown as T;
         free(fatPtr);
         return object;
     }
 
     function promiseFromPtr(ptr: FatPtr): Promise<FatPtr> {
-        return new Promise((resolve) => {
-            promises.set(ptr, resolve as (result: FatPtr) => void);
-        });
+        const resultPtr = promises.get(ptr);
+        if (resultPtr) {
+            if (typeof resultPtr === "function") {
+                throw new FPRuntimeError("Already created promise for this value");
+            }
+
+            promises.delete(ptr);
+            return Promise.resolve(resultPtr);
+        } else {
+            return new Promise((resolve) => {
+                promises.set(ptr, resolve as (result: FatPtr) => void);
+            });
+        }
     }
 
     function resolvePromise(asyncValuePtr: FatPtr, resultPtr: FatPtr) {
         const resolve = promises.get(asyncValuePtr);
-        if (!resolve) {
-            throw new FPRuntimeError("Tried to resolve unknown promise");
-        }
+        if (resolve) {
+            if (typeof resolve !== "function") {
+                throw new FPRuntimeError("Tried to resolve invalid promise");
+            }
 
-        resolve(resultPtr);
+            promises.delete(asyncValuePtr);
+            resolve(resultPtr);
+        } else {
+            promises.set(asyncValuePtr, resultPtr);
+        }
     }
 
     function serializeObject<T>(object: T): FatPtr {
@@ -128,7 +138,7 @@ export async function createRuntime(
                 importFunctions.log(message);
             },
             __fp_gen_make_http_request: (request_ptr: FatPtr): FatPtr => {
-                const request = parseObject<HttpRequest>(request_ptr);
+                const request = parseObject<types.HttpRequest>(request_ptr);
                 const _async_result_ptr = createAsyncValue();
                 importFunctions.makeHttpRequest(request)
                     .then((result) => {
@@ -170,10 +180,10 @@ export async function createRuntime(
             const export_fn = instance.exports.__fp_gen_invoke as any;
             if (!export_fn) return;
 
-            return (request: ProviderRequest, config: rmpv::Value) => {
+            return (request: types.ProviderRequest, config: rmpv::Value) => {
                 const request_ptr = serializeObject(request);
                 const config_ptr = serializeObject(config);
-                return promiseFromPtr(export_fn(request_ptr, config_ptr)).then((ptr) => parseObject<ProviderResponse>(ptr));
+                return promiseFromPtr(export_fn(request_ptr, config_ptr)).then((ptr) => parseObject<types.ProviderResponse>(ptr));
             };
         })(),
         invokeRaw: (() => {

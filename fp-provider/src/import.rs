@@ -1,17 +1,17 @@
 use crate::types::*;
 
-#[fp_bindgen_support::fp_import_signature]
 /// Logs a message to the (development) console.
+#[fp_bindgen_support::fp_import_signature]
 pub fn log(message: String);
 
-#[fp_bindgen_support::fp_import_signature]
 /// Performs an HTTP request.
+#[fp_bindgen_support::fp_import_signature]
 pub async fn make_http_request(request: HttpRequest) -> Result<HttpResponse, HttpRequestError>;
 
-#[fp_bindgen_support::fp_import_signature]
 /// Returns the current timestamp.
+#[fp_bindgen_support::fp_import_signature]
 pub fn now() -> Timestamp;
 
-#[fp_bindgen_support::fp_import_signature]
 /// Generates random bytes.
+#[fp_bindgen_support::fp_import_signature]
 pub fn random(len: u32) -> Vec<u8>;

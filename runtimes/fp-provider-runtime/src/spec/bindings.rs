@@ -1,6 +1,6 @@
 use super::types::*;
 use fp_bindgen_support::{
-    common::mem::FatPtr,
+    common::{abi::WasmAbi, mem::FatPtr},
     host::{
         errors::{InvocationError, RuntimeError},
         mem::{
@@ -65,7 +65,7 @@ impl Runtime {
             .exports
             .get_native_function::<(FatPtr, FatPtr), FatPtr>("__fp_gen_invoke")
             .map_err(|_| InvocationError::FunctionNotExported)?;
-        let result = function.call(request, config)?;
+        let result = function.call(request.to_abi(), config.to_abi())?;
         let result = ModuleRawFuture::new(env.clone(), result).await;
         Ok(result)
     }
@@ -86,7 +86,6 @@ fn create_import_object(store: &Store, env: &RuntimeInstanceData) -> ImportObjec
 pub fn _log(env: &RuntimeInstanceData, message: FatPtr) {
     let message = import_from_guest::<String>(env, message);
     let result = super::log(message);
-    ()
 }
 
 pub fn _make_http_request(env: &RuntimeInstanceData, request: FatPtr) -> FatPtr {
@@ -108,7 +107,8 @@ pub fn _now(env: &RuntimeInstanceData) -> FatPtr {
     export_to_guest(env, &result)
 }
 
-pub fn _random(env: &RuntimeInstanceData, len: u32) -> FatPtr {
+pub fn _random(env: &RuntimeInstanceData, len: <u32 as WasmAbi>::AbiType) -> FatPtr {
+    let len = WasmAbi::from_abi(len);
     let result = super::random(len);
     export_to_guest(env, &result)
 }

@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

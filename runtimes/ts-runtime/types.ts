@@ -31,7 +31,7 @@ export type HttpRequestError =
     | { type: "connection_refused" }
     | { type: "timeout" }
     | { type: "response_too_big" }
-    | { type: "server_error"; statusCode: number;response: ArrayBuffer }
+    | { type: "server_error"; statusCode: number; response: ArrayBuffer }
     | { type: "other"; reason: string };
 
 /**
@@ -149,11 +149,11 @@ export type QueryTimeRange = {
 };
 
 /**
- * A result that can be either successful (`Ok)` or represent an error (`Err`).
+ * A result that can be either successful (`Ok`) or represent an error (`Err`).
  */
 export type Result<T, E> =
     /**
-     * Represents a succesful result.
+     * Represents a successful result.
      */
     | { Ok: T }
     /**
