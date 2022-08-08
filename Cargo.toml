@@ -12,5 +12,13 @@ members = [
     "runtimes/fp-provider-runtime",
 ]
 
-# [patch."ssh://git@github.com/fiberplane/fp-bindgen.git"]
+[patch."ssh://git@github.com/fiberplane/fiberplane-rs.git"]
+# fiberplane = { path = "../fiberplane-rs/fiberplane" }
+
+[patch.crates-io]
+# fp-bindgen = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
+# fp-bindgen-macros = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
+# fp-bindgen-support = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
 # fp-bindgen = { path = "../fp-bindgen/fp-bindgen" }
+# fp-bindgen-macros = { path = "../fp-bindgen/macros" }
+# fp-bindgen-support = { path = "../fp-bindgen/fp-bindgen-support" }

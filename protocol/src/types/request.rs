@@ -1,66 +1,29 @@
-use super::Timestamp;
+use fiberplane::protocols::blobs::Blob;
 use fp_bindgen::prelude::Serializable;
-use serde_bytes::ByteBuf;
+use rmpv::Value;
 
 #[non_exhaustive]
-#[derive(Serializable, Debug)]
-#[fp(tag = "type", rename_all = "snake_case")]
-#[allow(dead_code)]
-pub enum ProviderRequest {
-    // Note that enum variants must be structs because
-    // we are using serde's internally tagged representation
-    Instant(QueryInstant),
-    Series(QueryTimeRange),
-    Proxy(ProxyRequest),
-    /// Requests a list of auto-suggestions. Note that these are
-    /// context-unaware.
-    AutoSuggest,
-    Logs(QueryLogs),
-    /// Check data source status, any issue will be returned as `Error`
-    Status,
-}
-
-#[derive(Serializable, Debug)]
+#[derive(Debug, Serializable)]
 #[fp(rename_all = "camelCase")]
-pub struct QueryInstant {
-    pub query: String,
-    pub timestamp: Timestamp,
-}
+pub struct ProviderRequest {
+    /// Query type that is part of the
+    /// [Intent](https://www.notion.so/fiberplane/RFC-45-Provider-Protocol-2-0-Revised-4ec85a0233924b2db0010d8cdae75e16#c8ed5dfbfd764e6bbd5c5b79333f9d6e)
+    /// through which the provider is invoked.
+    pub query_type: String,
 
-#[derive(Serializable, Debug)]
-#[fp(rename_all = "camelCase")]
-pub struct QueryTimeRange {
-    pub query: String,
-    pub time_range: TimeRange,
-}
+    /// Query data.
+    ///
+    /// This is usually populated from the [ProviderCell::query_data] field,
+    /// meaning the MIME type will be `"application/x-www-form-urlencoded"`
+    /// when produced by Studio's Query Builder.
+    pub query_data: Blob,
 
-/// Relays requests for a data-source to a proxy server registered with the API.
-#[derive(Serializable, Debug)]
-#[fp(rename_all = "camelCase")]
-pub struct ProxyRequest {
-    /// ID of the proxy as known by the API.
-    pub proxy_id: String,
+    /// Configuration for the data source.
+    pub config: Value,
 
-    /// Name of the data source exposed by the proxy.
-    pub data_source_name: String,
-
-    /// Request data to send to the proxy
-    pub request: ByteBuf,
-}
-
-/// A range in time from a given timestamp (inclusive) up to another timestamp
-/// (exclusive).
-#[derive(Serializable, Debug)]
-#[fp(rename_all = "camelCase")]
-pub struct TimeRange {
-    pub from: Timestamp,
-    pub to: Timestamp,
-}
-
-#[derive(Serializable, Debug)]
-#[fp(rename_all = "camelCase")]
-pub struct QueryLogs {
-    pub query: String,
-    pub limit: Option<u32>,
-    pub time_range: TimeRange,
+    /// Optional response from a previous invocation.
+    /// May be used for implementing things like filtering without additional
+    /// server roundtrip.
+    #[fp(default, skip_serializing_if = "Option::is_none")]
+    pub previous_response: Option<Blob>,
 }

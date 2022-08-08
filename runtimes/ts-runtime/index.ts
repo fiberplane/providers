@@ -19,8 +19,16 @@ export type Imports = {
 };
 
 export type Exports = {
-    invoke?: (request: types.ProviderRequest, config: rmpv::Value) => Promise<types.ProviderResponse>;
+    createCells?: (queryType: string, response: types.Blob) => types.Result<Array<types.Cell>, types.Error>;
+    extractData?: (response: types.Blob, mimeType: string, query: string | null) => types.Result<ArrayBuffer, types.Error>;
+    getSupportedQueryTypes?: (config: any) => Promise<Array<types.SupportedQueryType>>;
+    invoke?: (request: types.LegacyProviderRequest, config: any) => Promise<types.LegacyProviderResponse>;
+    invoke2?: (request: types.ProviderRequest) => Promise<types.Result<types.Blob, types.Error>>;
+    createCellsRaw?: (queryType: Uint8Array, response: Uint8Array) => Uint8Array;
+    extractDataRaw?: (response: Uint8Array, mimeType: Uint8Array, query: Uint8Array) => Uint8Array;
+    getSupportedQueryTypesRaw?: (config: Uint8Array) => Promise<Uint8Array>;
     invokeRaw?: (request: Uint8Array, config: Uint8Array) => Promise<Uint8Array>;
+    invoke2Raw?: (request: Uint8Array) => Promise<Uint8Array>;
 };
 
 /**
@@ -176,14 +184,83 @@ export async function createRuntime(
     const resolveFuture = getExport<(asyncValuePtr: FatPtr, resultPtr: FatPtr) => void>("__fp_guest_resolve_async_value");
 
     return {
+        createCells: (() => {
+            const export_fn = instance.exports.__fp_gen_create_cells as any;
+            if (!export_fn) return;
+
+            return (queryType: string, response: types.Blob) => {
+                const query_type_ptr = serializeObject(queryType);
+                const response_ptr = serializeObject(response);
+                return parseObject<types.Result<Array<types.Cell>, types.Error>>(export_fn(query_type_ptr, response_ptr));
+            };
+        })(),
+        extractData: (() => {
+            const export_fn = instance.exports.__fp_gen_extract_data as any;
+            if (!export_fn) return;
+
+            return (response: types.Blob, mimeType: string, query: string | null) => {
+                const response_ptr = serializeObject(response);
+                const mime_type_ptr = serializeObject(mimeType);
+                const query_ptr = serializeObject(query);
+                return parseObject<types.Result<ArrayBuffer, types.Error>>(export_fn(response_ptr, mime_type_ptr, query_ptr));
+            };
+        })(),
+        getSupportedQueryTypes: (() => {
+            const export_fn = instance.exports.__fp_gen_get_supported_query_types as any;
+            if (!export_fn) return;
+
+            return (config: any) => {
+                const config_ptr = serializeObject(config);
+                return promiseFromPtr(export_fn(config_ptr)).then((ptr) => parseObject<Array<types.SupportedQueryType>>(ptr));
+            };
+        })(),
         invoke: (() => {
             const export_fn = instance.exports.__fp_gen_invoke as any;
             if (!export_fn) return;
 
-            return (request: types.ProviderRequest, config: rmpv::Value) => {
+            return (request: types.LegacyProviderRequest, config: any) => {
                 const request_ptr = serializeObject(request);
                 const config_ptr = serializeObject(config);
-                return promiseFromPtr(export_fn(request_ptr, config_ptr)).then((ptr) => parseObject<types.ProviderResponse>(ptr));
+                return promiseFromPtr(export_fn(request_ptr, config_ptr)).then((ptr) => parseObject<types.LegacyProviderResponse>(ptr));
+            };
+        })(),
+        invoke2: (() => {
+            const export_fn = instance.exports.__fp_gen_invoke2 as any;
+            if (!export_fn) return;
+
+            return (request: types.ProviderRequest) => {
+                const request_ptr = serializeObject(request);
+                return promiseFromPtr(export_fn(request_ptr)).then((ptr) => parseObject<types.Result<types.Blob, types.Error>>(ptr));
+            };
+        })(),
+        createCellsRaw: (() => {
+            const export_fn = instance.exports.__fp_gen_create_cells as any;
+            if (!export_fn) return;
+
+            return (queryType: Uint8Array, response: Uint8Array) => {
+                const query_type_ptr = exportToMemory(queryType);
+                const response_ptr = exportToMemory(response);
+                return importFromMemory(export_fn(query_type_ptr, response_ptr));
+            };
+        })(),
+        extractDataRaw: (() => {
+            const export_fn = instance.exports.__fp_gen_extract_data as any;
+            if (!export_fn) return;
+
+            return (response: Uint8Array, mimeType: Uint8Array, query: Uint8Array) => {
+                const response_ptr = exportToMemory(response);
+                const mime_type_ptr = exportToMemory(mimeType);
+                const query_ptr = exportToMemory(query);
+                return importFromMemory(export_fn(response_ptr, mime_type_ptr, query_ptr));
+            };
+        })(),
+        getSupportedQueryTypesRaw: (() => {
+            const export_fn = instance.exports.__fp_gen_get_supported_query_types as any;
+            if (!export_fn) return;
+
+            return (config: Uint8Array) => {
+                const config_ptr = exportToMemory(config);
+                return promiseFromPtr(export_fn(config_ptr)).then(importFromMemory);
             };
         })(),
         invokeRaw: (() => {
@@ -194,6 +271,15 @@ export async function createRuntime(
                 const request_ptr = exportToMemory(request);
                 const config_ptr = exportToMemory(config);
                 return promiseFromPtr(export_fn(request_ptr, config_ptr)).then(importFromMemory);
+            };
+        })(),
+        invoke2Raw: (() => {
+            const export_fn = instance.exports.__fp_gen_invoke2 as any;
+            if (!export_fn) return;
+
+            return (request: Uint8Array) => {
+                const request_ptr = exportToMemory(request);
+                return promiseFromPtr(export_fn(request_ptr)).then(importFromMemory);
             };
         })(),
     };

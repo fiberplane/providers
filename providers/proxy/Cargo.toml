@@ -8,6 +8,7 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
-fp-provider = { version = "1.0.0-alpha.1", path = "../../fp-provider" }
+fp-provider = { version = "2.0.0", path = "../../fp-provider" }
 rmp-serde = "1.0.0"
+rmpv = "1.0"
 urlencoding = "2"

@@ -1,7 +1,8 @@
 use fiberplane::protocols::core::LokiDataSource;
 use fp_provider::{
-    fp_export_impl, make_http_request, Error, HttpRequest, HttpRequestMethod, LogRecord,
-    ProviderRequest, ProviderResponse, QueryLogs, Timestamp, Value,
+    fp_export_impl, make_http_request, Error, HttpRequest, HttpRequestMethod,
+    LegacyLogRecord as LogRecord, LegacyProviderRequest as ProviderRequest,
+    LegacyProviderResponse as ProviderResponse, QueryLogs, Timestamp,
 };
 use rmpv::ext::from_value;
 use serde::Deserialize;
@@ -11,7 +12,7 @@ use url::Url;
 const CONVERSION_FACTOR: f64 = 1e9;
 
 #[fp_export_impl(fp_provider)]
-async fn invoke(request: ProviderRequest, config: Value) -> ProviderResponse {
+async fn invoke(request: ProviderRequest, config: rmpv::Value) -> ProviderResponse {
     let config: LokiDataSource = match from_value(config) {
         Ok(config) => config,
         Err(err) => {
@@ -201,7 +202,7 @@ async fn check_status(config: LokiDataSource) -> Result<(), Error> {
 #[cfg(test)]
 mod test {
     use crate::{data_mapper, Data, QueryData, QueryResponse};
-    use fp_provider::LogRecord;
+    use fp_provider::LegacyLogRecord as LogRecord;
     use serde::Deserialize;
     use serde_json::Deserializer;
     use std::collections::HashMap;

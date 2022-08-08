@@ -1,11 +1,12 @@
 [package]
 name = "fp-provider-runtime"
-version = "1.0.0-alpha.1"
+version = "2.0.0"
 authors = ["Fiberplane <info@fiberplane.com>"]
 edition = "2018"
 
 [dependencies]
-fp-bindgen-support = { version = "2.0.0", features = ["async", "host"] }
+fiberplane = { git = "ssh://git@github.com/fiberplane/fiberplane-rs.git", branch = "main" }
+fp-bindgen-support = { version = "2.0.1", features = ["async", "host"] }
 rand = "0.8.0"
 reqwest = { version = "0.11.4", default-features = false, features = [
     "rustls-tls",

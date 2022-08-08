@@ -1,10 +1,11 @@
 [package]
 name = "provider-protocol"
-version = "0.1.0"
+version = "2.0.0"
 authors = ["Fiberplane <info@fiberplane.com>"]
 edition = "2018"
 
 [dependencies]
-fp-bindgen = { version = "2", features = ["generators"] }
-rmpv = "1.0.0"
+fiberplane = { git = "ssh://git@github.com/fiberplane/fiberplane-rs.git", branch = "main" }
+fp-bindgen = { version = "2", features = ["generators", "serde-bytes-compat"] }
+rmpv = "1.0"
 serde_bytes = "0.11"

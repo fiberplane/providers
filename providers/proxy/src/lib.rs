@@ -1,8 +1,10 @@
-use fp_provider::*;
+use fp_provider::{
+    LegacyProviderRequest as ProviderRequest, LegacyProviderResponse as ProviderResponse, *,
+};
 use std::collections::HashMap;
 
 #[fp_export_impl(fp_provider)]
-async fn invoke(request: ProviderRequest, _config: Value) -> ProviderResponse {
+async fn invoke(request: ProviderRequest, _config: rmpv::Value) -> ProviderResponse {
     match request {
         ProviderRequest::Proxy(request) => proxy_request(request).await,
         _ => ProviderResponse::Error {

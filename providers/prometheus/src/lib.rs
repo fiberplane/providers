@@ -1,5 +1,7 @@
 use fiberplane::protocols::core::PrometheusDataSource;
-use fp_provider::*;
+use fp_provider::{
+    LegacyProviderRequest as ProviderRequest, LegacyProviderResponse as ProviderResponse, *,
+};
 use serde::Deserialize;
 use serde_bytes::ByteBuf;
 use std::{
@@ -14,7 +16,7 @@ const ONE_MINUTE: u32 = 60; // seconds
 const ONE_HOUR: u32 = 60 * ONE_MINUTE; // seconds
 
 #[fp_export_impl(fp_provider)]
-async fn invoke(request: ProviderRequest, config: Value) -> ProviderResponse {
+async fn invoke(request: ProviderRequest, config: rmpv::Value) -> ProviderResponse {
     log(format!(
         "prometheus provider invoked with request: {:?}, config: {:?}",
         request, config
@@ -268,7 +270,11 @@ fn from_matrix(response: &[u8]) -> Result<Vec<Series>, Error> {
                 .into_iter()
                 .map(to_point)
                 .collect::<Result<Vec<_>, ParseFloatError>>()?;
-            Ok(Series { metric, points })
+            Ok(Series {
+                metric,
+                points,
+                visible: false,
+            })
         })
         .collect::<Result<Vec<_>, ParseFloatError>>()
         .map_err(|error| Error::Data {

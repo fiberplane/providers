@@ -1,8 +1,9 @@
 use elasticsearch_dsl::{Hit, SearchResponse};
 use fiberplane::protocols::core::ElasticsearchDataSource;
 use fp_provider::{
-    fp_export_impl, log, make_http_request, Error, HttpRequest, HttpRequestMethod, LogRecord,
-    ProviderRequest, ProviderResponse, QueryLogs,
+    fp_export_impl, log, make_http_request, Error, HttpRequest, HttpRequestMethod,
+    LegacyLogRecord as LogRecord, LegacyProviderRequest as ProviderRequest,
+    LegacyProviderResponse as ProviderResponse, QueryLogs,
 };
 use rmpv::ext::from_value;
 use serde::{Deserialize, Serialize};

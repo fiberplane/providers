@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 [dependencies]
 form_urlencoded = "1"
 fiberplane = { git = "ssh://git@github.com/fiberplane/fiberplane-rs.git", branch = "main" }
-fp-provider = { version = "1.0.0-alpha.1", path = "../../fp-provider" }
+fp-provider = { version = "2.0.0", path = "../../fp-provider" }
 rmpv = { version = "1.0.0", features = ["with-serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_bytes = "0.11"
