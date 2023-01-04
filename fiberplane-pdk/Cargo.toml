@@ -1,0 +1,21 @@
+[package]
+name = "fiberplane-pdk"
+description = "Fiberplane Provider Development Kit"
+version = "1.0.0"
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+
+[lib]
+crate-type = ["lib"]
+
+[dependencies]
+form_urlencoded = "1"
+fiberplane-models = { workspace = true }
+fiberplane-pdk-macros = { workspace = true }
+fiberplane-provider-bindings = { workspace = true }
+fiberplane-string-utils = { workspace = true }
+rmp-serde = "1"
+rmpv = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
