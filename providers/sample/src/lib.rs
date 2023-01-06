@@ -19,6 +19,20 @@ pub const SUGGESTIONS_MSGPACK_MIME_TYPE: &str = formatcp!("{SUGGESTIONS_MIME_TYP
 static COMMIT_HASH: &str = env!("VERGEN_GIT_SHA");
 static BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
 
+/// This example shows how to define a struct and let the PDK generate a config
+/// schema for it. This schema is used by Fiberplane Studio to render the
+/// config form. The data will be encoded using JSON when the provider is
+/// configured inside Studio, though it may also be encoded using YAML if the
+/// provider is configured inside a Proxy. In either case, the data is stored as
+/// an untyped object in the `config` field of the `ProviderRequest` that is
+/// passed to `invoke2()`. The generated `parse()` method can then be used to
+/// parse this object into the following struct.
+#[derive(ConfigSchema)]
+struct SampleConfig {
+    #[pdk(label = "Specify your endpoint")]
+    pub endpoint: String,
+}
+
 /// This example shows how to define a struct and let the PDK generate a query
 /// schema for it. This schema is used by Fiberplane Studio to render a suitable
 /// query form. The data will be encoded using `FORM_ENCODED_MIME_TYPE` and
@@ -52,11 +66,12 @@ async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQuer
 #[pdk_export]
 async fn invoke2(request: ProviderRequest) -> Result<Blob, Error> {
     log(format!(
-        "Sample provider (commit: {}, built at: {}) invoked for query type \"{}\" and query data \"{:?}\"",
-        COMMIT_HASH, BUILD_TIMESTAMP, request.query_type, request.query_data
+        "Sample provider (commit: {COMMIT_HASH}, built at: {BUILD_TIMESTAMP}) \
+        invoked for query type \"{}\" and query data \"{:?}\"",
+        request.query_type, request.query_data
     ));
 
-    let config: Config = serde_json::from_value(request.config).map_err(|err| Error::Config {
+    let config = SampleConfig::parse(request.config).map_err(|err| Error::Config {
         message: format!("Error parsing config: {:?}", err),
     })?;
 

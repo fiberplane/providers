@@ -12,6 +12,7 @@ edition = "2021"
 rust-version = "1.65"
 
 [workspace.dependencies]
+const_format = "0.2"
 fp-bindgen = { version = "2.4" }
 fp-bindgen-support = { version = "2.4" }
 fiberplane-models = { path = "../fiberplane-rs/fiberplane-models" }

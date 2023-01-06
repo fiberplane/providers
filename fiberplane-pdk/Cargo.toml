@@ -15,7 +15,9 @@ fiberplane-models = { workspace = true }
 fiberplane-pdk-macros = { workspace = true }
 fiberplane-provider-bindings = { workspace = true }
 fiberplane-string-utils = { workspace = true }
+fp-bindgen = { workspace = true }
 rmp-serde = "1"
 rmpv = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+time = { workspace = true }

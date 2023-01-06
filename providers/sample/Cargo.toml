@@ -10,6 +10,7 @@ rust-version = { workspace = true }
 crate-type = ["cdylib"]
 
 [dependencies]
+const_format = { workspace = true }
 fiberplane-pdk = { workspace = true }
 
 [build-dependencies]

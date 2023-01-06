@@ -1,5 +1,43 @@
+mod config_schema;
+mod query_schema;
+mod schema_generator;
+
 use proc_macro::TokenStream;
+use proc_macro_error::proc_macro_error;
 use quote::quote;
+
+/// Used to automatically generate a config schema for a given struct.
+///
+/// The macro extends the struct to which it is applied with a static `parse()`
+/// method and it will automatically implement the provider's
+/// `get_config_schema()` function for you.
+///
+/// `parse()` takes an untyped `ProviderConfig` object and parses it into an
+/// instance of the struct.
+///
+/// Example:
+///
+/// ```no_compile
+/// use fiberplane_pdk::prelude::*;
+///
+/// #[derive(ConfigSchema)]
+/// struct MyConfig {
+///     #[pdk(label = "Specify your endpoint")]
+///     pub endpoint: String,
+/// }
+///
+/// #[pdk_export]
+/// async fn invoke2(request: ProviderRequest) -> Result<Blob, Error> {
+///     let config = MyConfig::parse(request.config)?;
+///     todo!("Do something with the request");
+/// }
+/// ```
+#[proc_macro_derive(ConfigSchema, attributes(pdk))]
+#[proc_macro_error]
+pub fn derive_config_schema(input: TokenStream) -> TokenStream {
+    proc_macro_error::set_dummy(input.clone().into());
+    config_schema::derive_config_schema(input)
+}
 
 /// Used to automatically generate a query schema for a given struct.
 ///
@@ -41,8 +79,10 @@ use quote::quote;
 /// }
 /// ```
 #[proc_macro_derive(QuerySchema, attributes(pdk))]
-pub fn derive_query_schema(_item: TokenStream) -> TokenStream {
-    todo!("IMPLEMENT MACRO")
+#[proc_macro_error]
+pub fn derive_query_schema(input: TokenStream) -> TokenStream {
+    proc_macro_error::set_dummy(input.clone().into());
+    query_schema::derive_query_schema(input)
 }
 
 /// Exports a provider function to make it available to the provider runtime.
@@ -61,7 +101,7 @@ pub fn derive_query_schema(_item: TokenStream) -> TokenStream {
 pub fn pdk_export(_attributes: TokenStream, input: TokenStream) -> TokenStream {
     let ts: proc_macro2::TokenStream = input.into();
     (quote! {
-        #[fp_export_impl(fiberplane_pdk::bindings)]
+        #[fiberplane_pdk::fp_export_impl(fiberplane_pdk::bindings)]
         #ts
     })
     .into()
