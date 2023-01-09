@@ -1,0 +1,34 @@
+[workspace]
+members = [
+  "fiberplane-pdk",
+  "fiberplane-pdk-macros",
+  "providers/*",
+]
+exclude = ["providers/.cargo"]
+
+[workspace.package]
+authors = ["Fiberplane <info@fiberplane.com>"]
+edition = "2021"
+rust-version = "1.65"
+
+[workspace.dependencies]
+fp-bindgen = { version = "2.4" }
+fp-bindgen-support = { version = "2.4" }
+fiberplane-models = { path = "../fiberplane-rs/fiberplane-models" }
+fiberplane-pdk = { path = "fiberplane-pdk", version = "1" }
+fiberplane-pdk-macros = { path = "fiberplane-pdk-macros", version = "1" }
+fiberplane-string-utils = { path = "../fiberplane-rs/fiberplane-string-utils" }
+fiberplane-provider-bindings = { path = "../fiberplane-rs/fiberplane-provider-protocol/fiberplane-provider-bindings" }
+rmpv = { version = "1", features = ["with-serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+time = { version = "0.3.15", features = [ "macros", "serde-human-readable", "serde-well-known" ] }
+tracing = "0.1.36"
+url = { version = "2.2.2", features = ["serde"] }
+vergen = { version = "7.4.2", default-features = false, features = ["build", "git"] }
+
+[patch.crates-io]
+#fp-bindgen = { path = "../fp-bindgen/fp-bindgen"}
+#fp-bindgen-support = { path = "../fp-bindgen/fp-bindgen-support"}
+#fp-bindgen = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
+#fp-bindgen-support = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
