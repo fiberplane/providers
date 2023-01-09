@@ -1,10 +1,10 @@
+use crate::schema_field::SchemaField;
+use crate::{field_attrs::FieldAttrs, schema_struct::SchemaStruct};
 use fiberplane_models::providers::*;
 use proc_macro::TokenStream;
-use proc_macro_error::{abort};
+use proc_macro_error::abort;
 use quote::quote;
-use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::{parse_macro_input, token, Field, Ident, Result, Token, Type, PathArguments, GenericArgument};
+use syn::{parse_macro_input, Field, GenericArgument, PathArguments, PathSegment, Type};
 
 /// Generates a schema from the given struct.
 pub fn generate_schema(struct_item: TokenStream) -> TokenStream {
@@ -12,175 +12,154 @@ pub fn generate_schema(struct_item: TokenStream) -> TokenStream {
     let fields: Vec<_> = schema_struct
         .fields
         .iter()
-        .map(generate_schema_field)
+        .map(|field: &Field| {
+            let schema_field = determine_field_type(field);
+            schema_field.to_token_stream()
+        })
         .collect();
 
     let ts = quote! { vec![#(#fields),*] };
     ts.into()
 }
 
-/// Represents the parsed struct from which to generate the schema.
-struct SchemaStruct {
-    struct_token: Token![struct],
-    ident: Ident,
-    brace_token: token::Brace,
-    fields: Punctuated<Field, Token![,]>,
-}
-
-impl Parse for SchemaStruct {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let lookahead = input.lookahead1();
-        if lookahead.peek(Token![struct]) {
-            input.parse()
-        } else {
-            Err(lookahead.error())
-        }
-    }
-}
-
-fn generate_schema_field(field: &Field) -> proc_macro2::TokenStream {
-    let schema_field = determine_field_type(field);
-
-    quote! {
-        #field_type::new()
-    }
-
-    TextField::new()
-            .with_name("baseUrl")
-            .with_label("Base URL of the API we are interested in")
-            .with_placeholder("Leave empty to allow querying any URL")
-            .into(),
-}
-
-/// All the possible field types we can generate.
-enum SchemaField {
-    Checkbox(CheckboxField),
-    DateTimeRange(DateTimeRangeField),
-    Integer(IntegerField),
-    Label(LabelField),
-    Select(SelectField),
-    Text(TextField),
-}
-
-impl SchemaField {
-    pub fn required(self) -> Self {
-        use SchemaField::*;
-        match self {
-            Checkbox(field) => Checkbox(field.required()),
-            DateTimeRange(field) => DateTimeRange(field.required()),
-            Integer(field) => Integer(field.required()),
-            Label(field) => Label(field.required()),
-            Select(field) => Select(field.required()),
-            Text(field) => Text(field.required()),
-        }
-    }
-
-    pub fn with_label(self, label: &str) -> Self {
-        use SchemaField::*;
-        match self {
-            Checkbox(field) => Checkbox(field.with_label(label)),
-            DateTimeRange(field) => DateTimeRange(field.with_label(label)),
-            Integer(field) => Integer(field.with_label(label)),
-            Label(field) => Label(field.with_label(label)),
-            Select(field) => Select(field.with_label(label)),
-            Text(field) => Text(field.with_label(label)),
-        }
-    }
-
-    pub fn with_name(self, name: &str) -> Self {
-        use SchemaField::*;
-        match self {
-            Checkbox(field) => Checkbox(field.with_name(name)),
-            DateTimeRange(field) => DateTimeRange(field.with_name(name)),
-            Integer(field) => Integer(field.with_name(name)),
-            Label(field) => Label(field.with_name(name)),
-            Select(field) => Select(field.with_name(name)),
-            Text(field) => Text(field.with_name(name)),
-        }
-    }
-}
-
 fn determine_field_type(field: &Field) -> SchemaField {
-    let path = match field.ty {
-        Type::Path(type_path) if type_path.qself.is_none() => type_path.path,
-        ty => abort!(ty, "unsupported type in schema")
+    let name = match &field.ident {
+        Some(ident) => ident.to_string(),
+        None => abort!(field, "struct field must have an identifier"),
     };
 
-    let mut is_vec = false;
+    let attrs = FieldAttrs::from_attrs(&field.attrs);
+
+    let (type_ident, required, multiple) = get_ident(field);
+
+    let mut schema_field = match (type_ident.as_str(), multiple) {
+        ("bool", false) => SchemaField::Checkbox(CheckboxField::new()),
+        ("i8" | "i16" | "i32" | "i64" | "u8" | "u16" | "u32" | "u64", false) => {
+            let mut field = IntegerField::new();
+            if let Some(max) = attrs.max {
+                field = field.with_max(max);
+            }
+            if let Some(min) = attrs.min {
+                field = field.with_min(min);
+            } else if type_ident.as_str().starts_with("u") {
+                field = field.with_min(0);
+            }
+            if let Some(step) = attrs.step {
+                field = field.with_step(step);
+            }
+            SchemaField::Integer(field)
+        }
+        ("DateTimeRange", false) => SchemaField::DateTimeRange(DateTimeRangeField::new()),
+        ("Label", multiple) => {
+            let mut field = LabelField::new();
+            if multiple {
+                field = field.multiple();
+            }
+            SchemaField::Label(field)
+        }
+        ("String", multiple) if attrs.select || !multiple => {
+            if attrs.select {
+                let mut field = SelectField::new();
+                if multiple {
+                    field = field.multiple();
+                }
+                if !attrs.options.is_empty() {
+                    field = field
+                        .with_options(&attrs.options.iter().map(String::as_str).collect::<Vec<_>>())
+                }
+                if !attrs.prerequisites.is_empty() {
+                    field = field.with_prerequisites(
+                        &attrs
+                            .prerequisites
+                            .iter()
+                            .map(String::as_str)
+                            .collect::<Vec<_>>(),
+                    );
+                }
+                SchemaField::Select(field)
+            } else {
+                let mut field = TextField::new();
+                if attrs.multiline {
+                    field = field.multiline();
+                }
+                if !attrs.prerequisites.is_empty() {
+                    field = field.with_prerequisites(
+                        &attrs
+                            .prerequisites
+                            .iter()
+                            .map(String::as_str)
+                            .collect::<Vec<_>>(),
+                    );
+                }
+                SchemaField::Text(field)
+            }
+        }
+        _ => abort!(field.ty, "unsupported type in schema"),
+    };
+
+    if let Some(label) = attrs.label {
+        schema_field = schema_field.with_label(&label);
+    }
+
+    if let Some(placeholder) = attrs.placeholder {
+        schema_field = schema_field.with_placeholder(&placeholder);
+    }
+
+    if required {
+        schema_field = schema_field.required();
+    }
+
+    schema_field.with_name(&name)
+}
+
+fn get_ident(field: &Field) -> (String, bool, bool) {
+    let path = match &field.ty {
+        Type::Path(type_path) if type_path.qself.is_none() => &type_path.path,
+        ty => abort!(ty, "unsupported type in schema"),
+    };
+
+    let mut multiple = false;
     let mut required = true;
 
-    let (ident, arguments) = match path.segments.last() {
-        Some(segment) => (segment.ident, segment.arguments),
-        None => abort!(path, "unsupported type in schema")
+    let Some(mut path_segment) = path.segments.last().cloned() else {
+        abort!(path, "unsupported type in schema")
     };
 
-    // Extract a possibly nested identifier in the presence of an `Option`.
-    // If an `Option` is present, the field will no longer be marked as required.
-    let string_ident = ident.to_string();
-    let string_ident = match (string_ident.as_str(), arguments) {
-        ("Option", PathArguments::AngleBracketed(args)) => {
-            required = false;
-
-            let nested_path = match args.args.last() {
-                Some(GenericArgument::Type(Type::Path(type_path))) if type_path.qself.is_none() => type_path.path,
-                _ => abort!(path, "unsupported type in schema")
-            };
-
-            match path.segments.last() {
-                Some(segment) if segment.arguments.is_none() => segment.ident.to_string(),
-                _ => abort!(path, "unsupported type in schema")
-            }
-        }
-        (string_ident, PathArguments::None) => string_ident.to_owned(),
-        _ => abort!(path, "unsupported type in schema")
-    };
-
-    // Do the same for `Vec`, only now we set `is_vec` based on its presence.
-    let string_ident = match (string_ident.as_str(), arguments) {
-        ("Vec", PathArguments::AngleBracketed(args)) => {
-            is_vec = true;
-
-            let nested_path = match args.args.last() {
-                Some(GenericArgument::Type(Type::Path(type_path))) if type_path.qself.is_none() => type_path.path,
-                _ => abort!(path, "unsupported type in schema")
-            };
-
-            match path.segments.last() {
-                Some(segment) if segment.arguments.is_none() => segment.ident.to_string(),
-                _ => abort!(path, "unsupported type in schema")
-            }
-        }
-        (string_ident, PathArguments::None) => string_ident.to_owned(),
-        _ => abort!(path, "unsupported type in schema")
-    };
-
-    let name = match field.ident {
-        Some(ident) => ident.to_string(),
-        None => abort!(field, "struct field must have an identifier")
-    };
-
-    match (string_ident.as_str(), is_vec) {
-        ("bool", false) => SchemaField::Checkbox(CheckboxField::new()),
-        ("DateTimeRange", false) => SchemaField::DateTimeRange(DateTimeRangeField::new()),
-        ("i8" | "i16" | "i32" | "i64", false) => SchemaField::Integer(IntegerField::new()),
-        ("Label", is_vec) => {
-            let mut field = LabelField::new();
-            if is_vec {
-                field = field.multiple();
-            }
-            SchemaField::Label(field)
-        }
-        ("Label", is_vec) => {
-            let mut field = LabelField::new();
-            if is_vec {
-                field = field.multiple();
-            }
-            SchemaField::Label(field)
-        }
-        ("String", is_vec) => SchemaField::Text(TextField::new()),
-        ("u8" | "u16" | "u32" | "u64", false) => {
-            SchemaField::Integer(IntegerField::new().with_min(0))
-        }
-        _ => abort!(path, "unsupported type in schema")
+    // If the type is wrapped in an `Option`, it means the field is not required
+    // and we use the nested type instead.
+    if let Some(nested_segment) = get_nested_type(&path_segment, "Option") {
+        path_segment = nested_segment;
+        required = false;
     }
+
+    // If the type is wrapped in a `Vec`, it means multiple values are allowed
+    // and we use the nested type instead.
+    if let Some(nested_segment) = get_nested_type(&path_segment, "Vec") {
+        path_segment = nested_segment;
+        multiple = true;
+    }
+
+    if !path_segment.arguments.is_none() {
+        abort!(path_segment, "unsupported type in schema")
+    }
+
+    (path_segment.ident.to_string(), required, multiple)
+}
+
+fn get_nested_type(segment: &PathSegment, container_ident: &str) -> Option<PathSegment> {
+    if segment.ident == container_ident {
+        if let PathArguments::AngleBracketed(args) = &segment.arguments {
+            let Some(GenericArgument::Type(Type::Path(nested_path))) = args.args.last() else {
+                abort!(segment, "unsupported type in schema")
+            };
+
+            if nested_path.qself.is_some() {
+                abort!(segment, "unsupported type in schema")
+            }
+
+            return nested_path.path.segments.last().cloned();
+        }
+    }
+
+    None
 }

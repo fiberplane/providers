@@ -1,6 +1,9 @@
 mod config_schema;
+mod field_attrs;
 mod query_schema;
+mod schema_field;
 mod schema_generator;
+mod schema_struct;
 
 use proc_macro::TokenStream;
 use proc_macro_error::proc_macro_error;
