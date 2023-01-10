@@ -1,5 +1,7 @@
 use fiberplane_models::providers::*;
+use proc_macro2::Span;
 use quote::quote;
+use syn::Ident;
 
 /// All the possible field types we can generate.
 pub enum SchemaField {
@@ -24,17 +26,19 @@ impl SchemaField {
         }
     }
 
-    pub fn to_token_stream(self) -> proc_macro2::TokenStream {
+    pub fn to_token_stream(self, field_enum: &str) -> proc_macro2::TokenStream {
         use SchemaField::*;
 
-        let field_type = match &self {
-            Checkbox(_) => quote! { CheckboxField },
-            DateTimeRange(_) => quote! { DateTimeRangeField },
-            Integer(_) => quote! { IntegerField },
-            Label(_) => quote! { LabelField },
-            Select(_) => quote! { SelectField },
-            Text(_) => quote! { TextField },
+        let field_variant = match &self {
+            Checkbox(_) => quote! { Checkbox },
+            DateTimeRange(_) => quote! { DateTimeRange },
+            Integer(_) => quote! { Integer },
+            Label(_) => quote! { Label },
+            Select(_) => quote! { Select },
+            Text(_) => quote! { Text },
         };
+        let enum_ident = Ident::new(field_enum, Span::call_site());
+        let field_ident = Ident::new(&format!("{field_variant}Field"), Span::call_site());
 
         let name = match &self {
             Checkbox(field) => &field.name,
@@ -123,7 +127,7 @@ impl SchemaField {
         };
 
         quote! {
-            #field_type::new()
+            #enum_ident::#field_variant(#field_ident::new()
                 #name
                 #checked
                 #label
@@ -134,7 +138,7 @@ impl SchemaField {
                 #placeholder
                 #prerequisites
                 #step
-                #value
+                #value)
         }
     }
 

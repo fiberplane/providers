@@ -4,7 +4,7 @@ use quote::quote;
 use syn::parse_macro_input;
 
 pub fn derive_query_schema(input: TokenStream) -> TokenStream {
-    let schema: proc_macro2::TokenStream = generate_schema(input.clone()).into();
+    let schema: proc_macro2::TokenStream = generate_schema("QueryField", input.clone()).into();
     let schema_struct = parse_macro_input!(input as SchemaStruct);
     let ident = schema_struct.ident;
 

@@ -7,14 +7,14 @@ use quote::quote;
 use syn::{parse_macro_input, Field, GenericArgument, PathArguments, PathSegment, Type};
 
 /// Generates a schema from the given struct.
-pub fn generate_schema(struct_item: TokenStream) -> TokenStream {
+pub fn generate_schema(field_enum: &str, struct_item: TokenStream) -> TokenStream {
     let schema_struct = parse_macro_input!(struct_item as SchemaStruct);
     let fields: Vec<_> = schema_struct
         .fields
         .iter()
         .map(|field: &Field| {
             let schema_field = determine_field_type(field);
-            schema_field.to_token_stream()
+            schema_field.to_token_stream(field_enum)
         })
         .collect();
 

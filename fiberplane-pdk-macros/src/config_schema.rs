@@ -3,7 +3,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 
 pub fn derive_config_schema(input: TokenStream) -> TokenStream {
-    let schema: proc_macro2::TokenStream = generate_schema(input).into();
+    let schema: proc_macro2::TokenStream = generate_schema("ConfigField", input).into();
 
     let output = quote! {
         #[pdk_export]

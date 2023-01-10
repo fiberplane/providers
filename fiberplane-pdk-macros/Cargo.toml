@@ -1,10 +1,10 @@
 [package]
 name = "fiberplane-pdk-macros"
 description = "Macros for the Fiberplane PDK"
-version = "1.0.0"
-authors = { workspace = true }
-edition = { workspace = true }
-rust-version = { workspace = true }
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+version.workspace = true
 
 [lib]
 proc-macro = true
