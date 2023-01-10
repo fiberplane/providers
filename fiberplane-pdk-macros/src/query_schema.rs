@@ -1,4 +1,5 @@
-use crate::{schema_generator::generate_schema, schema_struct::SchemaStruct};
+use crate::schema_generator::generate_schema;
+use crate::schema_struct::SchemaStruct;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse_macro_input;
@@ -10,6 +11,11 @@ pub fn derive_query_schema(input: TokenStream) -> TokenStream {
 
     let output = quote! {
         impl #ident {
+            pub fn parse(query_data: fiberplane_pdk::prelude::Blob)
+                    -> core::result::Result<Self, fiberplane_pdk::bindings::Error> {
+                fiberplane_pdk::parse_query(query_data)
+            }
+
             pub fn schema() -> fiberplane_pdk::providers::QuerySchema {
                 #schema
             }

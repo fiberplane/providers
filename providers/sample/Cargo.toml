@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 [dependencies]
 const_format = { workspace = true }
 fiberplane-pdk = { workspace = true }
+serde = { workspace = true }
 
 [build-dependencies]
 vergen = { workspace = true }

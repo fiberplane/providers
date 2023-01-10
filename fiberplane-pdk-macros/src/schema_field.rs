@@ -85,7 +85,7 @@ impl SchemaField {
 
         let options = match &self {
             Select(SelectField { options, .. }) if !options.is_empty() => {
-                quote! { .with_options(#(#options),*) }
+                quote! { .with_options(&[#(#options),*]) }
             }
             _ => quote! {},
         };
@@ -107,7 +107,7 @@ impl SchemaField {
             Select(SelectField { prerequisites, .. }) | Text(TextField { prerequisites, .. })
                 if !prerequisites.is_empty() =>
             {
-                quote! { .with_prerequisites(#(#prerequisites),*) }
+                quote! { .with_prerequisites(&[#(#prerequisites),*]) }
             }
             _ => quote! {},
         };

@@ -2,7 +2,7 @@ use proc_macro_error::abort;
 use quote::ToTokens;
 use syn::ext::IdentExt;
 use syn::parse::{Parse, ParseStream};
-use syn::{parenthesized, Attribute, Error, Ident, LitStr, Result, Token};
+use syn::{parenthesized, Attribute, Error, Ident, LitInt, LitStr, Result, Token};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct FieldAttrs {
@@ -36,9 +36,6 @@ pub struct FieldAttrs {
     ///
     /// Only supported on select fields. Multiple options are specified using
     /// multiple `option = "..."` annotations.
-    ///
-    /// Specifying options implicitly turns the type of the field into a select
-    /// field.
     pub options: Vec<String>,
 
     /// Suggested placeholder to display when there is no value for the field.
@@ -55,9 +52,12 @@ pub struct FieldAttrs {
     /// `prerequisite = "..."` annotations.
     pub prerequisites: Vec<String>,
 
-    /// Explicit indicator that this is a select field. This is useful when the
-    /// values are of type `String` and the select field does not have a static
-    /// list of options.
+    /// Indicates that this is a select field. Both text fields and select
+    /// fields accept values of type `String`, so the `select` attribute is
+    /// distinguish between them.
+    ///
+    /// Note that select fields that accept multiple values use `Vec<String>`
+    /// as a type. These still require the use of the `select` attribute.
     pub select: bool,
 
     /// Specifies the granularity that any specified numbers must adhere to.
@@ -72,7 +72,8 @@ pub struct FieldAttrs {
 
     /// Value of the field as it will be included in the encoded query.
     ///
-    /// Only supported on checkbox fields.
+    /// Only supported on checkbox fields. If omitted, a default value of "true"
+    /// is used.
     pub value: Option<String>,
 }
 
@@ -97,7 +98,7 @@ impl Parse for FieldAttrs {
         let parse_i32 = || -> Result<i32> {
             content.parse::<Token![=]>()?;
             content
-                .parse::<LitStr>()?
+                .parse::<LitInt>()?
                 .to_token_stream()
                 .to_string()
                 .parse()
@@ -125,10 +126,7 @@ impl Parse for FieldAttrs {
                 "max" => result.max = Some(parse_i32()?),
                 "min" => result.min = Some(parse_i32()?),
                 "multiline" => result.multiline = true,
-                "option" => {
-                    result.options.push(parse_string()?);
-                    result.select = true;
-                }
+                "option" => result.options.push(parse_string()?),
                 "prerequisite" => result.prerequisites.push(parse_string()?),
                 "placeholder" => result.placeholder = Some(parse_string()?),
                 "select" => result.select = true,
