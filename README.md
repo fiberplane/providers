@@ -28,6 +28,11 @@ for ways to reach out to us.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Code of Conduct
+
+See
+[CODE_OF_CONDUCT.md](https://github.com/fiberplane/fiberplane/blob/main/CODE_OF_CONDUCT.md).
+
 ## License
 
 Our providers and the PDK are distributed under the terms of both the MIT
