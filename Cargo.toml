@@ -10,6 +10,7 @@ exclude = ["providers/.cargo"]
 authors = ["Fiberplane <info@fiberplane.com>"]
 edition = "2021"
 rust-version = "1.65"
+version = "1.0.0"
 
 [workspace.dependencies]
 const_format = "0.2"

@@ -25,8 +25,8 @@ We actively welcome your pull requests:
    rejected.
 1. Fork the repo and create your branch from `main`.
 2. If you've added code that should be tested, add tests.
-3. If you've updated APIs, update the documentation. Be mindful of breaking
-   changes, please discuss these first with the maintainers.
+3. Be mindful of breaking changes, please discuss these first with the
+   maintainers.
 4. Ensure the test suite passes.
 5. Make sure your code is correctly formatted (see below).
 6. Issue that pull request!
