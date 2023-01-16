@@ -11,8 +11,11 @@ pub fn derive_config_schema(input: TokenStream) -> TokenStream {
 
     let output = quote! {
         impl #ident {
-            pub fn parse(config: fiberplane_pdk::providers::ProviderConfig) -> fiberplane_pdk::serde_json::Result<Self> {
-                fiberplane_pdk::serde_json::from_value(config)
+            pub fn parse(config: fiberplane_pdk::providers::ProviderConfig)
+                    -> core::result::Result<Self, fiberplane_pdk::bindings::Error> {
+                fiberplane_pdk::serde_json::from_value(config).map_err(|err| Error::Config {
+                    message: format!("Error parsing config: {:?}", err),
+                })
             }
         }
 

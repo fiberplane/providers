@@ -26,7 +26,9 @@ We actively welcome your pull requests:
 1. Fork the repo and create your branch from `main`.
 2. If you've added code that should be tested, add tests.
 3. Be mindful of breaking changes, please discuss these first with the
-   maintainers.
+   maintainers. This is mainly a concern when a PR touches the PDK, but for
+   individual providers you should be careful when changing the supported query
+   types, or the format of the returned data.
 4. Ensure the test suite passes.
 5. Make sure your code is correctly formatted (see below).
 6. Issue that pull request!
