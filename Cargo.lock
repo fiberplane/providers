@@ -86,6 +86,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "chrono"
+version = "0.4.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16b0a3d9ed01224b22057780a37bb8c5dbfe1be8ba48678e7bf57ec4b385411f"
+dependencies = [
+ "num-integer",
+ "num-traits",
+ "serde",
+]
+
+[[package]]
 name = "const_format"
 version = "0.2.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -120,6 +131,32 @@ name = "diff"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56254986775e3233ffa9c4d7d3faaf6d36a2c09d30b20687e9f88bc8bafc16c8"
+
+[[package]]
+name = "elasticsearch-dsl"
+version = "0.4.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c820db919f52bf9427bd3720625641c4b7de60834eb47a9fe9a98b9b179db9b"
+dependencies = [
+ "chrono",
+ "num-traits",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "elasticsearch-provider"
+version = "1.0.0"
+dependencies = [
+ "const_format",
+ "elasticsearch-dsl",
+ "fiberplane-pdk",
+ "hex",
+ "serde",
+ "time",
+ "url",
+ "vergen",
+]
 
 [[package]]
 name = "enum-iterator"
@@ -182,6 +219,7 @@ dependencies = [
 name = "fiberplane-pdk-macros"
 version = "1.0.0"
 dependencies = [
+ "Inflector",
  "fiberplane-models",
  "proc-macro-error",
  "proc-macro2",
@@ -306,6 +344,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
 
 [[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+
+[[package]]
 name = "http"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -397,10 +441,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "loki-provider"
+version = "1.0.0"
+dependencies = [
+ "fiberplane-pdk",
+ "serde",
+ "url",
+ "vergen",
+]
+
+[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
+
+[[package]]
+name = "num-integer"
+version = "0.1.45"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "225d3389fb3509a24c93f5c29eb6bde2586b98d9f016636dff58d7c6f7569cd9"
+dependencies = [
+ "autocfg",
+ "num-traits",
+]
 
 [[package]]
 name = "num-traits"

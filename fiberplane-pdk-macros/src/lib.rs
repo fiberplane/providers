@@ -1,9 +1,10 @@
+mod casing;
 mod config_schema;
 mod field_attrs;
+mod provider_data;
 mod query_schema;
 mod schema_field;
 mod schema_generator;
-mod schema_struct;
 
 use proc_macro::TokenStream;
 use proc_macro_error::proc_macro_error;
@@ -23,7 +24,7 @@ use quote::quote;
 /// ```no_compile
 /// use fiberplane_pdk::prelude::*;
 ///
-/// #[derive(ConfigSchema)]
+/// #[derive(ConfigSchema, Deserialize)]
 /// struct MyConfig {
 ///     #[pdk(label = "Specify your endpoint")]
 ///     pub endpoint: String,
@@ -35,11 +36,35 @@ use quote::quote;
 ///     todo!("Do something with the request");
 /// }
 /// ```
-#[proc_macro_derive(ConfigSchema, attributes(pdk))]
+#[proc_macro_derive(ConfigSchema, attributes(pdk, serde))]
 #[proc_macro_error]
 pub fn derive_config_schema(input: TokenStream) -> TokenStream {
     proc_macro_error::set_dummy(input.clone().into());
     config_schema::derive_config_schema(input)
+}
+
+/// Used to automatically generate conversion methods to convert your data to
+/// and from the `Blob` type.
+///
+/// The macro extends the struct to which it is applied with `to_blob()` and
+/// `from_blob()` methods.
+///
+/// Example:
+///
+/// ```no_compile
+/// use fiberplane_pdk::prelude::*;
+///
+/// #[derive(ProviderData, Serialize, Deserialize)]
+/// #[pdk(mime_type = MY_MIME_TYPE]
+/// struct MyData {
+///     // specify your fields here...
+/// }
+/// ```
+#[proc_macro_derive(ProviderData, attributes(pdk))]
+#[proc_macro_error]
+pub fn derive_provider_data(input: TokenStream) -> TokenStream {
+    proc_macro_error::set_dummy(input.clone().into());
+    provider_data::derive_provider_data(input)
 }
 
 /// Used to automatically generate a query schema for a given struct.
@@ -55,7 +80,7 @@ pub fn derive_config_schema(input: TokenStream) -> TokenStream {
 /// ```no_compile
 /// use fiberplane_pdk::prelude::*;
 ///
-/// #[derive(QuerySchema)]
+/// #[derive(Deserialize, QuerySchema)]
 /// struct MyQueryData {
 ///     #[pdk(label = "Enter your query")]
 ///     pub query: String,
@@ -81,7 +106,7 @@ pub fn derive_config_schema(input: TokenStream) -> TokenStream {
 ///     }
 /// }
 /// ```
-#[proc_macro_derive(QuerySchema, attributes(pdk))]
+#[proc_macro_derive(QuerySchema, attributes(pdk, serde))]
 #[proc_macro_error]
 pub fn derive_query_schema(input: TokenStream) -> TokenStream {
     proc_macro_error::set_dummy(input.clone().into());

@@ -1,7 +1,12 @@
 use fiberplane_models::providers::*;
 use proc_macro2::Span;
-use quote::quote;
-use syn::Ident;
+use quote::{quote, ToTokens};
+use syn::ext::IdentExt;
+use syn::parenthesized;
+use syn::parse::{Parse, ParseStream};
+use syn::{Attribute, Error, Ident, LitStr, Result, Token};
+
+use crate::casing::Casing;
 
 /// All the possible field types we can generate.
 pub enum SchemaField {
@@ -26,7 +31,15 @@ impl SchemaField {
         }
     }
 
-    pub fn to_token_stream(self, field_enum: &str) -> proc_macro2::TokenStream {
+    pub fn to_token_stream(
+        self,
+        field_enum: &str,
+        field_attrs: &[Attribute],
+        struct_attrs: &[Attribute],
+    ) -> proc_macro2::TokenStream {
+        let field_attrs = SerdeAttrs::from_attrs(field_attrs);
+        let struct_attrs = SerdeAttrs::from_attrs(struct_attrs);
+
         use SchemaField::*;
 
         let field_variant = match &self {
@@ -40,14 +53,17 @@ impl SchemaField {
         let enum_ident = Ident::new(field_enum, Span::call_site());
         let field_ident = Ident::new(&format!("{field_variant}Field"), Span::call_site());
 
-        let name = match &self {
-            Checkbox(field) => &field.name,
-            DateTimeRange(field) => &field.name,
-            Integer(field) => &field.name,
-            Label(field) => &field.name,
-            Select(field) => &field.name,
-            Text(field) => &field.name,
-        };
+        let name = field_attrs.rename.unwrap_or_else(|| {
+            let name = match &self {
+                Checkbox(field) => &field.name,
+                DateTimeRange(field) => &field.name,
+                Integer(field) => &field.name,
+                Label(field) => &field.name,
+                Select(field) => &field.name,
+                Text(field) => &field.name,
+            };
+            struct_attrs.rename_all.format_string(&name)
+        });
         let name = quote! { .with_name(#name) };
 
         let checked = match &self {
@@ -176,5 +192,72 @@ impl SchemaField {
             Select(field) => Select(field.with_placeholder(name)),
             Text(field) => Text(field.with_placeholder(name)),
         }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct SerdeAttrs {
+    pub rename: Option<String>,
+    pub rename_all: Casing,
+}
+
+impl SerdeAttrs {
+    pub fn from_attrs(attrs: &[Attribute]) -> Self {
+        for attr in attrs {
+            if attr.path.is_ident("serde") {
+                return syn::parse2::<Self>(attr.tokens.clone())
+                    .expect("Could not parse Serde field attributes");
+            }
+        }
+
+        Self::default()
+    }
+}
+
+impl Parse for SerdeAttrs {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let content;
+        parenthesized!(content in input);
+
+        let parse_value = || -> Result<String> {
+            content.parse::<Token![=]>()?;
+            Ok(content
+                .parse::<LitStr>()?
+                .to_token_stream()
+                .to_string()
+                .trim_matches('"')
+                .to_owned())
+        };
+
+        let parse_optional_value = || -> Result<String> {
+            if content.peek(Token![=]) {
+                parse_value()
+            } else {
+                Ok(String::new())
+            }
+        };
+
+        let mut result = Self::default();
+        loop {
+            let key: Ident = content.call(IdentExt::parse_any)?;
+            match key.to_string().as_ref() {
+                "rename" => result.rename = Some(parse_value()?),
+                "rename_all" => {
+                    result.rename_all = Casing::try_from(parse_value()?.as_ref())
+                        .map_err(|err| Error::new(content.span(), err))?
+                }
+                _ => {
+                    parse_optional_value()?;
+                }
+            }
+
+            if content.is_empty() {
+                break;
+            }
+
+            content.parse::<Token![,]>()?;
+        }
+
+        Ok(result)
     }
 }
