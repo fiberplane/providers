@@ -1,4 +1,3 @@
-use const_format::formatcp;
 use fiberplane_pdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -9,16 +8,7 @@ use serde::{Deserialize, Serialize};
 pub const CELLS_SHOWCASE_QUERY_TYPE: &str = "x-showcase-cells";
 pub const CUSTOM_DATA_SHOWCASE_QUERY_TYPE: &str = "x-showcase-custom";
 
-pub const SHOWCASE_JSON_MIME_TYPE: &str =
-    "application/vnd.fiberplane.providers.sample.showcase+json";
-
-// Note how we need to specify an encoding in addition to the base MIME type.
-// Fiberplane Studio can decode responses using either `+json` or `+msgpack`
-// encodings. Note that Fiberplane's own providers primarily use MessagePack for
-// performance reasons, but we'll use JSON in this sample provider, because it's
-// easier to inspect should you find yourself wishing to debug something.
-pub const CELLS_JSON_MIME_TYPE: &str = formatcp!("{CELLS_MIME_TYPE}+json");
-pub const SUGGESTIONS_JSON_MIME_TYPE: &str = formatcp!("{SUGGESTIONS_MIME_TYPE}+json");
+pub const SHOWCASE_MIME_TYPE: &str = "application/vnd.fiberplane.providers.sample.showcase";
 
 static COMMIT_HASH: &str = env!("VERGEN_GIT_SHA");
 static BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
@@ -29,7 +19,7 @@ static BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
 /// of the `ProviderRequest` that is passed to `invoke2()`. The generated
 /// `parse()` method can then be used to parse this object into the following
 /// struct.
-#[derive(ConfigSchema, Deserialize)]
+#[derive(ConfigSchema, Deserialize, Serialize)]
 struct SampleConfig {
     #[pdk(label = "Your API endpoint", placeholder = "Please specify a URL")]
     pub endpoint: String,
@@ -68,38 +58,29 @@ struct ShowcaseQueryData {
     pub tags: Vec<String>,
 }
 
-#[pdk_export]
-async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQueryType> {
-    vec![
-        SupportedQueryType::new(CELLS_SHOWCASE_QUERY_TYPE)
-            .with_label("Showcase query (cells)")
-            .with_schema(ShowcaseQueryData::schema())
-            .supporting_mime_types(&[CELLS_JSON_MIME_TYPE]),
-        SupportedQueryType::new(CUSTOM_DATA_SHOWCASE_QUERY_TYPE)
-            .with_label("Showcase query (custom data)")
-            .with_schema(ShowcaseQueryData::schema())
-            .supporting_mime_types(&[SHOWCASE_JSON_MIME_TYPE]),
-        SupportedQueryType::new(STATUS_QUERY_TYPE).supporting_mime_types(&[STATUS_MIME_TYPE]),
-        SupportedQueryType::new(SUGGESTIONS_QUERY_TYPE)
-            .supporting_mime_types(&[SUGGESTIONS_JSON_MIME_TYPE]),
-    ]
+/// This type shows how we can conveniently generate custom data using the
+/// `ProviderData` derive macro.
+#[derive(Deserialize, ProviderData, Serialize)]
+#[pdk(mime_type = SHOWCASE_MIME_TYPE)]
+struct ShowcaseCustomData {
+    config: SampleConfig,
+    query_data: ShowcaseQueryData,
 }
 
-#[pdk_export]
-async fn invoke2(request: ProviderRequest) -> Result<Blob, Error> {
-    log(format!(
-        "Sample provider (commit: {COMMIT_HASH}, built at: {BUILD_TIMESTAMP}) \
-        invoked for query type \"{}\" and query data \"{:?}\"",
-        request.query_type, request.query_data
-    ));
-
-    let config = SampleConfig::parse(request.config)?;
-
-    match request.query_type.as_str() {
-        CELLS_SHOWCASE_QUERY_TYPE => query_cells_showcase(request.query_data, config),
-        CUSTOM_DATA_SHOWCASE_QUERY_TYPE => query_custom_data_showcase(request.query_data, config),
-        STATUS_QUERY_TYPE => check_status(),
-        _ => Err(Error::UnsupportedRequest),
+pdk_query_types! {
+    CELLS_SHOWCASE_QUERY_TYPE => {
+        label: "Showcase query (cells)",
+        handler: query_cells_showcase(ShowcaseQueryData, SampleConfig),
+        supported_mime_types: [CELLS_MIME_TYPE]
+    },
+    CUSTOM_DATA_SHOWCASE_QUERY_TYPE => {
+        label: "Showcase query (custom data)",
+        handler: query_custom_data_showcase(ShowcaseQueryData, SampleConfig),
+        supported_mime_types: [SHOWCASE_MIME_TYPE]
+    },
+    STATUS_QUERY_TYPE => {
+        handler: check_status(),
+        supported_mime_types: [STATUS_MIME_TYPE]
     }
 }
 
@@ -117,19 +98,19 @@ async fn invoke2(request: ProviderRequest) -> Result<Blob, Error> {
 /// respectively. In this scenario, `create_cells()` doesn't need to be
 /// implemented at all.
 #[pdk_export]
-fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>, Error> {
+fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
     log(format!("Creating cells for query type: {query_type}"));
 
-    if response.mime_type != SHOWCASE_JSON_MIME_TYPE {
-        return Err(Error::UnsupportedRequest);
-    }
-
-    let ShowcaseQueryData {
-        query,
-        time_range: DateTimeRange { from, to },
-        live,
-        tags,
-    } = fiberplane_pdk::serde_json::from_slice(&response.data)?;
+    let ShowcaseCustomData {
+        config: _,
+        query_data:
+            ShowcaseQueryData {
+                query,
+                time_range: DateTimeRange { from, to },
+                live,
+                tags,
+            },
+    } = ShowcaseCustomData::parse(response)?;
 
     Ok(vec![Cell::Text(TextCell {
         id: "result".to_owned(),
@@ -158,11 +139,16 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>, Error> 
 /// `get_supported_query_types()`. If the query type is omitted there, it means
 /// the provider doesn't support health checks, and the provider is assumed to
 /// be always available.
-fn check_status() -> Result<Blob, Error> {
-    Ok(Blob {
-        mime_type: STATUS_MIME_TYPE.to_owned(),
-        data: "ok".into(),
+fn check_status() -> Result<Blob> {
+    // FIXME: I should find a cleaner solution to wrapping this struct...
+    // TODO: Maybe we want to rethink how we generate status responses some
+    //       more, so we can take care of the versioning for provider authors?
+    ProviderStatus(fiberplane_pdk::providers::ProviderStatus {
+        status: Ok(()),
+        version: COMMIT_HASH.to_owned(),
+        built_at: BUILD_TIMESTAMP.to_owned(),
     })
+    .serialize()
 }
 
 /// This showcase shows how to return cells directly, without the need for
@@ -172,26 +158,18 @@ fn check_status() -> Result<Blob, Error> {
 /// In many cases, this also allows you to omit implementing `create_cells()`
 /// entirely. But for this provider, we still need to implement it to support
 /// the custom data showcase.
-fn query_cells_showcase(query_data: Blob, config: SampleConfig) -> Result<Blob, Error> {
+fn query_cells_showcase(query_data: ShowcaseQueryData, config: SampleConfig) -> Result<Blob> {
     let response = query_custom_data_showcase(query_data, config)?;
     let cells = create_cells(CELLS_SHOWCASE_QUERY_TYPE.to_owned(), response)?;
 
-    Ok(Blob {
-        mime_type: CELLS_JSON_MIME_TYPE.to_owned(),
-        data: fiberplane_pdk::serde_json::to_vec_pretty(&cells)?.into(),
-    })
+    Cells(cells).serialize()
 }
 
-/// For this showcase, we simply re-encode the query data to JSON, so that we
-/// can conveniently use it for other purposes again. In a real-world scenario,
+/// For this showcase, we simply re-encode the query data, so that we can
+/// conveniently use it for other purposes again. In a real-world scenario,
 /// this is where we could perform some HTTP request and use the response to
 /// either generate a custom response, or to directly generate notebook cells
 /// using the `CELLS_MIME_TYPE` format (see the cells showcase).
-fn query_custom_data_showcase(query_data: Blob, _config: SampleConfig) -> Result<Blob, Error> {
-    let query_data = ShowcaseQueryData::parse(query_data)?;
-
-    Ok(Blob {
-        mime_type: SHOWCASE_JSON_MIME_TYPE.to_owned(),
-        data: fiberplane_pdk::serde_json::to_vec_pretty(&query_data)?.into(),
-    })
+fn query_custom_data_showcase(query_data: ShowcaseQueryData, config: SampleConfig) -> Result<Blob> {
+    ShowcaseCustomData { config, query_data }.serialize()
 }

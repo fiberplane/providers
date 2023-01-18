@@ -3,15 +3,12 @@ mod config;
 mod tests;
 
 use config::ElasticConfig;
-use const_format::formatcp;
 use elasticsearch_dsl::{Hit, SearchResponse};
 use fiberplane_pdk::prelude::*;
 use fiberplane_pdk::serde_json::{self, Map, Value};
 use serde::{Deserialize, Serialize};
 use std::{cmp::Ordering, collections::HashMap, str::FromStr};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
-
-pub const EVENTS_MSGPACK_MIME_TYPE: &str = formatcp!("{EVENTS_MIME_TYPE}+json");
 
 pub(crate) static TIMESTAMP_FIELDS: &[&str] = &["@timestamp", "timestamp", "fields.timestamp"];
 pub(crate) static BODY_FIELDS: &[&str] =
@@ -48,7 +45,7 @@ async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQuer
         SupportedQueryType::new(EVENTS_QUERY_TYPE)
             .with_label("Elasticsearch query")
             .with_schema(ElasticQuery::schema())
-            .supporting_mime_types(&[EVENTS_MSGPACK_MIME_TYPE]),
+            .supporting_mime_types(&[EVENTS_MIME_TYPE]),
         SupportedQueryType::new(STATUS_QUERY_TYPE).supporting_mime_types(&[STATUS_MIME_TYPE]),
         // TODO: implement AutoSuggest
     ]

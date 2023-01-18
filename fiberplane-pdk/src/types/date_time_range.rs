@@ -10,6 +10,3 @@ pub struct DateTimeRange {
     /// End time of the range, exclusive.
     pub to: OffsetDateTime,
 }
-
-/// `Result` type that uses `fiberplane_pdk::prelude::Error` as Error type.
-pub type Result<T> = core::result::Result<T, crate::bindings::Error>;

@@ -10,7 +10,6 @@ version.workspace = true
 crate-type = ["cdylib"]
 
 [dependencies]
-const_format = { workspace = true }
 elasticsearch-dsl = "0.4.9"
 fiberplane-pdk = { workspace = true }
 hex = "0.4.3"

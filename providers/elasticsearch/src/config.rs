@@ -26,7 +26,7 @@ pub(crate) struct ElasticConfig {
 }
 
 impl ElasticConfig {
-    pub fn parse_url(&self) -> Result<Url, Error> {
+    pub fn parse_url(&self) -> Result<Url> {
         Url::from_str(&self.url).map_err(|err| Error::Config {
             message: format!("Invalid Elasticsearch URL: {err}"),
         })

@@ -1,14 +1,73 @@
 mod casing;
 mod config_schema;
 mod field_attrs;
+mod ident_or_string;
 mod provider_data;
 mod query_schema;
+mod query_types;
 mod schema_field;
 mod schema_generator;
 
 use proc_macro::TokenStream;
 use proc_macro_error::proc_macro_error;
 use quote::quote;
+
+/// Used to define the query types supported by the provider.
+///
+/// For every query type that is supported, the following properties may be
+/// defined:
+///
+/// * **handler** - This is the function that will be called for handling
+///   requests of the given type. Handlers may have one or two arguments, the
+///   types of which are given between parentheses. The first argument is always
+///   the type of the query data, while the second optionally specifies a type
+///   for the provider's config. Providing a handler is mandatory.
+/// * **label** - A label that is used when presenting the query type to the
+///   user. Some query types are not intended to be user-selected (such as the
+///   `status` query type) in which case they should not define a label.
+/// * **supported_mime_types** - A list of MIME types that is supported by the
+///   provider for data produced when running queries of the given type. This
+///   should at least include the MIME type of the `Blob`s returned by
+///   `handler()`. If the provider implements the `extract_data()` function this
+///   may include other MIME types as well, in which case `extract_data()` has
+///   the responsibility of converting from the data format returned by
+///   `handler()` to the requested MIME type.
+///
+/// This macro generates the `invoke2()` and `get_supported_query_types()`
+/// functions for you.
+///
+/// # Example
+///
+/// ```rust no_compile
+/// use fiberplane_pdk::prelude::*;
+///
+/// pdk_query_types! {
+///     TIMESERIES_QUERY_TYPE => {
+///         label: "Timeseries query",
+///         handler: query_timeseries(ExampleQueryData, ExampleConfig),
+///         supported_mime_types: [TIMESERIES_MIME_TYPE],
+///     },
+///     "x-custom-query-type" => {
+///         label: "My custom query",
+///         handler: query_custom(ExampleQueryData),
+///         supported_mime_types: ["application/vnd.fiberplane.provider.my-provider.custom-data"],
+///     }
+/// }
+///
+/// fn query_timeseries(query_data: ExampleQueryData, config: ExampleConfig) -> Result<Blob> {
+///     todo!("Implement timeseries query handling")
+/// }
+///
+/// fn query_custom(query_data: ExampleQueryData) -> Result<Blob> {
+///     todo!("Implement custom query handling")
+/// }
+/// ```
+#[proc_macro]
+#[proc_macro_error]
+pub fn pdk_query_types(input: TokenStream) -> TokenStream {
+    proc_macro_error::set_dummy(input.clone().into());
+    query_types::define_query_types(input)
+}
 
 /// Used to automatically generate a config schema for a given struct.
 ///
@@ -19,9 +78,9 @@ use quote::quote;
 /// `parse()` takes an untyped `ProviderConfig` object and parses it into an
 /// instance of the struct.
 ///
-/// Example:
+/// # Example
 ///
-/// ```no_compile
+/// ```rust no_compile
 /// use fiberplane_pdk::prelude::*;
 ///
 /// #[derive(ConfigSchema, Deserialize)]
@@ -46,12 +105,12 @@ pub fn derive_config_schema(input: TokenStream) -> TokenStream {
 /// Used to automatically generate conversion methods to convert your data to
 /// and from the `Blob` type.
 ///
-/// The macro extends the struct to which it is applied with `to_blob()` and
-/// `from_blob()` methods.
+/// The macro extends the struct to which it is applied with `parse()` and
+/// `serialize()` methods.
 ///
-/// Example:
+/// # Example
 ///
-/// ```no_compile
+/// ```rust no_compile
 /// use fiberplane_pdk::prelude::*;
 ///
 /// #[derive(ProviderData, Serialize, Deserialize)]
@@ -75,9 +134,13 @@ pub fn derive_provider_data(input: TokenStream) -> TokenStream {
 /// `schema()` will return the generated query schema, while `parse()` will take
 /// form-encoded query data and parse it into an instance of the struct.
 ///
-/// Example:
+/// # Example
 ///
-/// ```no_compile
+/// Note: This examples shows how to use the generated `schema()` and `parse()`
+///       methods directly. Using the `pdk_query_types!` macro, this example
+///       can be simplified even further.
+///
+/// ```rust no_compile
 /// use fiberplane_pdk::prelude::*;
 ///
 /// #[derive(Deserialize, QuerySchema)]
@@ -115,9 +178,11 @@ pub fn derive_query_schema(input: TokenStream) -> TokenStream {
 
 /// Exports a provider function to make it available to the provider runtime.
 ///
-/// Example usage of implementing the `invoke2` function:
+/// # Example
 ///
-/// ```no_compile
+/// Example usage of implementing the `invoke2()` function:
+///
+/// ```rust no_compile
 /// use fiberplane_pdk::prelude::*;
 ///
 /// #[pdk_export]

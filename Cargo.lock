@@ -148,7 +148,6 @@ dependencies = [
 name = "elasticsearch-provider"
 version = "1.0.0"
 dependencies = [
- "const_format",
  "elasticsearch-dsl",
  "fiberplane-pdk",
  "hex",
