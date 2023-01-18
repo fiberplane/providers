@@ -1,20 +1,22 @@
+use crate::field_attrs::FieldAttrs;
 use crate::schema_field::SchemaField;
-use crate::{field_attrs::FieldAttrs, schema_struct::SchemaStruct};
 use fiberplane_models::providers::*;
 use proc_macro::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
-use syn::{parse_macro_input, Field, GenericArgument, PathArguments, PathSegment, Type};
+use syn::{
+    parse_macro_input, Field, GenericArgument, ItemStruct, PathArguments, PathSegment, Type,
+};
 
 /// Generates a schema from the given struct.
 pub fn generate_schema(field_enum: &str, struct_item: TokenStream) -> TokenStream {
-    let schema_struct = parse_macro_input!(struct_item as SchemaStruct);
+    let schema_struct = parse_macro_input!(struct_item as ItemStruct);
     let fields: Vec<_> = schema_struct
         .fields
         .iter()
         .map(|field: &Field| {
             let schema_field = determine_field_type(field);
-            schema_field.to_token_stream(field_enum)
+            schema_field.to_token_stream(field_enum, &field.attrs, &schema_struct.attrs)
         })
         .collect();
 
@@ -59,7 +61,7 @@ fn determine_field_type(field: &Field) -> SchemaField {
             }
             SchemaField::Label(field)
         }
-        ("String", multiple) if attrs.select || !multiple => {
+        ("String", multiple) => {
             if attrs.select {
                 let mut field = SelectField::new();
                 if multiple {
@@ -83,6 +85,9 @@ fn determine_field_type(field: &Field) -> SchemaField {
                 let mut field = TextField::new();
                 if attrs.multiline {
                     field = field.multiline();
+                }
+                if multiple {
+                    field = field.multiple();
                 }
                 if !attrs.prerequisites.is_empty() {
                     field = field.with_prerequisites(

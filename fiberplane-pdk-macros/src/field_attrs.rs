@@ -4,7 +4,7 @@ use syn::ext::IdentExt;
 use syn::parse::{Parse, ParseStream};
 use syn::{parenthesized, Attribute, Error, Ident, LitInt, LitStr, Result, Token};
 
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default)]
 pub struct FieldAttrs {
     /// Whether the checkbox should be initially checked.
     ///

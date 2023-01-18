@@ -1,5 +1,6 @@
 mod parse_query;
 pub mod prelude;
+pub mod provider_data;
 mod types;
 
 // Fiberplane-specific re-exports.

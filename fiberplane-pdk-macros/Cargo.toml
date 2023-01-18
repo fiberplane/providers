@@ -11,6 +11,7 @@ proc-macro = true
 
 [dependencies]
 fiberplane-models = { workspace = true }
+Inflector = "0.11"
 proc-macro2 = "1"
 proc-macro-error = "1"
 quote = "1"

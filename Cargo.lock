@@ -182,6 +182,7 @@ dependencies = [
 name = "fiberplane-pdk-macros"
 version = "1.0.0"
 dependencies = [
+ "Inflector",
  "fiberplane-models",
  "proc-macro-error",
  "proc-macro2",
