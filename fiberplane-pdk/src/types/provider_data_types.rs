@@ -2,8 +2,8 @@ use crate as fiberplane_pdk; // To satisfy the `ProviderData` macro output.
 use crate::bindings::Cell;
 use crate::macros::ProviderData;
 use crate::providers::{
-    Event, Suggestion, Timeseries, CELLS_MIME_TYPE, EVENTS_MIME_TYPE, STATUS_MIME_TYPE,
-    SUGGESTIONS_MIME_TYPE, TIMESERIES_MIME_TYPE,
+    Event, Suggestion, Timeseries, CELLS_MIME_TYPE, EVENTS_MIME_TYPE, SUGGESTIONS_MIME_TYPE,
+    TIMESERIES_MIME_TYPE,
 };
 use serde::{Deserialize, Serialize};
 
@@ -14,10 +14,6 @@ pub struct Cells(pub Vec<Cell>);
 #[derive(Clone, Debug, Deserialize, ProviderData, Serialize)]
 #[pdk(mime_type = EVENTS_MIME_TYPE)]
 pub struct Events(pub Vec<Event>);
-
-#[derive(Clone, Debug, Deserialize, ProviderData, Serialize)]
-#[pdk(mime_type = STATUS_MIME_TYPE)]
-pub struct ProviderStatus(pub fiberplane_models::providers::ProviderStatus);
 
 #[derive(Clone, Debug, Deserialize, ProviderData, Serialize)]
 #[pdk(mime_type = SUGGESTIONS_MIME_TYPE)]
