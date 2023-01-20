@@ -9,6 +9,7 @@ pub fn derive_config_schema(input: TokenStream) -> TokenStream {
     let ident = schema_struct.ident;
 
     let output = quote! {
+        #[automatically_derived]
         impl #ident {
             pub fn parse(config: fiberplane_pdk::providers::ProviderConfig)
                     -> fiberplane_pdk::prelude::Result<Self> {

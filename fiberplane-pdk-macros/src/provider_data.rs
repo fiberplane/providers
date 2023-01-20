@@ -16,6 +16,7 @@ pub fn derive_provider_data(input: TokenStream) -> TokenStream {
     };
 
     let output = quote! {
+        #[automatically_derived]
         impl #ident {
             pub fn parse(blob: fiberplane_pdk::bindings::Blob)
                     -> fiberplane_pdk::prelude::Result<Self> {
