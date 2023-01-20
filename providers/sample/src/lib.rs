@@ -110,7 +110,7 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
                 live,
                 tags,
             },
-    } = ShowcaseCustomData::parse(response)?;
+    } = ShowcaseCustomData::parse_blob(response)?;
 
     Ok(vec![Cell::Text(TextCell {
         id: "result".to_owned(),
@@ -140,15 +140,12 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
 /// the provider doesn't support health checks, and the provider is assumed to
 /// be always available.
 fn check_status() -> Result<Blob> {
-    // FIXME: I should find a cleaner solution to wrapping this struct...
-    // TODO: Maybe we want to rethink how we generate status responses some
-    //       more, so we can take care of the versioning for provider authors?
-    ProviderStatus(fiberplane_pdk::providers::ProviderStatus {
+    ProviderStatus {
         status: Ok(()),
         version: COMMIT_HASH.to_owned(),
         built_at: BUILD_TIMESTAMP.to_owned(),
-    })
-    .serialize()
+    }
+    .to_blob()
 }
 
 /// This showcase shows how to return cells directly, without the need for
@@ -162,7 +159,7 @@ fn query_cells_showcase(query_data: ShowcaseQueryData, config: SampleConfig) -> 
     let response = query_custom_data_showcase(query_data, config)?;
     let cells = create_cells(CELLS_SHOWCASE_QUERY_TYPE.to_owned(), response)?;
 
-    Cells(cells).serialize()
+    Cells(cells).to_blob()
 }
 
 /// For this showcase, we simply re-encode the query data, so that we can
@@ -171,5 +168,5 @@ fn query_cells_showcase(query_data: ShowcaseQueryData, config: SampleConfig) -> 
 /// either generate a custom response, or to directly generate notebook cells
 /// using the `CELLS_MIME_TYPE` format (see the cells showcase).
 fn query_custom_data_showcase(query_data: ShowcaseQueryData, config: SampleConfig) -> Result<Blob> {
-    ShowcaseCustomData { config, query_data }.serialize()
+    ShowcaseCustomData { config, query_data }.to_blob()
 }

@@ -16,14 +16,14 @@ pub fn derive_provider_data(input: TokenStream) -> TokenStream {
     };
 
     let output = quote! {
-        impl #ident {
-            pub fn parse(blob: fiberplane_pdk::bindings::Blob)
+        #[automatically_derived]
+        impl fiberplane_pdk::provider_data::ProviderData for #ident {
+            fn parse_blob(blob: fiberplane_pdk::bindings::Blob)
                     -> fiberplane_pdk::prelude::Result<Self> {
                 fiberplane_pdk::provider_data::parse_blob(#mime_type, blob)
             }
 
-            pub fn serialize(&self)
-                    -> fiberplane_pdk::prelude::Result<fiberplane_pdk::bindings::Blob> {
+            fn to_blob(&self) -> fiberplane_pdk::prelude::Result<fiberplane_pdk::bindings::Blob> {
                 fiberplane_pdk::provider_data::to_blob(#mime_type, &self)
             }
         }

@@ -4,7 +4,9 @@ use proc_macro_error::abort_call_site;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::{braced, parenthesized, parse_macro_input, parse_quote, token, Expr, Result, Token};
+use syn::{
+    braced, bracketed, parenthesized, parse_macro_input, parse_quote, token, Expr, Result, Token,
+};
 
 use crate::ident_or_string::IdentOrString;
 
@@ -31,9 +33,12 @@ pub fn define_query_types(input: TokenStream) -> TokenStream {
                 quote! { .with_label(#label) }
             });
 
-            let mime_types = query_type.mime_types().map(|mime_types| {
-                quote! { .supporting_mime_types(#mime_types) }
-            });
+            let mime_types = query_type
+                .mime_types()
+                .map(|supported_mime_types| supported_mime_types.mime_types)
+                .map(|mime_types| {
+                    quote! { .supporting_mime_types(&[#mime_types]) }
+                });
 
             quote! {
                 SupportedQueryType::new(#identifier)
@@ -127,13 +132,11 @@ impl QueryType {
             })
     }
 
-    fn mime_types(&self) -> Option<Punctuated<IdentOrString, Token![,]>> {
+    fn mime_types(&self) -> Option<SupportedMimeTypes> {
         self.fields
             .iter()
             .find(|field| field.name == "supported_mime_types")
             .map(|field| {
-                // FIXME: This seems to result in a macro panick, maybe due
-                //        to the punctuation?
                 let value = &field.value;
                 parse_quote! { #value }
             })
@@ -181,6 +184,21 @@ impl Parse for QueryHandler {
             ident: input.parse()?,
             _parens: parenthesized!(content in input),
             arg_types: content.parse_terminated(Ident::parse)?,
+        })
+    }
+}
+
+struct SupportedMimeTypes {
+    _brackets: token::Bracket,
+    mime_types: Punctuated<IdentOrString, Token![,]>,
+}
+
+impl Parse for SupportedMimeTypes {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let content;
+        Ok(Self {
+            _brackets: bracketed!(content in input),
+            mime_types: content.parse_terminated(IdentOrString::parse)?,
         })
     }
 }

@@ -9,6 +9,7 @@ pub fn derive_query_schema(input: TokenStream) -> TokenStream {
     let ident = schema_struct.ident;
 
     let output = quote! {
+        #[automatically_derived]
         impl #ident {
             pub fn parse(query_data: fiberplane_pdk::bindings::Blob)
                     -> fiberplane_pdk::prelude::Result<Self> {
