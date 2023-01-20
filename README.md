@@ -15,8 +15,8 @@ directory.
 
 The PDK is a development kit for creating providers. It consists of a Rust crate
 that you can link against when creating your own provider. All the providers in
-this repository also make us of it. Please see the [`pdk/`](pdk/) directory for
-more details.
+this repository also make us of it. Please see the
+[`fiberplane-pdk/`](fiberplane-pdk/) directory for more details.
 
 ## Getting Help
 
@@ -27,6 +27,11 @@ for ways to reach out to us.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Code of Conduct
+
+See
+[CODE_OF_CONDUCT.md](https://github.com/fiberplane/fiberplane/blob/main/CODE_OF_CONDUCT.md).
 
 ## License
 

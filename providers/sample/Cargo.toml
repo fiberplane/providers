@@ -1,16 +1,18 @@
 [package]
 name = "sample-provider"
 description = "Fiberplane Sample Provider"
-version = "0.1.0"
-authors = { workspace = true }
-edition = { workspace = true }
-rust-version = { workspace = true }
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+version.workspace = true
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
+const_format = { workspace = true }
 fiberplane-pdk = { workspace = true }
+serde = { workspace = true }
 
 [build-dependencies]
 vergen = { workspace = true }
