@@ -21,7 +21,7 @@ this repository also make us of it. Please see the
 ## Getting Help
 
 Please see
-[COMMUNITY.md](https://github.com/fiberplane/fiberplane/blob/main/COMMUNITY.md)
+[COMMUNITY.md](https://github.com/fiberplane/fiberplane-rs/blob/main/COMMUNITY.md)
 for ways to reach out to us.
 
 ## Contributing
@@ -31,7 +31,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 ## Code of Conduct
 
 See
-[CODE_OF_CONDUCT.md](https://github.com/fiberplane/fiberplane/blob/main/CODE_OF_CONDUCT.md).
+[CODE_OF_CONDUCT.md](https://github.com/fiberplane/fiberplane-rs/blob/main/CODE_OF_CONDUCT.md).
 
 ## License
 
