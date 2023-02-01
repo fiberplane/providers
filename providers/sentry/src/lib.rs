@@ -192,10 +192,12 @@ fn create_overview_cells(issues: Vec<SentryIssue>) -> Result<Vec<Cell>> {
             events_cell.id = id;
 
             BTreeMap::from([
-                ("name".to_string(), TableCellValue::Cell(name_cell)),
+                ("name".to_string(), TableCellValue::Cell { cell: name_cell }),
                 (
                     "events".to_string(),
-                    TableCellValue::Cell(Cell::Text(events_cell)),
+                    TableCellValue::Cell {
+                        cell: Cell::Text(events_cell),
+                    },
                 ),
             ])
         })
