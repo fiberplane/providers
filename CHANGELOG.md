@@ -16,3 +16,4 @@ changes if the major version hasn't changed.
 ### Added
 
 - Initial release of the Fiberplane Providers and PDK.
+- Amazon Web Services (AWS) Cloudwatch provider.
