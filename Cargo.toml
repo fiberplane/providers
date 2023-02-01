@@ -13,11 +13,11 @@ license = "MIT OR Apache-2.0"
 fp-bindgen = { version = "3.0.0-alpha.1" }
 fp-bindgen-support = { version = "3.0.0-alpha.1" }
 #fiberplane-models = { version = "1.0.0-alpha.2", registry = "artifactory" }
-fiberplane-models = { git = "ssh://git@github.com/fiberplane/fiberplane-rs.git", branch = "main" }
+fiberplane-models = { git = "ssh://git@github.com/fiberplane/fiberplane-rs.git", branch = "sentry_provider" }
 fiberplane-pdk = { version = "1.0.0-alpha.1", path = "fiberplane-pdk" }
 fiberplane-pdk-macros = { version = "1.0.0-alpha.1", path = "fiberplane-pdk-macros" }
 #fiberplane-provider-bindings = { version = "1.0.0-alpha.2", registry = "artifactory" }
-fiberplane-provider-bindings = { git = "ssh://git@github.com/fiberplane/fiberplane-rs.git", branch = "main" }
+fiberplane-provider-bindings = { git = "ssh://git@github.com/fiberplane/fiberplane-rs.git", branch = "sentry_provider" }
 
 rmpv = { version = "1", features = ["with-serde"] }
 serde = { version = "1", features = ["derive"] }
