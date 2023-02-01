@@ -25,7 +25,7 @@ pub use types::*;
 static COMMIT_HASH: &str = env!("VERGEN_GIT_SHA");
 static BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
 
-#[pdk_export(fiberplane_provider_bindings)]
+#[pdk_export]
 async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQueryType> {
     panic::init_panic_hook();
     vec![
@@ -142,7 +142,7 @@ async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQuer
     ]
 }
 
-#[pdk_export(fiberplane_provider_bindings)]
+#[pdk_export]
 async fn invoke2(request: ProviderRequest) -> Result<Blob> {
     panic::init_panic_hook();
 
@@ -172,7 +172,7 @@ async fn invoke2(request: ProviderRequest) -> Result<Blob> {
     }
 }
 
-#[pdk_export(fiberplane_provider_bindings)]
+#[pdk_export]
 fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
     panic::init_panic_hook();
 
@@ -186,7 +186,7 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
     }
 }
 
-#[pdk_export(fiberplane_provider_bindings)]
+#[pdk_export]
 fn extract_data(response: Blob, mime_type: String, query: Option<String>) -> Result<Blob> {
     panic::init_panic_hook();
 
@@ -197,7 +197,7 @@ fn extract_data(response: Blob, mime_type: String, query: Option<String>) -> Res
     Err(Error::UnsupportedRequest)
 }
 
-#[pdk_export(fiberplane_provider_bindings)]
+#[pdk_export]
 fn get_config_schema() -> Vec<ConfigField> {
     vec![
         TextField::new()
