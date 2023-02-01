@@ -1,0 +1,13 @@
+[package]
+name = "grafana-common"
+version = "0.1.0"
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+
+[dependencies]
+base64 = "0.13"
+fiberplane-provider-bindings = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+url = { version = "2.2.2", features = ["serde"] }

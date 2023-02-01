@@ -1,0 +1,24 @@
+[package]
+name = "https-provider"
+version = "0.1.0"
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+base64 = "0.13"
+const_format = "0.2"
+fiberplane-pdk = { workspace = true }
+form_urlencoded = "1"
+rmp-serde = "1"
+rmpv = { version = "1.0.0", features = ["with-serde"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+time = { workspace = true, features = ["formatting"] }
+url = { version = "2.2.2", features = ["serde"] }
+
+[build-dependencies]
+vergen = { workspace = true }
