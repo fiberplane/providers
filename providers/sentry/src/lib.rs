@@ -3,6 +3,7 @@ mod percent_encode;
 mod sentry;
 
 use config::SentryConfig;
+use const_format::formatcp;
 use fiberplane_models::utils::char_count;
 use fiberplane_pdk::prelude::*;
 use futures::future;
@@ -12,11 +13,8 @@ use std::{collections::HashMap, fmt::Write};
 
 const OVERVIEW_QUERY_TYPE: &str = "x-issues-overview";
 const ISSUE_QUERY_TYPE: &str = "x-issue-details";
-const STATUS_QUERY_TYPE: &str = "status";
 
-const CELLS_MIME_TYPE: &str = "application/vnd.fiberplane.cells+msgpack";
-const STATUS_MIME_TYPE: &str = "text/plain";
-const QUERY_DATA_MIME_TYPE: &str = "application/x-www-form-urlencoded";
+const CELLS_MSGPACK_MIME_TYPE: &str = formatcp!("{CELLS_MIME_TYPE}+msgpack");
 
 const QUERY_PARAM_NAME: &str = "q";
 const TIME_RANGE_PARAM_NAME: &str = "time_range";
@@ -105,7 +103,7 @@ async fn query_issues_overview(query_data: Blob, config: SentryConfig) -> Result
 }
 
 fn get_overview_query(query_data: &Blob) -> Result<String> {
-    if query_data.mime_type != QUERY_DATA_MIME_TYPE {
+    if query_data.mime_type != FORM_ENCODED_MIME_TYPE {
         return Err(Error::UnsupportedRequest);
     }
 
@@ -226,7 +224,7 @@ async fn query_issue_details(query_data: Blob, config: SentryConfig) -> Result<B
 }
 
 fn get_issue_id(query_data: &Blob) -> Result<String> {
-    if query_data.mime_type != QUERY_DATA_MIME_TYPE {
+    if query_data.mime_type != FORM_ENCODED_MIME_TYPE {
         return Err(Error::UnsupportedRequest);
     }
 
@@ -343,6 +341,6 @@ fn create_issue_cells(
 fn serialize_cells(cells: Vec<Cell>) -> Result<Blob> {
     Ok(Blob {
         data: rmp_serde::to_vec_named(&cells)?.into(),
-        mime_type: CELLS_MIME_TYPE.to_owned(),
+        mime_type: CELLS_MSGPACK_MIME_TYPE.to_owned(),
     })
 }

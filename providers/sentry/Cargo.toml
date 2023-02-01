@@ -9,6 +9,7 @@ rust-version = { workspace = true }
 crate-type = ["cdylib"]
 
 [dependencies]
+const_format = "0.2"
 form_urlencoded = "1"
 fiberplane-pdk = { workspace = true }
 fiberplane-models = { workspace = true }

@@ -46,9 +46,9 @@ async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQuer
                     .with_value("true")
                     .into(),
             ])
-            .supporting_mime_types(&[TIMESERIES_MSGPACK_MIME_TYPE]),
+            .supporting_mime_types(&[TIMESERIES_MIME_TYPE]),
         SupportedQueryType::new(SUGGESTIONS_QUERY_TYPE)
-            .supporting_mime_types(&[SUGGESTIONS_MSGPACK_MIME_TYPE]),
+            .supporting_mime_types(&[SUGGESTIONS_MIME_TYPE]),
         SupportedQueryType::new(STATUS_QUERY_TYPE).supporting_mime_types(&[STATUS_MIME_TYPE]),
     ]
 }

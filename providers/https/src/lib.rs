@@ -171,7 +171,7 @@ async fn check_status(config: Config) -> Result<Blob> {
 }
 
 async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> {
-    if request.query_data.mime_type != QUERY_DATA_MIME_TYPE {
+    if request.query_data.mime_type != FORM_ENCODED_MIME_TYPE {
         return Err(Error::UnsupportedRequest);
     }
     let mut path = String::new();
