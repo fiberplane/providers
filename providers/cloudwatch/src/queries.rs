@@ -1,8 +1,3 @@
-use fiberplane_provider_bindings::{Blob, Cell, Error, Timestamp};
-use time::{format_description::well_known::Rfc3339, OffsetDateTime};
-
-use crate::constants::CELLS_MSGPACK_MIME_TYPE;
-
 pub mod auto_suggest;
 pub mod describe_log_groups;
 pub mod describe_queries;
@@ -12,6 +7,10 @@ pub mod graph_metric;
 pub mod list_metrics;
 pub mod start_query;
 pub mod status;
+
+use crate::constants::CELLS_MSGPACK_MIME_TYPE;
+use fiberplane_pdk::prelude::{Blob, Cell, Error, Timestamp};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 pub fn serialize_cells(cells: Vec<Cell>) -> Result<Blob, Error> {
     Ok(Blob {

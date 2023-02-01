@@ -1,8 +1,7 @@
-use std::collections::HashMap;
-
 use super::{ClientCommon, ClientError};
 use crate::{api::paginate::paginate_vec, config::Config, types::api::cloudwatch_logs::*};
-use fiberplane_provider_bindings::{Error, Timestamp};
+use fiberplane_pdk::prelude::{Error, Timestamp};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Client {

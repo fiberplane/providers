@@ -1,10 +1,7 @@
-use std::collections::{BTreeMap, HashMap};
-
-use serde::{Deserialize, Serialize};
-
-use crate::client::{request_state, CanonicalRequest};
-
 use super::{POST_CONTENT_TYPE, X_AMZ_TARGET_PREFIX};
+use crate::client::{request_state, CanonicalRequest};
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, HashMap};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -23,11 +20,12 @@ pub struct GetLogRecordResponse {
 }
 
 impl From<GetLogRecordRequest> for CanonicalRequest<{ request_state::STEM }> {
-    fn from(req: GetLogRecordRequest) -> Self {
+    fn from(get_log_record_request: GetLogRecordRequest) -> Self {
         let method = http::Method::POST;
         let uri = "/".to_string();
         let query_params = BTreeMap::new();
-        let body = serde_json::to_vec(&req).expect("GetLogRecordRequest is always serializable.");
+        let body = serde_json::to_vec(&get_log_record_request)
+            .expect("GetLogRecordRequest is always serializable.");
         let headers = BTreeMap::from([
             (
                 "x-amz-target".to_string(),

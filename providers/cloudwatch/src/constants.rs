@@ -1,6 +1,7 @@
 use const_format::formatcp;
-pub use fiberplane_models::providers::{
-    CELLS_MIME_TYPE, EVENTS_MIME_TYPE, SUGGESTIONS_MIME_TYPE, TIMESERIES_MIME_TYPE,
+pub use fiberplane_pdk::providers::{
+    CELLS_MIME_TYPE, EVENTS_MIME_TYPE, FORM_ENCODED_MIME_TYPE, SUGGESTIONS_MIME_TYPE,
+    TIMESERIES_MIME_TYPE,
 };
 
 pub const PROVIDER_TYPE: &str = "cloudwatch";
@@ -19,7 +20,7 @@ pub const CELLS_MSGPACK_MIME_TYPE: &str = formatcp!("{CELLS_MIME_TYPE}+msgpack")
 pub const EVENTS_MSGPACK_MIME_TYPE: &str = formatcp!("{EVENTS_MIME_TYPE}+msgpack");
 pub const EVENTS_JSON_MIME_TYPE: &str = formatcp!("{EVENTS_MIME_TYPE}+json");
 pub const LIST_METRICS_MIME_TYPE: &str = "application/json";
-pub const QUERY_DATA_MIME_TYPE: &str = "application/x-www-form-urlencoded";
+pub const QUERY_DATA_MIME_TYPE: &str = FORM_ENCODED_MIME_TYPE;
 pub const QUERY_RESULTS_MIME_TYPE: &str =
     "application/vnd.fiberplane.providers.cloudwatch.query-results";
 

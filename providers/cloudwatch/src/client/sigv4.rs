@@ -2,7 +2,7 @@
 
 use super::{canonical_request::request_state, CanonicalRequest};
 use bytes::Bytes;
-use fiberplane_provider_bindings::Timestamp;
+use fiberplane_pdk::prelude::Timestamp;
 use hmac::{Hmac, Mac};
 use secrecy::{ExposeSecret, SecretString};
 use sha2::{Digest, Sha256};

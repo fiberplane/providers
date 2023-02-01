@@ -1,6 +1,4 @@
 //! Describe Log Groups query handling
-use std::collections::{BTreeMap, HashMap};
-
 use crate::{
     client::cloudwatch_logs::Client,
     config::Config,
@@ -9,10 +7,11 @@ use crate::{
         LOG_RECORD_POINTER_PARAM_NAME, SPAN_KEY, TRACE_KEY, TS_KEY,
     },
 };
-use fiberplane_models::providers::{
+use fiberplane_pdk::prelude::{Blob, Cell, Error, LogCell, ProviderRequest};
+use fiberplane_pdk::providers::{
     Event, OtelMetadata, OtelSpanId, OtelTraceId, FORM_ENCODED_MIME_TYPE,
 };
-use fiberplane_provider_bindings::{Blob, Cell, Error, LogCell, ProviderRequest};
+use std::collections::{BTreeMap, HashMap};
 use time::{
     format_description::well_known::Rfc3339, macros::format_description, OffsetDateTime,
     PrimitiveDateTime,

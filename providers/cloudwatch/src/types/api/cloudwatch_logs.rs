@@ -10,13 +10,12 @@ mod get_query_results;
 mod start_query;
 
 use super::IntTimestamp as Timestamp;
-use serde::{Deserialize, Serialize};
-
 pub use describe_log_groups::*;
 pub use describe_log_streams::*;
 pub use describe_queries::*;
 pub use get_log_record::*;
 pub use get_query_results::*;
+use serde::{Deserialize, Serialize};
 pub use start_query::*;
 
 // The values of the constants are per API, and for Cloudwatch they were found from

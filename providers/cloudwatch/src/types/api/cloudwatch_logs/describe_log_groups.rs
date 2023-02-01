@@ -1,12 +1,10 @@
-use std::collections::BTreeMap;
-
+use super::*;
 use crate::{
     api::paginate::Paginate,
     client::{request_state, CanonicalRequest},
 };
-
-use super::*;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 /// Describe Log Groups
 ///
@@ -101,12 +99,12 @@ pub struct DescribeLogGroupsResponse {
 }
 
 impl From<DescribeLogGroupsRequest> for CanonicalRequest<{ request_state::STEM }> {
-    fn from(req: DescribeLogGroupsRequest) -> Self {
+    fn from(describe_log_groups_request: DescribeLogGroupsRequest) -> Self {
         let method = http::Method::POST;
         let uri = "/".to_string();
         let query_params = BTreeMap::new();
-        let body =
-            serde_json::to_vec(&req).expect("DescribeLogGroupsRequest is always serializable.");
+        let body = serde_json::to_vec(&describe_log_groups_request)
+            .expect("DescribeLogGroupsRequest is always serializable.");
         let headers = BTreeMap::from([
             (
                 "x-amz-target".to_string(),

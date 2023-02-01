@@ -1,9 +1,7 @@
-use std::collections::{BTreeMap, HashMap};
-
-use fiberplane_provider_bindings::Error;
-use serde::de::DeserializeOwned;
-
 use crate::client::{request_state, CanonicalRequest, ClientCommon};
+use fiberplane_pdk::prelude::Error;
+use serde::de::DeserializeOwned;
+use std::collections::{BTreeMap, HashMap};
 
 /// Trait for request that can combine with a "next page" token to create
 /// a new version of the same request, but for the next page.

@@ -7,16 +7,6 @@
 //! - CloudWatch logs
 //! - Resource groups tagging
 
-use config::Config;
-use constants::*;
-use fiberplane_models::providers::{
-    CELLS_MIME_TYPE, STATUS_MIME_TYPE, STATUS_QUERY_TYPE, SUGGESTIONS_QUERY_TYPE,
-};
-use fiberplane_provider_bindings::*;
-use queries::*;
-use std::env;
-pub use types::*;
-
 mod client;
 mod config;
 mod constants;
@@ -25,39 +15,46 @@ mod queries;
 mod types;
 pub mod utils;
 
+use config::Config;
+use constants::*;
+use fiberplane_pdk::prelude::*;
+use queries::*;
+use std::env;
+pub use types::*;
+
 static COMMIT_HASH: &str = env!("VERGEN_GIT_SHA");
 static BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
 
-#[fp_export_impl(fiberplane_provider_bindings)]
+#[pdk_export(fiberplane_provider_bindings)]
 async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQueryType> {
     panic::init_panic_hook();
     vec![
         SupportedQueryType::new(GRAPH_METRIC_QUERY_TYPE).with_label("AWS: graph metrics")
             .with_schema( vec![
                 TextField::new()
-                    .with_name( EXPRESSION_PARAM_NAME)
-                    .with_label( "Query of the metric to graph")
-                    .with_placeholder( "select avg(CPUUtilization) from schema(\"AWS/EC2\", InstanceId) group by InstanceId")
+                    .with_name(EXPRESSION_PARAM_NAME)
+                    .with_label("Query of the metric to graph")
+                    .with_placeholder("select avg(CPUUtilization) from schema(\"AWS/EC2\", InstanceId) group by InstanceId")
                     .multiline()
                     .required()
                     .into()
                 ,
                 TextField::new()
-                    .with_name( LABEL_PARAM_NAME)
-                    .with_label( "Title of the timeseries")
-                    .with_placeholder( "CPU usage")
+                    .with_name(LABEL_PARAM_NAME)
+                    .with_label("Title of the timeseries")
+                    .with_placeholder("CPU usage")
                     .multiline()
                     .required()
                 .into(),
                 TextField::new()
-                    .with_name( PERIOD_PARAM_NAME)
-                    .with_label( "Period of time between points")
-                    .with_placeholder( "30")
+                    .with_name(PERIOD_PARAM_NAME)
+                    .with_label("Period of time between points")
+                    .with_placeholder("30")
                     .required()
                 .into(),
                 DateTimeRangeField::new()
-                    .with_name( TIME_RANGE_PARAM_NAME)
-                    .with_label( "Specify a time range")
+                    .with_name(TIME_RANGE_PARAM_NAME)
+                    .with_label("Specify a time range")
                     .required()
                 .into(),
             ])
@@ -65,15 +62,15 @@ async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQuer
         SupportedQueryType::new(LIST_METRICS_QUERY_TYPE).with_label("AWS: list metrics")
             .with_schema(vec![
                 TextField::new()
-                    .with_name( TAG_KEY_PARAM_NAME)
-                    .with_label( "A tag key to filter by")
-                    .with_placeholder( "Environment")
+                    .with_name(TAG_KEY_PARAM_NAME)
+                    .with_label("A tag key to filter by")
+                    .with_placeholder("Environment")
                     .with_suggestions()
                 .into(),
                 TextField::new()
-                    .with_name( TAG_VALUE_PARAM_NAME)
-                    .with_label( "A tag value to filter by")
-                    .with_placeholder( "production")
+                    .with_name(TAG_VALUE_PARAM_NAME)
+                    .with_label("A tag value to filter by")
+                    .with_placeholder("production")
                     .with_suggestions()
                 .into(),
             ])
@@ -81,31 +78,31 @@ async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQuer
         SupportedQueryType::new(DESCRIBE_LOG_GROUPS_QUERY_TYPE)
             .with_label("AWS: list log groups")
             .with_schema(vec![TextField::new()
-                .with_name( DUMMY_PARAM_NAME)
-                .with_label( "Dummy field to get a button")
+                .with_name(DUMMY_PARAM_NAME)
+                .with_label("Dummy field to get a button")
             .into()])
             .supporting_mime_types(&[CELLS_MIME_TYPE]),
         SupportedQueryType::new(START_LOG_QUERY_QUERY_TYPE)
             .with_label("AWS: start a Logs query")
             .with_schema(vec![
                 TextField::new()
-                    .with_name( QUERY_PARAM_NAME)
-                    .with_label( "Query for logs")
+                    .with_name(QUERY_PARAM_NAME)
+                    .with_label("Query for logs")
                     .with_placeholder(&format!("fields {}, {} | sort {} desc | limit 20", TS_KEY.0, BODY_KEY.0, TS_KEY.0))
                     .required()
                     .with_suggestions()
                 .into(),
                 TextField::new()
-                    .with_name( LOG_GROUP_PARAM_NAME)
-                    .with_label( "Group names to do the query on")
-                    .with_placeholder( "RDSOSMetrics")
+                    .with_name(LOG_GROUP_PARAM_NAME)
+                    .with_label("Group names to do the query on")
+                    .with_placeholder("RDSOSMetrics")
                     .multiline()
                     .required()
                     .with_suggestions()
                 .into(),
                 DateTimeRangeField::new()
-                    .with_name( TIME_RANGE_PARAM_NAME)
-                    .with_label( "Specify a time range")
+                    .with_name(TIME_RANGE_PARAM_NAME)
+                    .with_label("Specify a time range")
                     .required()
                 .into(),
             ])
@@ -114,9 +111,9 @@ async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQuer
             .with_label("AWS: list Logs queries")
             .with_schema(vec![
                 TextField::new()
-                    .with_name( LOG_GROUP_PARAM_NAME)
-                    .with_label( "Group name to list the queries for")
-                    .with_placeholder( "RDSOSMetrics")
+                    .with_name(LOG_GROUP_PARAM_NAME)
+                    .with_label("Group name to list the queries for")
+                    .with_placeholder("RDSOSMetrics")
                     .with_suggestions()
                 .into(),
                 // TODO: Add a QueryStatus filter parameter once we can use the Select field (FP-2590)
@@ -125,38 +122,38 @@ async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQuer
         SupportedQueryType::new(GET_QUERY_RESULTS_QUERY_TYPE)
             .with_label("AWS: display Logs query results")
             .with_schema(vec![TextField::new()
-                .with_name( QUERY_ID_PARAM_NAME)
-                .with_label( "Query Id to look for")
-                .with_placeholder( "640e6499-5f95-4e53-beb6-64dafb482180")
+                .with_name(QUERY_ID_PARAM_NAME)
+                .with_label("Query Id to look for")
+                .with_placeholder("640e6499-5f95-4e53-beb6-64dafb482180")
                 .required()
             .into()])
             .supporting_mime_types(&[EVENTS_MIME_TYPE]),
         SupportedQueryType::new(GET_LOG_RECORD_QUERY_TYPE)
             .with_label("AWS: display Logs entry details")
             .with_schema(vec![TextField::new()
-                .with_name( LOG_RECORD_POINTER_PARAM_NAME)
-                .with_label( "Log record pointer to fetch")
-                .with_placeholder( "123456789")
+                .with_name(LOG_RECORD_POINTER_PARAM_NAME)
+                .with_label("Log record pointer to fetch")
+                .with_placeholder("123456789")
                 .required()
             .into()])
             .supporting_mime_types(&[CELLS_MIME_TYPE]),
         SupportedQueryType::new(STATUS_QUERY_TYPE).supporting_mime_types(&[STATUS_MIME_TYPE]),
-        SupportedQueryType::new(SUGGESTIONS_QUERY_TYPE).supporting_mime_types(&[SUGGESTIONS_MSGPACK_MIME_TYPE]),
+        SupportedQueryType::new(SUGGESTIONS_QUERY_TYPE).supporting_mime_types(&[SUGGESTIONS_MIME_TYPE]),
     ]
 }
 
-#[fp_export_impl(fiberplane_provider_bindings)]
-async fn invoke2(request: ProviderRequest) -> Result<Blob, Error> {
+#[pdk_export(fiberplane_provider_bindings)]
+async fn invoke2(request: ProviderRequest) -> Result<Blob> {
     panic::init_panic_hook();
 
     log(format!(
-        "CloudWatch: (commit: {}, built at: {}) invoked for query type \"{}\" and query data \"{:?}\"",
-        COMMIT_HASH, BUILD_TIMESTAMP, request.query_type, request.query_data
+        "CloudWatch: (commit: {COMMIT_HASH}, built at: {BUILD_TIMESTAMP}) invoked for query type \"{}\" and query data \"{:?}\"",
+        request.query_type, request.query_data
     ));
 
     let config: Config =
         serde_json::from_value(request.config.clone()).map_err(|err| Error::Config {
-            message: format!("Error parsing config: {:?}", err),
+            message: format!("Error parsing config: {err:?}"),
         })?;
 
     match request.query_type.as_str() {
@@ -175,8 +172,8 @@ async fn invoke2(request: ProviderRequest) -> Result<Blob, Error> {
     }
 }
 
-#[fp_export_impl(fiberplane_provider_bindings)]
-fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>, Error> {
+#[pdk_export(fiberplane_provider_bindings)]
+fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
     panic::init_panic_hook();
 
     match query_type.as_str() {
@@ -189,8 +186,8 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>, Error> 
     }
 }
 
-#[fp_export_impl(fiberplane_provider_bindings)]
-fn extract_data(response: Blob, mime_type: String, query: Option<String>) -> Result<Blob, Error> {
+#[pdk_export(fiberplane_provider_bindings)]
+fn extract_data(response: Blob, mime_type: String, query: Option<String>) -> Result<Blob> {
     panic::init_panic_hook();
 
     if response.mime_type.starts_with(QUERY_RESULTS_MIME_TYPE) {
@@ -200,8 +197,8 @@ fn extract_data(response: Blob, mime_type: String, query: Option<String>) -> Res
     Err(Error::UnsupportedRequest)
 }
 
-#[fp_export_impl(fiberplane_provider_bindings)]
-fn get_config_schema() -> ConfigSchema {
+#[pdk_export(fiberplane_provider_bindings)]
+fn get_config_schema() -> Vec<ConfigField> {
     vec![
         TextField::new()
             .with_name("region")

@@ -1,21 +1,19 @@
-use http::Method;
-use secrecy::SecretString;
-use serde::de::DeserializeOwned;
-use std::collections::BTreeMap;
-
-use fiberplane_provider_bindings::{
-    log, make_http_request, now, Error, HttpRequest, HttpRequestError, HttpRequestMethod,
-};
-
-pub use canonical_request::CanonicalRequest;
-
-pub use self::canonical_request::request_state;
-
 mod canonical_request;
 pub mod cloudwatch;
 pub mod cloudwatch_logs;
 pub mod resource_groups_tagging;
 mod sigv4;
+
+pub use self::canonical_request::request_state;
+pub use canonical_request::CanonicalRequest;
+use fiberplane_pdk::{
+    prelude::{log, make_http_request, now},
+    providers::{Error, HttpRequest, HttpRequestError, HttpRequestMethod},
+};
+use http::Method;
+use secrecy::SecretString;
+use serde::de::DeserializeOwned;
+use std::collections::BTreeMap;
 
 #[derive(Debug)]
 pub enum ClientError {
@@ -30,9 +28,9 @@ impl std::fmt::Display for ClientError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ClientError::InvalidRequest(e) => {
-                write!(f, "invalid request to send to runtime host: {}", e)
+                write!(f, "invalid request to send to runtime host: {e}")
             }
-            ClientError::Host(e) => write!(f, "runtime http client error: {:?}", e),
+            ClientError::Host(e) => write!(f, "runtime http client error: {e:?}"),
             ClientError::UnexpectedResponse { expected, actual } => {
                 write!(
                     f,
@@ -99,7 +97,7 @@ impl ClientCommon {
             body: request.body.clone(),
         };
 
-        log(format!("CloudWatch: Sending request {:?}", request));
+        log(format!("CloudWatch: Sending request {request:?}"));
 
         make_http_request(request)
             .await
@@ -110,12 +108,11 @@ impl ClientCommon {
                         response,
                     } => {
                         log(format!(
-                            "CloudWatch: HTTP error: {}; {:?}",
-                            status_code,
+                            "CloudWatch: HTTP error: {status_code}; {:?}",
                             String::from_utf8_lossy(response)
                         ));
                     }
-                    other => log(format!("CloudWatch: HTTP error: {:?}", other)),
+                    other => log(format!("CloudWatch: HTTP error: {other:?}")),
                 };
                 ClientError::Host(err)
             })

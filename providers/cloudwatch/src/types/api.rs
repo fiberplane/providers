@@ -1,13 +1,13 @@
 //! Payloads read and returned by the API
 
-use fiberplane_provider_bindings::Timestamp as FpTimestamp;
-use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
-
 pub mod cloudwatch;
 pub mod cloudwatch_logs;
 pub mod paginate;
 pub mod resource_groups_tagging;
+
+use fiberplane_pdk::prelude::Timestamp as FpTimestamp;
+use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 
 // It seems that all 'GET' requests get tagged, and all 'POST' requests aren't
 /// An API response from the SDK

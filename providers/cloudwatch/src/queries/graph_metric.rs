@@ -17,6 +17,7 @@
 //! - `select sum(Invocations) from schema("AWS/Lambda", FunctionName) group by FunctionName`
 //! - `select avg(NumberOfObjects) from schema("AWS/S3", BucketName) group by BucketName`
 //!   + BucketSizeBytes
+use super::try_from_iso_date;
 use crate::{
     api::{
         cloudwatch::{MetricDataResult, ScanOrder},
@@ -29,13 +30,11 @@ use crate::{
         TIMESERIES_MSGPACK_MIME_TYPE, TIME_RANGE_PARAM_NAME,
     },
 };
-use fiberplane_models::providers::{Timeseries, FORM_ENCODED_MIME_TYPE};
-use fiberplane_provider_bindings::{
+use fiberplane_pdk::prelude::{
     now, Blob, Cell, Error, GraphCell, GraphType, ProviderRequest, StackingType, Timestamp,
 };
+use fiberplane_pdk::providers::{Timeseries, FORM_ENCODED_MIME_TYPE};
 use std::collections::BTreeMap;
-
-use super::try_from_iso_date;
 
 pub async fn invoke2_handler(config: Config, request: ProviderRequest) -> Result<Blob, Error> {
     let request: GraphMetricRequest = request.query_data.try_into()?;
@@ -175,7 +174,7 @@ pub fn mdr_to_ts(res: MetricDataResult, resource_referential: &[ResourceTagMappi
 
     let metrics = ts_iter
         .zip(values_iter)
-        .map(|(time, value)| fiberplane_models::providers::Metric {
+        .map(|(time, value)| fiberplane_pdk::providers::Metric {
             time: time.into(),
             value,
             otel: Default::default(),

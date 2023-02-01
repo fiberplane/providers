@@ -1,9 +1,7 @@
-use std::collections::BTreeMap;
-
-use crate::client::{request_state, CanonicalRequest};
-
 use super::*;
+use crate::client::{request_state, CanonicalRequest};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,12 +40,12 @@ pub struct DescribeLogStreamsResponse {
 }
 
 impl From<DescribeLogStreamsRequest> for CanonicalRequest<{ request_state::STEM }> {
-    fn from(req: DescribeLogStreamsRequest) -> Self {
+    fn from(describe_log_streams_request: DescribeLogStreamsRequest) -> Self {
         let method = http::Method::POST;
         let uri = "/".to_string();
         let query_params = BTreeMap::new();
-        let body =
-            serde_json::to_vec(&req).expect("DescribeLogStreamsRequest is always serializable.");
+        let body = serde_json::to_vec(&describe_log_streams_request)
+            .expect("DescribeLogStreamsRequest is always serializable.");
         let headers = BTreeMap::from([
             (
                 "x-amz-target".to_string(),

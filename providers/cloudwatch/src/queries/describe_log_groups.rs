@@ -1,10 +1,9 @@
 //! Describe Log Groups query handling
-use crate::{api::cloudwatch_logs::LogGroup, client::cloudwatch_logs::Client, config::Config};
-use fiberplane_provider_bindings::{Blob, Cell, Error, ProviderRequest, TextCell};
-
 use super::serialize_cells;
+use crate::{api::cloudwatch_logs::LogGroup, client::cloudwatch_logs::Client, config::Config};
+use fiberplane_pdk::prelude::{Blob, Cell, Error, ProviderRequest, Result, TextCell};
 
-pub async fn invoke2_handler(config: Config, _request: ProviderRequest) -> Result<Blob, Error> {
+pub async fn invoke2_handler(config: Config, _request: ProviderRequest) -> Result<Blob> {
     let client = Client::from(&config);
 
     client
@@ -16,7 +15,7 @@ pub async fn invoke2_handler(config: Config, _request: ProviderRequest) -> Resul
         .and_then(try_into_blob)
 }
 
-fn try_into_blob(groups: Vec<LogGroup>) -> Result<Blob, Error> {
+fn try_into_blob(groups: Vec<LogGroup>) -> Result<Blob> {
     serialize_cells(
         groups
             .into_iter()

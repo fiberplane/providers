@@ -1,12 +1,11 @@
 //! Describe Queries query handling
+use super::serialize_cells;
 use crate::{
     api::cloudwatch_logs::QueryInfo, client::cloudwatch_logs::Client, config::Config,
     constants::LOG_GROUP_PARAM_NAME,
 };
-use fiberplane_models::providers::FORM_ENCODED_MIME_TYPE;
-use fiberplane_provider_bindings::{Blob, Cell, Error, ProviderRequest, TextCell};
-
-use super::serialize_cells;
+use fiberplane_pdk::prelude::{Blob, Cell, Error, ProviderRequest, TextCell};
+use fiberplane_pdk::providers::FORM_ENCODED_MIME_TYPE;
 
 pub async fn invoke2_handler(config: Config, request: ProviderRequest) -> Result<Blob, Error> {
     let request: DescribeQueriesInput = request.query_data.try_into()?;

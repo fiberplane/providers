@@ -1,6 +1,4 @@
 //! Describe Log Groups query handling
-use std::collections::BTreeMap;
-
 use crate::{
     api::cloudwatch_logs::{QueryStatistics, QueryStatus, ResultField},
     client::cloudwatch_logs::Client,
@@ -10,11 +8,12 @@ use crate::{
         PTR_KEY, QUERY_ID_PARAM_NAME, QUERY_RESULTS_MIME_TYPE, SPAN_KEY, TRACE_KEY, TS_KEY,
     },
 };
-use fiberplane_models::providers::{
+use fiberplane_pdk::prelude::{Blob, Cell, Error, LogCell, ProviderRequest, TextCell};
+use fiberplane_pdk::providers::{
     Event, OtelMetadata, OtelSpanId, OtelTraceId, FORM_ENCODED_MIME_TYPE,
 };
-use fiberplane_provider_bindings::{Blob, Cell, Error, LogCell, ProviderRequest, TextCell};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use time::{macros::format_description, OffsetDateTime, PrimitiveDateTime};
 
 pub async fn invoke2_handler(config: Config, request: ProviderRequest) -> Result<Blob, Error> {

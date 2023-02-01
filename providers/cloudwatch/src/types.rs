@@ -1,17 +1,17 @@
+pub mod api;
+
 use crate::{
     EXPRESSION_PARAM_NAME, LIST_METRICS_MIME_TYPE, PERIOD_PARAM_NAME, QUERY_DATA_MIME_TYPE,
     TIME_RANGE_PARAM_NAME,
 };
-use fiberplane_provider_bindings::{log, Blob, Error, ProviderRequest, ValidationError};
+use api::cloudwatch::{ListMetricsResponse, ListMetricsResult, Metric as SdkMetric};
+use fiberplane_pdk::prelude::{log, Blob, Error, ProviderRequest, ValidationError};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, time::SystemTime};
 use time::{
     ext::NumericalDuration, format_description::well_known::Rfc3339, Duration, OffsetDateTime,
 };
-
-pub mod api;
-use api::cloudwatch::{ListMetricsResponse, ListMetricsResult, Metric as SdkMetric};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricList {
@@ -42,7 +42,7 @@ impl std::fmt::Display for Metric {
         write!(f, "\n\tDimensions:")?;
         self.dimensions
             .iter()
-            .try_for_each(|(key, value)| write!(f, "\n\t\tName: {}\n\t\tValue: {}", key, value))
+            .try_for_each(|(key, value)| write!(f, "\n\t\tName: {key}\n\t\tValue: {value}"))
     }
 }
 

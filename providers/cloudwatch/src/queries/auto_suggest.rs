@@ -1,9 +1,5 @@
 //! Auto suggestions implementation
 
-use fiberplane_models::providers::{AutoSuggestRequest, Suggestion};
-use fiberplane_provider_bindings::*;
-use itertools::Itertools;
-
 use crate::{
     client::cloudwatch::Client,
     client::cloudwatch_logs::Client as LogsClient,
@@ -16,8 +12,10 @@ use crate::{
         TAG_VALUE_PARAM_NAME,
     },
 };
+use fiberplane_pdk::prelude::*;
+use itertools::Itertools;
 
-pub async fn invoke2_handler(query_data: Blob, config: Config) -> Result<Blob, Error> {
+pub async fn invoke2_handler(query_data: Blob, config: Config) -> Result<Blob> {
     let query = AutoSuggestRequest::from_query_data(&query_data)?;
 
     let suggestions = match query.query_type.as_str() {
@@ -42,7 +40,7 @@ pub async fn invoke2_handler(query_data: Blob, config: Config) -> Result<Blob, E
 async fn list_metrics_suggestions(
     query: AutoSuggestRequest,
     config: Config,
-) -> Result<Vec<Suggestion>, Error> {
+) -> Result<Vec<Suggestion>> {
     match query.field.as_str() {
         TAG_KEY_PARAM_NAME => {
             let mut keys = TagsClient::from(&config).get_tag_keys(None).await?;
@@ -79,7 +77,7 @@ async fn list_metrics_suggestions(
 async fn list_log_query_suggestions(
     query: AutoSuggestRequest,
     config: Config,
-) -> Result<Vec<Suggestion>, Error> {
+) -> Result<Vec<Suggestion>> {
     match query.field.as_str() {
         LOG_GROUP_PARAM_NAME => {
             let identifier = query
@@ -138,7 +136,7 @@ async fn list_log_query_suggestions(
 async fn list_graph_metric_suggestions(
     query: AutoSuggestRequest,
     config: Config,
-) -> Result<Vec<Suggestion>, Error> {
+) -> Result<Vec<Suggestion>> {
     match query.field.as_str() {
         EXPRESSION_PARAM_NAME => {
             let identifier = query

@@ -8,14 +8,13 @@
 //! - tag:GetTagValues
 //! You'll also need permissions to access the resources of individual services so that you can tag and untag those resources.
 
-use fiberplane_provider_bindings::Error;
-
 use super::ClientCommon;
 use crate::{
     api::{paginate::paginate_vec, SdkResponse},
     config::Config,
     types::api::resource_groups_tagging::*,
 };
+use fiberplane_pdk::providers::Error;
 
 #[derive(Debug, Clone)]
 pub struct Client {
@@ -37,7 +36,7 @@ impl Client {
     }
 
     pub fn format_action_header(action: &str) -> String {
-        format!("{}.{}", X_AMZ_TARGET_PREFIX, action)
+        format!("{X_AMZ_TARGET_PREFIX}.{action}")
     }
 
     /// List all tag keys, up to an optional limit

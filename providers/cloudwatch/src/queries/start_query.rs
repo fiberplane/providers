@@ -1,4 +1,5 @@
 //! "Start Log query" query handling
+use super::{serialize_cells, try_from_iso_date};
 use crate::{
     client::cloudwatch_logs::Client,
     config::Config,
@@ -7,12 +8,10 @@ use crate::{
         QUERY_PARAM_NAME, TIME_RANGE_PARAM_NAME,
     },
 };
-use fiberplane_models::providers::FORM_ENCODED_MIME_TYPE;
-use fiberplane_provider_bindings::{
+use fiberplane_pdk::prelude::{
     now, Annotation, AnnotationWithOffset, Blob, Cell, Error, ProviderRequest, TextCell, Timestamp,
 };
-
-use super::{serialize_cells, try_from_iso_date};
+use fiberplane_pdk::providers::FORM_ENCODED_MIME_TYPE;
 
 pub async fn invoke2_handler(config: Config, request: ProviderRequest) -> Result<Blob, Error> {
     let request: StartQueryInput = request.query_data.try_into()?;
@@ -39,7 +38,7 @@ fn try_into_blob(id: String) -> Result<Blob, Error> {
             .append_pair(QUERY_ID_PARAM_NAME, &id)
             .finish()
     );
-    let content = format!("Query Id: {} (Click here to see results in a new cell)", id);
+    let content = format!("Query Id: {id} (Click here to see results in a new cell)");
     let link_start: u32 = (content.len() - "(Click here to see results in a new cell)".len())
         .try_into()
         .expect("usize fits in u32 on all target architectures.");

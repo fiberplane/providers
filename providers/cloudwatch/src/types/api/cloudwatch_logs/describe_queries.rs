@@ -1,12 +1,10 @@
-use std::collections::BTreeMap;
-
+use super::*;
 use crate::{
     api::paginate::Paginate,
     client::{request_state, CanonicalRequest},
 };
-
-use super::*;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 /// https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeQueries.html
 #[derive(Debug, Clone, Serialize)]
@@ -30,12 +28,12 @@ pub struct DescribeQueriesResponse {
 }
 
 impl From<DescribeQueriesRequest> for CanonicalRequest<{ request_state::STEM }> {
-    fn from(req: DescribeQueriesRequest) -> Self {
+    fn from(describe_queries_request: DescribeQueriesRequest) -> Self {
         let method = http::Method::POST;
         let uri = "/".to_string();
         let query_params = BTreeMap::new();
-        let body =
-            serde_json::to_vec(&req).expect("DescribeQueriesRequest is always serializable.");
+        let body = serde_json::to_vec(&describe_queries_request)
+            .expect("DescribeQueriesRequest is always serializable.");
         let headers = BTreeMap::from([
             (
                 "x-amz-target".to_string(),

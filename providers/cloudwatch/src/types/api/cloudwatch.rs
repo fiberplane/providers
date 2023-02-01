@@ -1,7 +1,6 @@
 //! Payloads read and returned by the cloudwatch API
 //!
 //! Cloudwatch: https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference
-
 use super::Timestamp;
 use serde::{Deserialize, Serialize};
 

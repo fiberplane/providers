@@ -1,8 +1,8 @@
 use crate::{client::cloudwatch::Client, config::Config};
-use fiberplane_models::providers::STATUS_MIME_TYPE;
-use fiberplane_provider_bindings::{Blob, Error};
+use fiberplane_pdk::prelude::{Blob, Result};
+use fiberplane_pdk::providers::STATUS_MIME_TYPE;
 
-pub async fn check_status(config: Config) -> Result<Blob, Error> {
+pub async fn check_status(config: Config) -> Result<Blob> {
     let client = Client::from(&config);
     let blob = client
         .list_metrics(None, None, None, Some(0))

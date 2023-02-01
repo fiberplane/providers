@@ -1,12 +1,3 @@
-use bytes::Bytes;
-use fiberplane_provider_bindings::Timestamp;
-use http::Method;
-use itertools::Itertools;
-use secrecy::SecretString;
-use std::collections::BTreeMap;
-
-use super::sigv4;
-
 pub mod request_state {
     /// A state marker for Canonical Requests
     pub type State = u8;
@@ -16,6 +7,14 @@ pub mod request_state {
     /// The request has all information necessary to be signed with V4 algorithm and sent.
     pub const READY_TO_SIGN_V4: State = 1;
 }
+
+use super::sigv4;
+use bytes::Bytes;
+use fiberplane_pdk::prelude::Timestamp;
+use http::Method;
+use itertools::Itertools;
+use secrecy::SecretString;
+use std::collections::BTreeMap;
 
 /// A valid Canonical Request for AWS API.
 ///
@@ -133,7 +132,7 @@ impl std::fmt::Display for CanonicalRequest<{ request_state::READY_TO_SIGN_V4 }>
         let headers: String = self
             .headers
             .iter()
-            .map(|(k, v)| format!("{}:{}\n", k, v))
+            .map(|(k, v)| format!("{k}:{v}\n"))
             .collect::<String>()
             .trim_end()
             .to_string();

@@ -20,12 +20,12 @@ pub struct GetQueryResultsResponse {
 }
 
 impl From<GetQueryResultsRequest> for CanonicalRequest<{ request_state::STEM }> {
-    fn from(req: GetQueryResultsRequest) -> Self {
+    fn from(get_query_results_request: GetQueryResultsRequest) -> Self {
         let method = http::Method::POST;
         let uri = "/".to_string();
         let query_params = BTreeMap::new();
-        let body =
-            serde_json::to_vec(&req).expect("GetQueryResultsRequest is always serializable.");
+        let body = serde_json::to_vec(&get_query_results_request)
+            .expect("GetQueryResultsRequest is always serializable.");
         let headers = BTreeMap::from([
             (
                 "x-amz-target".to_string(),

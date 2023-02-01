@@ -1,11 +1,10 @@
-use std::collections::BTreeMap;
-
 use super::{canonical_request::request_state, CanonicalRequest, ClientCommon};
 use crate::api::paginate::{paginate, paginate_vec, Paginate};
 use crate::{api::SdkResponse, api::TaggedSdkResponse};
 use crate::{config::Config, types::api::cloudwatch::*};
-use fiberplane_provider_bindings::{Error, Timestamp};
+use fiberplane_pdk::prelude::{Error, Timestamp};
 use serde::Serialize;
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone)]
 pub struct Client {
@@ -28,7 +27,7 @@ impl Client {
     }
 
     fn format_action_header(action: &str) -> String {
-        format!("{}.{}", X_AMZ_TARGET_PREFIX, action)
+        format!("{X_AMZ_TARGET_PREFIX}.{action}")
     }
 
     /// Note: Using a limit of `Some(0)` means only a single call is made to the API
@@ -122,7 +121,7 @@ impl Client {
                 for partial_result in metric_data_results {
                     let key = format!(
                         "{}{}",
-                        partial_result.id.clone().unwrap(),
+                        partial_result.id.clone().unwrap_or_default(),
                         partial_result.label.clone().unwrap_or_default()
                     );
                     match acc.entry(key) {
@@ -137,7 +136,7 @@ impl Client {
                                 inner_accumulator
                                     .messages
                                     .as_mut()
-                                    .unwrap()
+                                    .expect("The case where inner_accumulator.messages is None has been dealt with before")
                                     .extend(partial_result.messages.clone().unwrap_or_default());
                             }
                             if inner_accumulator.timestamps.is_none() {
@@ -146,7 +145,7 @@ impl Client {
                                 inner_accumulator
                                     .timestamps
                                     .as_mut()
-                                    .unwrap()
+                                    .expect("The case where inner_accumulator.timestamps is None has been dealt with before")
                                     .extend(partial_result.timestamps.clone().unwrap_or_default());
                             }
                             if inner_accumulator.values.is_none() {
@@ -155,7 +154,7 @@ impl Client {
                                 inner_accumulator
                                     .values
                                     .as_mut()
-                                    .unwrap()
+                                    .expect("The case where inner_accumulator.values is None has been dealt with before")
                                     .extend(partial_result.values.clone().unwrap_or_default());
                             }
                         }
@@ -197,20 +196,20 @@ pub struct ListMetrics {
 }
 
 impl From<ListMetrics> for CanonicalRequest<{ request_state::STEM }> {
-    fn from(lm: ListMetrics) -> Self {
+    fn from(list_metrics_request: ListMetrics) -> Self {
         let method = http::Method::GET;
         let uri = "/".to_string();
         let query_params = {
             let mut acc = BTreeMap::new();
             acc.insert("Action".to_string(), "ListMetrics".to_string());
             acc.insert("Version".to_string(), VERSION.to_string());
-            if let Some(metric_name) = lm.metric_name {
+            if let Some(metric_name) = list_metrics_request.metric_name {
                 acc.insert("MetricName".to_string(), metric_name);
             }
-            if let Some(namespace) = lm.namespace {
+            if let Some(namespace) = list_metrics_request.namespace {
                 acc.insert("Namespace".to_string(), namespace);
             }
-            if let Some(next_token) = lm.next_token {
+            if let Some(next_token) = list_metrics_request.next_token {
                 acc.insert("NextToken".to_string(), next_token);
             }
             acc
@@ -237,11 +236,12 @@ impl Paginate for ListMetrics {
 }
 
 impl From<GetMetricDataRequest> for CanonicalRequest<{ request_state::STEM }> {
-    fn from(req: GetMetricDataRequest) -> Self {
+    fn from(get_metric_data_request: GetMetricDataRequest) -> Self {
         let method = http::Method::POST;
         let uri = "/".to_string();
         let query_params = BTreeMap::new();
-        let body = serde_json::to_vec(&req).expect("GetMetricDataRequest is always serializable.");
+        let body = serde_json::to_vec(&get_metric_data_request)
+            .expect("GetMetricDataRequest is always serializable.");
         let headers = {
             let mut acc = BTreeMap::new();
             acc.insert(

@@ -1,10 +1,7 @@
-use std::collections::BTreeMap;
-
-use serde::{Deserialize, Serialize};
-
-use crate::client::{request_state, resource_groups_tagging::Client, CanonicalRequest};
-
 use super::paginate::Paginate;
+use crate::client::{request_state, resource_groups_tagging::Client, CanonicalRequest};
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 /// The version of the API matching the module.
 /// The version must be included in the canonical request of all requests
@@ -234,11 +231,12 @@ pub struct Tag {
 }
 
 impl From<GetResourcesRequest> for CanonicalRequest<{ request_state::STEM }> {
-    fn from(req: GetResourcesRequest) -> Self {
+    fn from(get_resources_request: GetResourcesRequest) -> Self {
         let method = http::Method::POST;
         let uri = "/".to_string();
         let query_params = BTreeMap::new();
-        let body = serde_json::to_vec(&req).expect("GetResourcesRequest is always serializable.");
+        let body = serde_json::to_vec(&get_resources_request)
+            .expect("GetResourcesRequest is always serializable.");
         let headers = BTreeMap::from([
             (
                 "x-amz-target".to_string(),
@@ -267,11 +265,12 @@ impl Paginate for GetResourcesRequest {
 }
 
 impl From<GetTagKeysRequest> for CanonicalRequest<{ request_state::STEM }> {
-    fn from(req: GetTagKeysRequest) -> Self {
+    fn from(get_tag_keys_request: GetTagKeysRequest) -> Self {
         let method = http::Method::POST;
         let uri = "/".to_string();
         let query_params = BTreeMap::new();
-        let body = serde_json::to_vec(&req).expect("GetTagKeysRequest is always serializable.");
+        let body = serde_json::to_vec(&get_tag_keys_request)
+            .expect("GetTagKeysRequest is always serializable.");
         let headers = BTreeMap::from([
             (
                 "x-amz-target".to_string(),
@@ -299,11 +298,12 @@ impl Paginate for GetTagKeysRequest {
 }
 
 impl From<GetTagValuesRequest> for CanonicalRequest<{ request_state::STEM }> {
-    fn from(req: GetTagValuesRequest) -> Self {
+    fn from(get_tag_values_request: GetTagValuesRequest) -> Self {
         let method = http::Method::POST;
         let uri = "/".to_string();
         let query_params = BTreeMap::new();
-        let body = serde_json::to_vec(&req).expect("GetTagValuesRequest is always serializable.");
+        let body = serde_json::to_vec(&get_tag_values_request)
+            .expect("GetTagValuesRequest is always serializable.");
         let headers = BTreeMap::from([
             (
                 "x-amz-target".to_string(),
