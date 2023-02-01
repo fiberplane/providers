@@ -4,7 +4,6 @@ mod sentry;
 
 use config::SentryConfig;
 use fiberplane_models::{
-    notebooks::TableRowData,
     providers::{STATUS_MIME_TYPE, STATUS_QUERY_TYPE},
     utils::content_writer::ContentWriter,
 };
@@ -182,7 +181,7 @@ fn create_name_cell(issue: &SentryIssue) -> Cell {
 fn create_overview_cells(issues: Vec<SentryIssue>) -> Result<Vec<Cell>> {
     let rows = issues
         .into_iter()
-        .map(|issue| -> TableRowData {
+        .map(|issue| -> BTreeMap<String, TableCellValue> {
             let name_cell = create_name_cell(&issue);
 
             let id = format!("events_{}", issue.id);
