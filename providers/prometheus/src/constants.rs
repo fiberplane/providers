@@ -1,9 +1,6 @@
 use const_format::formatcp;
-use fiberplane_pdk::providers::{CELLS_MIME_TYPE, SUGGESTIONS_MIME_TYPE, TIMESERIES_MIME_TYPE};
+use fiberplane_pdk::providers::{SUGGESTIONS_MIME_TYPE, TIMESERIES_MIME_TYPE};
 
-pub const INSTANTS_QUERY_TYPE: &str = "x-instants";
-
-pub const CELLS_MSGPACK_MIME_TYPE: &str = formatcp!("{CELLS_MIME_TYPE}+msgpack");
 pub const SUGGESTIONS_MSGPACK_MIME_TYPE: &str = formatcp!("{SUGGESTIONS_MIME_TYPE}+msgpack");
 pub const TIMESERIES_MSGPACK_MIME_TYPE: &str = formatcp!("{TIMESERIES_MIME_TYPE}+msgpack");
 
