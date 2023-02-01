@@ -1,0 +1,22 @@
+[package]
+name = "elasticsearch-provider"
+version = "0.1.0"
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+elasticsearch-dsl = "0.4.9"
+fiberplane-pdk = { workspace = true }
+fiberplane-provider-bindings = { workspace = true }
+hex = "0.4.3"
+serde = { workspace = true }
+serde_json = { workspace = true }
+time = { workspace = true }
+url = { version = "2.2.2", features = ["serde"] }
+
+[build-dependencies]
+vergen = { workspace = true }
