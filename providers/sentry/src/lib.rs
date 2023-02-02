@@ -3,6 +3,7 @@ mod percent_encode;
 mod sentry;
 
 use config::SentryConfig;
+use const_format::formatcp;
 use fiberplane_models::{
     providers::{STATUS_MIME_TYPE, STATUS_QUERY_TYPE},
     utils::content_writer::ContentWriter,
@@ -17,7 +18,7 @@ use std::{
 
 const OVERVIEW_QUERY_TYPE: &str = "x-issues-overview";
 
-const CELLS_MIME_TYPE: &str = "application/vnd.fiberplane.cells+msgpack";
+const CELLS_MSGPACK_MIME_TYPE: &str = formatcp!("{CELLS_MIME_TYPE}+msgpack");
 
 const QUERY_PARAM_NAME: &str = "q";
 const TIME_RANGE_PARAM_NAME: &str = "time_range";
