@@ -18,7 +18,6 @@ use std::{
 const OVERVIEW_QUERY_TYPE: &str = "x-issues-overview";
 
 const CELLS_MIME_TYPE: &str = "application/vnd.fiberplane.cells+msgpack";
-const QUERY_DATA_MIME_TYPE: &str = "application/x-www-form-urlencoded";
 
 const QUERY_PARAM_NAME: &str = "q";
 const TIME_RANGE_PARAM_NAME: &str = "time_range";
@@ -104,7 +103,7 @@ async fn query_issues_overview(query_data: Blob, config: SentryConfig) -> Result
 }
 
 fn get_overview_query(query_data: &Blob) -> Result<String> {
-    if query_data.mime_type != QUERY_DATA_MIME_TYPE {
+    if query_data.mime_type != FORM_ENCODED_MIME_TYPE {
         return Err(Error::UnsupportedRequest);
     }
 
@@ -225,6 +224,6 @@ fn create_overview_cells(issues: Vec<SentryIssue>) -> Result<Vec<Cell>> {
 fn serialize_cells(cells: Vec<Cell>) -> Result<Blob> {
     Ok(Blob {
         data: rmp_serde::to_vec_named(&cells)?.into(),
-        mime_type: CELLS_MIME_TYPE.to_owned(),
+        mime_type: CELLS_MSGPACK_MIME_TYPE.to_owned(),
     })
 }
