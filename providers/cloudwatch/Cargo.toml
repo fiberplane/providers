@@ -1,0 +1,34 @@
+[package]
+name = "cloudwatch-provider"
+description = "Fiberplane Cloudwatch provider"
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+base64 = "0.13"
+bytes = { version = "1", features = [ "serde" ] }
+const_format = "0.2"
+fiberplane-pdk = { workspace = true }
+flatten-json-object = "0.6.1"
+form_urlencoded = "1"
+hex = "0.4.3"
+hmac = "0.12.1"
+http = "0.2.8"
+itertools = "0.10.5"
+rmp-serde = "1"
+rmpv = { workspace = true, features = ["with-serde"] }
+secrecy = { version = "0.8.0", features = ["serde"] }
+sha2 = "0.10.6"
+tower = "0.4.13"
+url = { workspace = true, features = ["serde"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+time = { workspace = true, features = ["formatting"] }
+
+[build-dependencies]
+vergen = { workspace = true }
