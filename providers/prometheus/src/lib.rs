@@ -1,6 +1,5 @@
 mod auto_suggest;
 mod constants;
-mod instants;
 mod prometheus;
 mod timeseries;
 
@@ -8,7 +7,6 @@ use auto_suggest::query_suggestions;
 use constants::*;
 use fiberplane_pdk::prelude::*;
 use grafana_common::{query_direct_and_proxied, Config};
-use instants::query_instants;
 use serde_json::Value;
 use std::env;
 use timeseries::{create_graph_cell, query_series};
@@ -19,14 +17,6 @@ static BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
 #[pdk_export]
 async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQueryType> {
     vec![
-        SupportedQueryType::new(INSTANTS_QUERY_TYPE)
-            .with_schema(vec![TextField::new()
-                .with_name(QUERY_PARAM_NAME)
-                .with_label("Enter your Prometheus query")
-                .required()
-                .with_suggestions()
-                .into()])
-            .supporting_mime_types(&[CELLS_MSGPACK_MIME_TYPE]),
         SupportedQueryType::new(TIMESERIES_QUERY_TYPE)
             .with_schema(vec![
                 TextField::new()
@@ -65,7 +55,6 @@ async fn invoke2(request: ProviderRequest) -> Result<Blob> {
     })?;
 
     match request.query_type.as_str() {
-        INSTANTS_QUERY_TYPE => query_instants(request.query_data, config).await,
         TIMESERIES_QUERY_TYPE => query_series(request.query_data, config).await,
         SUGGESTIONS_QUERY_TYPE => query_suggestions(request.query_data, config).await,
         STATUS_QUERY_TYPE => check_status(config).await,
@@ -78,7 +67,6 @@ fn create_cells(query_type: String, _response: Blob) -> Result<Vec<Cell>> {
     log(format!("Creating cells for query type: {query_type}"));
 
     match query_type.as_str() {
-        INSTANTS_QUERY_TYPE => todo!("Instants support is not currently implemented"),
         TIMESERIES_QUERY_TYPE => create_graph_cell(),
         _ => Err(Error::UnsupportedRequest),
     }

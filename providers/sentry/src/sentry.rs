@@ -1,3 +1,4 @@
+use fiberplane_models::timestamps::Timestamp;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -38,7 +39,7 @@ pub struct SentryIssue {
     pub first_seen: String,
     pub has_seen: bool,
     pub id: String,
-    pub last_seen: String,
+    pub last_seen: Timestamp,
     pub level: String,
     pub num_comments: u32,
     pub permalink: String,
@@ -50,6 +51,20 @@ pub struct SentryIssue {
     pub tags: Vec<SentryTag>,
     pub title: String,
     pub user_count: u32,
+    pub culprit: String,
+    pub count: String,
+    pub metadata: SentryIssueMetadata,
+    pub is_unhandled: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SentryIssueMetadata {
+    pub filename: Option<String>,
+    #[serde(alias = "type")]
+    pub issue_type: Option<String>,
+    pub value: Option<String>,
+    pub title: Option<String>,
 }
 
 #[derive(Deserialize)]

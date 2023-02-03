@@ -113,14 +113,7 @@ pub async fn query_series(query_data: Blob, config: Config) -> Result<Blob> {
                 err => err,
             })?;
 
-    let matrix = match response.data {
-        PrometheusData::Matrix(response) => response,
-        PrometheusData::Vector(_) => {
-            return Err(Error::Data {
-                message: "Unexpected response type".to_owned(),
-            })
-        }
-    };
+    let PrometheusData::Matrix(matrix) = response.data;
 
     matrix
         .into_iter()
