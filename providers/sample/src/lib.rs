@@ -48,14 +48,8 @@ struct ShowcaseQueryData {
     #[pdk(label = "Enable live mode")]
     pub live: bool,
 
-    #[pdk(
-        select,
-        label = "Select one or more tags",
-        option = "1.0.0",
-        option = "1.0.0-alpha.1",
-        option = "1.0.1"
-    )]
-    pub tags: Vec<String>,
+    #[pdk(multiline, label = "Input one or more tags (one per line)")]
+    pub tags: String,
 }
 
 /// This type shows how we can conveniently generate custom data using the
