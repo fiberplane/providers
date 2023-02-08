@@ -1,9 +1,9 @@
 mod deserialize;
-use serde::Serialize;
+mod serialize;
 use time::OffsetDateTime;
 
 /// Type to use for query data fields of type "date_time_range".
-#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DateTimeRange {
     /// Start time of the range, inclusive.
     pub from: OffsetDateTime,
@@ -15,12 +15,26 @@ pub struct DateTimeRange {
 #[cfg(test)]
 mod tests {
     use serde::Deserialize;
+    use serde::Serialize;
     use time::macros::datetime;
 
     use super::*;
-    #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+    #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
     struct TargetType {
         range: DateTimeRange,
+    }
+
+    #[test]
+    fn back_and_forth_url() {
+        let initial = TargetType {
+            range: DateTimeRange {
+                from: datetime!(2023-02-08 09:16:27.794 +00:00),
+                to: datetime!(2023-02-08 09:31:27.794 +00:00),
+            },
+        };
+        let there_and_back: TargetType =
+            serde_html_form::from_str(&serde_html_form::to_string(&initial).unwrap()).unwrap();
+        assert_eq!(there_and_back, initial)
     }
 
     #[test]
