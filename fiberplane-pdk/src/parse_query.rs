@@ -14,7 +14,6 @@ pub fn parse_query<T: DeserializeOwned>(query_data: Blob) -> Result<T> {
         });
     }
 
-    log(format!("Parsing {:?}", query_data.data));
     serde_html_form::from_bytes(&query_data.data).map_err(|err| Error::Other {
         message: err.to_string(),
     })

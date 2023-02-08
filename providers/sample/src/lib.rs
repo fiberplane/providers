@@ -114,7 +114,8 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
             "Your query was: {query}\n\
             Your time range: {from} - {to}\n\
             Live mode was {live}\n\
-            Provided tags: {tags}"
+            Provided tags: {:?}",
+            tags.split("\n").collect::<Vec<_>>()
         ),
         formatting: Formatting::default(),
         read_only: None,
