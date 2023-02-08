@@ -20,6 +20,7 @@ static BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
 /// `parse()` method can then be used to parse this object into the following
 /// struct.
 #[derive(ConfigSchema, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct SampleConfig {
     #[pdk(label = "Your API endpoint", placeholder = "Please specify a URL")]
     pub endpoint: String,
@@ -46,6 +47,7 @@ struct ShowcaseQueryData {
     pub time_range: DateTimeRange,
 
     #[pdk(label = "Enable live mode")]
+    #[serde(default)]
     pub live: bool,
 
     #[pdk(multiline, label = "Input one or more tags (one per line)")]
