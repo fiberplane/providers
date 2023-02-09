@@ -28,7 +28,7 @@ impl<'de> Visitor<'de> for DateTimeRangeVisitor {
     where
         E: de::Error,
     {
-        if let Some((from_ts, to_ts)) = value.split_once(" ") {
+        if let Some((from_ts, to_ts)) = value.split_once(' ') {
             let from = OffsetDateTime::parse(from_ts, &Rfc3339)
                 .map_err(|e| E::custom(format!("could not parse the 'from' timestamp: {e}")))?;
             let to = OffsetDateTime::parse(to_ts, &Rfc3339)
