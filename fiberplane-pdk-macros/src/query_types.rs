@@ -5,8 +5,7 @@ use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{
-    braced, bracketed, parenthesized, parse_macro_input, parse_quote, token, Expr, LitBool, Result,
-    Token,
+    braced, bracketed, parenthesized, parse_macro_input, parse_quote, token, Expr, Result, Token,
 };
 
 use crate::ident_or_string::IdentOrString;
@@ -55,10 +54,6 @@ pub fn define_query_types(input: TokenStream) -> TokenStream {
         .map(|query_type| {
             let identifier = &query_type.identifier;
 
-            let is_async: bool = query_type
-                .is_async()
-                .map_or(false, |literal_bool| literal_bool.value);
-
             let handler = query_type.handler().map(|handler| {
                 let fn_name = handler.ident;
                 let args = handler.arg_types.iter().enumerate().map(|(pos, ty)| {
@@ -69,14 +64,14 @@ pub fn define_query_types(input: TokenStream) -> TokenStream {
                     };
                     quote! { #ty::parse(#parse_arg)? }
                 });
-                quote! { #fn_name(#(#args),*) }
+                if handler.is_async {
+                    quote! { #fn_name(#(#args),*).await }
+                } else {
+                    quote! { #fn_name(#(#args),*) }
+                }
             });
 
-            if is_async {
-                quote! { #identifier => #handler.await }
-            } else {
-                quote! { #identifier => #handler }
-            }
+            quote! { #identifier => #handler }
         })
         .collect();
 
@@ -121,16 +116,6 @@ struct QueryType {
 }
 
 impl QueryType {
-    fn is_async(&self) -> Option<LitBool> {
-        self.fields
-            .iter()
-            .find(|field| field.name == "async")
-            .map(|field| {
-                let value = &field.value;
-                parse_quote! { #value }
-            })
-    }
-
     fn handler(&self) -> Option<QueryHandler> {
         self.fields
             .iter()
@@ -191,6 +176,7 @@ impl Parse for QueryTypeField {
 }
 
 struct QueryHandler {
+    is_async: bool,
     ident: Ident,
     _parens: token::Paren,
     arg_types: Punctuated<Ident, Token![,]>,
@@ -199,10 +185,23 @@ struct QueryHandler {
 impl Parse for QueryHandler {
     fn parse(input: ParseStream) -> Result<Self> {
         let content;
+
+        let ident = input.parse::<Ident>()?;
+        let _parens = parenthesized!(content in input);
+        let arg_types = content.parse_terminated(Ident::parse)?;
+        let is_async = if input.peek(Token![.]) && input.peek2(Token![await]) {
+            input.parse::<Token![.]>()?;
+            input.parse::<Token![await]>()?;
+            true
+        } else {
+            false
+        };
+
         Ok(Self {
-            ident: input.parse()?,
-            _parens: parenthesized!(content in input),
-            arg_types: content.parse_terminated(Ident::parse)?,
+            is_async,
+            ident,
+            _parens,
+            arg_types,
         })
     }
 }
