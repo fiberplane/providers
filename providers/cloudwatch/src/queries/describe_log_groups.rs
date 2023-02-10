@@ -21,12 +21,14 @@ fn try_into_blob(groups: Vec<LogGroup>) -> Result<Blob> {
             .into_iter()
             .enumerate()
             .map(|(id, group)| {
-                Cell::Text(TextCell {
-                    id: format!("log-group-{id}"),
-                    content: format!("{group:#?}"),
-                    formatting: Vec::new(),
-                    read_only: Some(true),
-                })
+                Cell::Text(
+                    TextCell::builder()
+                        .id(format!("log-group-{id}"))
+                        .content(format!("{group:#?}"))
+                        .formatting(Vec::new())
+                        .read_only(true)
+                        .build(),
+                )
             })
             .collect(),
     )

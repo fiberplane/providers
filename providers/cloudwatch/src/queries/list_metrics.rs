@@ -60,12 +60,14 @@ pub async fn invoke2_handler(config: Config, request: ProviderRequest) -> Result
 
 pub fn create_cells_handler(response: Blob) -> Result<Vec<Cell>, Error> {
     let list = MetricList::try_from_blob(response)?;
-    Ok(vec![Cell::Text(TextCell {
-        id: "metric-list".to_string(),
-        content: list.to_string(),
-        formatting: Vec::new(),
-        read_only: Some(true),
-    })])
+    Ok(vec![Cell::Text(
+        TextCell::builder()
+            .id("metric-list".to_string())
+            .content(list.to_string())
+            .formatting(Vec::new())
+            .read_only(true)
+            .build(),
+    )])
 }
 
 struct ListMetricsRequest {

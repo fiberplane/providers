@@ -57,21 +57,22 @@ pub async fn invoke2_handler(config: Config, request: ProviderRequest) -> Result
                 .into_iter()
                 .map(|mdr| mdr_to_ts(mdr, &all_resources))
                 .collect();
-            Ok(Blob {
-                mime_type: TIMESERIES_MSGPACK_MIME_TYPE.to_string(),
-                data: rmp_serde::to_vec_named(&series)?.into(),
-            })
+            Ok(Blob::builder()
+                .mime_type(TIMESERIES_MSGPACK_MIME_TYPE.to_string())
+                .data(rmp_serde::to_vec_named(&series)?)
+                .build())
         })
 }
 
 pub fn create_cells_handler(_response: Blob) -> Result<Vec<Cell>, Error> {
-    let graph_cell = Cell::Graph(GraphCell {
-        id: "graph".to_owned(),
-        data_links: vec![format!("cell-data:{TIMESERIES_MIME_TYPE},self")],
-        graph_type: GraphType::Line,
-        read_only: None,
-        stacking_type: StackingType::None,
-    });
+    let graph_cell = Cell::Graph(
+        GraphCell::builder()
+            .id("graph".to_owned())
+            .data_links(vec![format!("cell-data:{TIMESERIES_MIME_TYPE},self")])
+            .graph_type(GraphType::Line)
+            .stacking_type(StackingType::None)
+            .build(),
+    );
 
     Ok(vec![graph_cell])
 }
@@ -174,18 +175,20 @@ pub fn mdr_to_ts(res: MetricDataResult, resource_referential: &[ResourceTagMappi
 
     let metrics = ts_iter
         .zip(values_iter)
-        .map(|(time, value)| fiberplane_pdk::providers::Metric {
-            time: time.into(),
-            value,
-            otel: Default::default(),
+        .map(|(time, value)| {
+            fiberplane_pdk::providers::Metric::builder()
+                .time(time.into())
+                .value(value)
+                .otel(Default::default())
+                .build()
         })
         .collect();
 
-    Timeseries {
-        name: res.id.unwrap_or_else(|| "unnamed".into()),
-        labels,
-        metrics,
-        otel: Default::default(),
-        visible: true,
-    }
+    Timeseries::builder()
+        .name(res.id.unwrap_or_else(|| "unnamed".into()))
+        .labels(labels)
+        .metrics(metrics)
+        .otel(Default::default())
+        .visible(true)
+        .build()
 }

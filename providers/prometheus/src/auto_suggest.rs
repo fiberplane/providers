@@ -63,10 +63,12 @@ pub async fn query_suggestions(query_data: Blob, config: Config) -> Result<Blob>
         .data
         .into_iter()
         .filter_map(|(name, values)| {
-            values.into_iter().next().map(|value| Suggestion {
-                from,
-                text: name,
-                description: value.help,
+            values.into_iter().next().map(|value| {
+                Suggestion::builder()
+                    .from(from)
+                    .text(name)
+                    .description(value.help)
+                    .build()
             })
         })
         .collect();
@@ -83,18 +85,20 @@ pub async fn query_suggestions(query_data: Blob, config: Config) -> Result<Blob>
     }
     for &function in PROM_QL_FUNCTIONS {
         if identifier.is_empty() || function.contains(identifier) {
-            suggestions.push(Suggestion {
-                from,
-                text: function.to_owned(),
-                description: Some("Function".to_owned()),
-            })
+            suggestions.push(
+                Suggestion::builder()
+                    .from(from)
+                    .text(function.to_owned())
+                    .description(Some("Function".to_owned()))
+                    .build(),
+            )
         }
     }
 
-    Ok(Blob {
-        data: rmp_serde::to_vec_named(&suggestions)?.into(),
-        mime_type: SUGGESTIONS_MSGPACK_MIME_TYPE.to_owned(),
-    })
+    Ok(Blob::builder()
+        .data(rmp_serde::to_vec_named(&suggestions)?)
+        .mime_type(SUGGESTIONS_MSGPACK_MIME_TYPE.to_owned())
+        .build())
 }
 
 /// Extracts the identifier and starting offset that is currently being typed from the query. This

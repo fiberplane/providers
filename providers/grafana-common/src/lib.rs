@@ -75,19 +75,19 @@ where
     let request = if let Some(blob) = body {
         let mut headers = headers.unwrap_or_default();
         headers.insert("Content-Type".to_string(), blob.mime_type);
-        HttpRequest {
-            url,
-            headers: Some(headers),
-            method: HttpRequestMethod::Post,
-            body: Some(blob.data),
-        }
+        HttpRequest::builder()
+            .url(url)
+            .headers(Some(headers))
+            .method(HttpRequestMethod::Post)
+            .body(Some(blob.data))
+            .build()
     } else {
-        HttpRequest {
-            url,
-            headers,
-            method: HttpRequestMethod::Get,
-            body: None,
-        }
+        HttpRequest::builder()
+            .url(url)
+            .headers(headers)
+            .method(HttpRequestMethod::Get)
+            .body(None)
+            .build()
     };
 
     log(format!(
@@ -126,12 +126,14 @@ async fn get_grafana_datasource_proxy_url(
         .map_err(|e| Error::Config {
             message: format!("Invalid URL: {e:?}"),
         })?;
-    let response = make_http_request(HttpRequest {
-        body: None,
-        headers: config.to_headers(),
-        method: HttpRequestMethod::Get,
-        url: url.to_string(),
-    })
+    let response = make_http_request(
+        HttpRequest::builder()
+            .body(None)
+            .headers(config.to_headers())
+            .method(HttpRequestMethod::Get)
+            .url(url.to_string())
+            .build(),
+    )
     .await?;
     let data_sources: Vec<Datasource> =
         serde_json::from_slice(&response.body).map_err(|e| Error::Deserialization {

@@ -36,11 +36,11 @@ pub struct PrometheusPoint(f64, String);
 impl PrometheusPoint {
     pub fn to_metric(&self) -> Result<Metric, ParseFloatError> {
         let time = SystemTime::UNIX_EPOCH + Duration::from_millis((self.0 * 1000.0) as u64);
-        Ok(Metric {
-            time: Timestamp::from(time),
-            value: self.1.parse()?,
-            otel: OtelMetadata::default(),
-        })
+        Ok(Metric::builder()
+            .time(Timestamp::from(time))
+            .value(self.1.parse()?)
+            .otel(OtelMetadata::default())
+            .build())
     }
 }
 
@@ -59,12 +59,12 @@ impl RangeVector {
             .into_iter()
             .map(|value| value.to_metric())
             .collect::<Result<_, _>>()?;
-        Ok(Timeseries {
-            name,
-            labels,
-            metrics,
-            otel: OtelMetadata::default(),
-            visible: true,
-        })
+        Ok(Timeseries::builder()
+            .name(name)
+            .labels(labels)
+            .metrics(metrics)
+            .otel(OtelMetadata::default())
+            .visible(true)
+            .build())
     }
 }

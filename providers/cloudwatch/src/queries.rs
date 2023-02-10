@@ -13,10 +13,10 @@ use fiberplane_pdk::prelude::{Blob, Cell, Error, Timestamp};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 pub fn serialize_cells(cells: Vec<Cell>) -> Result<Blob, Error> {
-    Ok(Blob {
-        data: rmp_serde::to_vec_named(&cells)?.into(),
-        mime_type: CELLS_MSGPACK_MIME_TYPE.to_owned(),
-    })
+    Ok(Blob::builder()
+        .data(rmp_serde::to_vec_named(&cells)?)
+        .mime_type(CELLS_MSGPACK_MIME_TYPE.to_owned())
+        .build())
 }
 
 pub fn try_from_iso_date(timestamp: &str) -> Result<Timestamp, Error> {

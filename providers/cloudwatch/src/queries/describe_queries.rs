@@ -23,12 +23,14 @@ fn try_into_blob(groups: Vec<QueryInfo>) -> Result<Blob, Error> {
             .into_iter()
             .enumerate()
             .map(|(id, query)| {
-                Cell::Text(TextCell {
-                    id: format!("query-{id}"),
-                    content: format!("{query:#?}"),
-                    formatting: Vec::new(),
-                    read_only: Some(true),
-                })
+                Cell::Text(
+                    TextCell::builder()
+                        .id(format!("query-{id}"))
+                        .content(format!("{query:#?}"))
+                        .formatting(Vec::new())
+                        .read_only(true)
+                        .build(),
+                )
             })
             .collect(),
     )

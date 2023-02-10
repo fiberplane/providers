@@ -31,10 +31,10 @@ pub async fn invoke2_handler(query_data: Blob, config: Config) -> Result<Blob> {
         }
     };
 
-    Ok(Blob {
-        data: rmp_serde::to_vec_named(&suggestions)?.into(),
-        mime_type: SUGGESTIONS_MSGPACK_MIME_TYPE.to_owned(),
-    })
+    Ok(Blob::builder()
+        .data(rmp_serde::to_vec_named(&suggestions)?)
+        .mime_type(SUGGESTIONS_MSGPACK_MIME_TYPE.to_owned())
+        .build())
 }
 
 async fn list_metrics_suggestions(
@@ -48,10 +48,12 @@ async fn list_metrics_suggestions(
             keys.retain(|k| k.contains(&query.query));
             Ok(keys
                 .into_iter()
-                .map(|k| Suggestion {
-                    from: Some(0),
-                    text: k,
-                    description: None,
+                .map(|k| {
+                    Suggestion::builder()
+                        .from(Some(0))
+                        .text(k)
+                        .description(None)
+                        .build()
                 })
                 .collect())
         }
@@ -63,10 +65,12 @@ async fn list_metrics_suggestions(
             values.retain(|v| v.contains(&query.query));
             Ok(values
                 .into_iter()
-                .map(|v| Suggestion {
-                    from: Some(0),
-                    text: v,
-                    description: None,
+                .map(|v| {
+                    Suggestion::builder()
+                        .from(Some(0))
+                        .text(v)
+                        .description(None)
+                        .build()
                 })
                 .collect())
         }
@@ -92,12 +96,15 @@ async fn list_log_query_suggestions(
 
             Ok(keys
                 .into_iter()
-                .map(|k| Suggestion {
-                    from: Some(from.try_into().unwrap()),
-                    text: k
-                        .log_group_name
-                        .expect("All log groups returned by AWS have a name"),
-                    description: k.stored_bytes.map(|bytes| format!("{bytes} bytes")),
+                .map(|k| {
+                    Suggestion::builder()
+                        .from(Some(from.try_into().unwrap()))
+                        .text(
+                            k.log_group_name
+                                .expect("All log groups returned by AWS have a name"),
+                        )
+                        .description(k.stored_bytes.map(|bytes| format!("{bytes} bytes")))
+                        .build()
                 })
                 .collect())
         }
@@ -118,11 +125,13 @@ async fn list_log_query_suggestions(
                 .iter()
                 .filter_map(|(field, description)| {
                     if field.starts_with(&identifier) {
-                        Some(Suggestion {
-                            from: Some(from.try_into().unwrap()),
-                            text: field.to_string(),
-                            description: Some(description.to_string()),
-                        })
+                        Some(
+                            Suggestion::builder()
+                                .from(Some(from.try_into().unwrap()))
+                                .text(field.to_string())
+                                .description(Some(description.to_string()))
+                                .build(),
+                        )
                     } else {
                         None
                     }
@@ -162,12 +171,15 @@ async fn list_graph_metric_suggestions(
 
             Ok(keys
                 .into_iter()
-                .map(|k| Suggestion {
-                    from: Some(from.try_into().unwrap()),
-                    text: k
-                        .metric_name
-                        .expect("All metrics returned by AWS have a name"),
-                    description: k.namespace,
+                .map(|k| {
+                    Suggestion::builder()
+                        .from(Some(from.try_into().unwrap()))
+                        .text(
+                            k.metric_name
+                                .expect("All metrics returned by AWS have a name"),
+                        )
+                        .description(k.namespace)
+                        .build()
                 })
                 .unique_by(|suggestion| (suggestion.text.clone(), suggestion.description.clone()))
                 .collect())
@@ -177,10 +189,12 @@ async fn list_graph_metric_suggestions(
 
             Ok(values
                 .iter()
-                .map(|v| Suggestion {
-                    from: Some(0),
-                    text: v.to_string(),
-                    description: None,
+                .map(|v| {
+                    Suggestion::builder()
+                        .from(Some(0))
+                        .text(v.to_string())
+                        .description(None)
+                        .build()
                 })
                 .collect())
         }

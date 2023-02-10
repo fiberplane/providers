@@ -83,8 +83,8 @@ async fn check_status(config: Config) -> Result<Blob> {
     )
     .await?;
 
-    Ok(Blob {
-        mime_type: STATUS_MIME_TYPE.to_owned(),
-        data: "ok".into(),
-    })
+    Ok(Blob::builder()
+        .mime_type(STATUS_MIME_TYPE.to_owned())
+        .data("ok")
+        .build())
 }
