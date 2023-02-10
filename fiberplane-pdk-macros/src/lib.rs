@@ -22,6 +22,10 @@ use quote::quote;
 ///   types of which are given between parentheses. The first argument is always
 ///   the type of the query data, while the second optionally specifies a type
 ///   for the provider's config. Providing a handler is mandatory.
+/// * **async** - Set this value to `true` if the handler you invoke is
+///   an async function. Not having the `async` property is equivalent to
+///   having `async: false`; in that case, the handler MUST be a synchronous
+///   function.
 /// * **label** - A label that is used when presenting the query type to the
 ///   user. Some query types are not intended to be user-selected (such as the
 ///   `status` query type) in which case they should not define a label.
@@ -50,6 +54,7 @@ use quote::quote;
 ///     "x-custom-query-type" => {
 ///         label: "My custom query",
 ///         handler: query_custom(ExampleQueryData),
+///         async: true,
 ///         supported_mime_types: ["application/vnd.fiberplane.provider.my-provider.custom-data"],
 ///     }
 /// }
@@ -58,7 +63,7 @@ use quote::quote;
 ///     todo!("Implement timeseries query handling")
 /// }
 ///
-/// fn query_custom(query_data: ExampleQueryData) -> Result<Blob> {
+/// async fn query_custom(query_data: ExampleQueryData) -> Result<Blob> {
 ///     todo!("Implement custom query handling")
 /// }
 /// ```
