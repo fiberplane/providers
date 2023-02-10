@@ -5,7 +5,8 @@ use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{
-    braced, bracketed, parenthesized, parse_macro_input, parse_quote, token, Expr, Result, Token, LitBool,
+    braced, bracketed, parenthesized, parse_macro_input, parse_quote, token, Expr, LitBool, Result,
+    Token,
 };
 
 use crate::ident_or_string::IdentOrString;
@@ -54,9 +55,9 @@ pub fn define_query_types(input: TokenStream) -> TokenStream {
         .map(|query_type| {
             let identifier = &query_type.identifier;
 
-            let is_async: bool = query_type.is_async().map_or(false, |literal_bool| {
-                literal_bool.value
-            });
+            let is_async: bool = query_type
+                .is_async()
+                .map_or(false, |literal_bool| literal_bool.value);
 
             let handler = query_type.handler().map(|handler| {
                 let fn_name = handler.ident;
