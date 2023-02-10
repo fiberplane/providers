@@ -90,12 +90,12 @@ impl ClientCommon {
             format!("{}{}?{}", self.endpoint, uri, querystring)
         };
 
-        let request = HttpRequest {
-            url,
-            method,
-            headers: Some(headers.into_iter().collect()),
-            body: request.body.clone(),
-        };
+        let request = HttpRequest::builder()
+            .url(url)
+            .method(method)
+            .headers(Some(headers.into_iter().collect()))
+            .body(request.body.clone())
+            .build();
 
         log(format!("CloudWatch: Sending request {request:?}"));
 

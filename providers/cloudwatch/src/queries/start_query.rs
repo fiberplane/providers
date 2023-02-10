@@ -47,21 +47,23 @@ fn try_into_blob(id: String) -> Result<Blob, Error> {
         .try_into()
         .expect("usize fits in u32 on all target architectures.");
 
-    serialize_cells(vec![Cell::Text(TextCell {
-        id: "query-id".to_string(),
-        formatting: vec![
-            AnnotationWithOffset {
-                offset: link_start,
-                annotation: Annotation::StartLink { url },
-            },
-            AnnotationWithOffset {
-                offset: length,
-                annotation: Annotation::EndLink,
-            },
-        ],
-        content,
-        read_only: Some(true),
-    })])
+    serialize_cells(vec![Cell::Text(
+        TextCell::builder()
+            .id("query-id".to_string())
+            .formatting(vec![
+                AnnotationWithOffset::builder()
+                    .offset(link_start)
+                    .annotation(Annotation::StartLink { url })
+                    .build(),
+                AnnotationWithOffset::builder()
+                    .offset(length)
+                    .annotation(Annotation::EndLink)
+                    .build(),
+            ])
+            .content(content)
+            .read_only(true)
+            .build(),
+    )])
 }
 
 struct StartQueryInput {

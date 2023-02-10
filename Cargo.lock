@@ -42,7 +42,7 @@ checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 [[package]]
 name = "base64uuid"
 version = "1.0.0-alpha.2"
-source = "git+ssh://git@github.com/fiberplane/fiberplane-rs.git?branch=main#c85835b6ba826f0518e86ae43fbbaea734e66636"
+source = "git+ssh://git@github.com/fiberplane/fiberplane-rs.git?branch=main#f90c6cbfd75d5ceb4e3be12cd81aaedf7b445446"
 dependencies = [
  "base64",
  "serde",
@@ -108,7 +108,7 @@ dependencies = [
 
 [[package]]
 name = "cloudwatch-provider"
-version = "1.0.0-alpha.1"
+version = "1.0.0-alpha.2"
 dependencies = [
  "base64",
  "bytes",
@@ -263,7 +263,7 @@ dependencies = [
 [[package]]
 name = "fiberplane-models"
 version = "1.0.0-alpha.2"
-source = "git+ssh://git@github.com/fiberplane/fiberplane-rs.git?branch=main#c85835b6ba826f0518e86ae43fbbaea734e66636"
+source = "git+ssh://git@github.com/fiberplane/fiberplane-rs.git?branch=main#f90c6cbfd75d5ceb4e3be12cd81aaedf7b445446"
 dependencies = [
  "base64",
  "base64uuid",
@@ -277,12 +277,13 @@ dependencies = [
  "strum_macros",
  "thiserror",
  "time",
+ "typed-builder",
  "url",
 ]
 
 [[package]]
 name = "fiberplane-pdk"
-version = "1.0.0-alpha.1"
+version = "1.0.0-alpha.2"
 dependencies = [
  "fiberplane-models",
  "fiberplane-pdk-macros",
@@ -298,7 +299,7 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-pdk-macros"
-version = "1.0.0-alpha.1"
+version = "1.0.0-alpha.2"
 dependencies = [
  "Inflector",
  "fiberplane-models",
@@ -311,7 +312,7 @@ dependencies = [
 [[package]]
 name = "fiberplane-provider-bindings"
 version = "2.0.0-alpha.1"
-source = "git+ssh://git@github.com/fiberplane/fiberplane-rs.git?branch=main#c85835b6ba826f0518e86ae43fbbaea734e66636"
+source = "git+ssh://git@github.com/fiberplane/fiberplane-rs.git?branch=main#f90c6cbfd75d5ceb4e3be12cd81aaedf7b445446"
 dependencies = [
  "bytes",
  "fiberplane-models",
@@ -975,7 +976,7 @@ checksum = "7b4b9743ed687d4b4bcedf9ff5eaa7398495ae14e61cba0a295704edbc7decde"
 
 [[package]]
 name = "sample-provider"
-version = "1.0.0-alpha.1"
+version = "1.0.0-alpha.2"
 dependencies = [
  "fiberplane-pdk",
  "serde",
@@ -1229,6 +1230,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "24eb03ba0eab1fd845050058ce5e616558e8f8d8fca633e6b163fe25c797213a"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "typed-builder"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6179333b981641242a768f30f371c9baccbfcc03749627000c500ab88bf4528b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

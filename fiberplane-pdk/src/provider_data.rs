@@ -54,14 +54,14 @@ pub fn parse_blob<T: DeserializeOwned>(mime_type: &str, blob: Blob) -> Result<T>
 /// struct's `serialize()` method.
 pub fn to_blob<T: Serialize>(mime_type: &str, data: &T) -> Result<Blob> {
     if cfg!(debug_assertions) {
-        Ok(Blob {
-            data: serde_json::to_vec(data)?.into(),
-            mime_type: format!("{mime_type}+json"),
-        })
+        Ok(Blob::builder()
+            .data(serde_json::to_vec(data)?)
+            .mime_type(format!("{mime_type}+json"))
+            .build())
     } else {
-        Ok(Blob {
-            data: rmp_serde::to_vec_named(data)?.into(),
-            mime_type: format!("{mime_type}+msgpack"),
-        })
+        Ok(Blob::builder()
+            .data(rmp_serde::to_vec_named(data)?)
+            .mime_type(format!("{mime_type}+msgpack"))
+            .build())
     }
 }

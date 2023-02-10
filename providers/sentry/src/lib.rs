@@ -66,10 +66,10 @@ async fn invoke2(request: ProviderRequest) -> Result<Blob> {
 
     match request.query_type.as_str() {
         OVERVIEW_QUERY_TYPE => query_issues_overview(request.query_data, config).await,
-        STATUS_QUERY_TYPE => Ok(Blob {
-            mime_type: STATUS_MIME_TYPE.to_owned(),
-            data: "ok".into(),
-        }),
+        STATUS_QUERY_TYPE => Ok(Blob::builder()
+            .mime_type(STATUS_MIME_TYPE.to_owned())
+            .data("ok")
+            .build()),
         _ => Err(Error::UnsupportedRequest),
     }
 }
@@ -87,12 +87,14 @@ async fn query_issues_overview(query_data: Blob, config: SentryConfig) -> Result
         format!("Bearer {}", config.token),
     )]);
 
-    let response = make_http_request(HttpRequest {
-        body: None,
-        headers: Some(headers),
-        method: HttpRequestMethod::Get,
-        url,
-    })
+    let response = make_http_request(
+        HttpRequest::builder()
+            .body(None)
+            .headers(Some(headers))
+            .method(HttpRequestMethod::Get)
+            .url(url)
+            .build(),
+    )
     .await?;
 
     let issues =
@@ -203,28 +205,29 @@ fn create_overview_cells(issues: Vec<SentryIssue>) -> Result<Vec<Cell>> {
         })
         .collect();
 
-    let cell = Cell::Table(TableCell {
-        id: "table".to_owned(),
-        column_defs: vec![
-            TableColumnDefinition {
-                key: "name".to_owned(),
-                title: "Name".to_owned(),
-            },
-            TableColumnDefinition {
-                key: "events".to_owned(),
-                title: "Events".to_owned(),
-            },
-        ],
-        rows,
-        read_only: None,
-    });
+    let cell = Cell::Table(
+        TableCell::builder()
+            .id("table".to_owned())
+            .column_defs(vec![
+                TableColumnDefinition::builder()
+                    .key("name".to_owned())
+                    .title("Name".to_owned())
+                    .build(),
+                TableColumnDefinition::builder()
+                    .key("events".to_owned())
+                    .title("Events".to_owned())
+                    .build(),
+            ])
+            .rows(rows)
+            .build(),
+    );
 
     Ok(vec![cell])
 }
 
 fn serialize_cells(cells: Vec<Cell>) -> Result<Blob> {
-    Ok(Blob {
-        data: rmp_serde::to_vec_named(&cells)?.into(),
-        mime_type: CELLS_MSGPACK_MIME_TYPE.to_owned(),
-    })
+    Ok(Blob::builder()
+        .data(rmp_serde::to_vec_named(&cells)?)
+        .mime_type(CELLS_MSGPACK_MIME_TYPE.to_owned())
+        .build())
 }

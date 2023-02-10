@@ -116,18 +116,18 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>> 
     let body = SearchRequestBody { size: query.limit };
     url.set_query(Some(&format!("q={}", &query_string)));
 
-    let request = HttpRequest {
-        body: Some(
+    let request = HttpRequest::builder()
+        .body(Some(
             serde_json::to_vec(&body)
                 .map_err(|e| Error::Data {
                     message: format!("Error serializing query: {e:?}"),
                 })?
                 .into(),
-        ),
-        headers: Some(headers),
-        method: HttpRequestMethod::Post,
-        url: url.to_string(),
-    };
+        ))
+        .headers(Some(headers))
+        .method(HttpRequestMethod::Post)
+        .url(url.to_string())
+        .build();
 
     // Parse response
     let response = make_http_request(request).await?.body;
@@ -294,12 +294,12 @@ async fn check_status(config: Config) -> Result<()> {
     let mut headers = HashMap::new();
     headers.insert("Content-Type".to_string(), "application/json".to_string());
 
-    let request = HttpRequest {
-        body: None,
-        headers: Some(headers),
-        method: HttpRequestMethod::Get,
-        url: url.to_string(),
-    };
+    let request = HttpRequest::builder()
+        .body(None)
+        .headers(Some(headers))
+        .method(HttpRequestMethod::Get)
+        .url(url.to_string())
+        .build();
 
     let _ = make_http_request(request).await?;
 

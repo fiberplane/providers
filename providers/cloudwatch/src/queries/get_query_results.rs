@@ -52,45 +52,45 @@ pub fn create_cells_handler(response: Blob) -> Result<Vec<Cell>, Error> {
     }
 
     let results: QueryResults = response.try_into()?;
-    let status_cell = Cell::Text(TextCell {
-        id: "query-status".to_string(),
-        content: format!(
-            "Query status: {}",
-            match results.query_status {
-                QueryStatus::Scheduled => "scheduled (Hit \"Run\" again to obtain more results)",
-                QueryStatus::Running => "running (Hit \"Run\" again to obtain more results)",
-                QueryStatus::Complete => "complete",
-                QueryStatus::Failed => "failed",
-                QueryStatus::Cancelled => "cancelled",
-                QueryStatus::Timeout => "timed out",
-                QueryStatus::Unknown => "unknown (Hit \"Run\" again to obtain more results)",
-            }
-        ),
-        formatting: Vec::new(),
-        read_only: Some(true),
-    });
-    let statistics_cell = Cell::Text(TextCell {
-        id: "query-statistics".to_string(),
-        content: format!(
-            "Query statistics:\n\tRecords: {} matched / {} scanned\n\t(Bytes scanned: {})",
-            display_f64(results.query_statistics.records_matched),
-            display_f64(results.query_statistics.records_scanned),
-            display_f64(results.query_statistics.bytes_scanned),
-        ),
-        formatting: Vec::new(),
-        read_only: Some(true),
-    });
-    let logs_cell = Cell::Log(LogCell {
-        id: "query-results".to_string(),
-        data_links: vec![format!("cell-data:{EVENTS_MIME_TYPE},self")],
-        read_only: None,
-        display_fields: None,
-        hide_similar_values: None,
-        expanded_indices: None,
-        visibility_filter: None,
-        selected_indices: None,
-        highlighted_indices: None,
-    });
+    let status_cell = Cell::Text(
+        TextCell::builder()
+            .id("query-status".to_string())
+            .content(format!(
+                "Query status: {}",
+                match results.query_status {
+                    QueryStatus::Scheduled =>
+                        "scheduled (Hit \"Run\" again to obtain more results)",
+                    QueryStatus::Running => "running (Hit \"Run\" again to obtain more results)",
+                    QueryStatus::Complete => "complete",
+                    QueryStatus::Failed => "failed",
+                    QueryStatus::Cancelled => "cancelled",
+                    QueryStatus::Timeout => "timed out",
+                    QueryStatus::Unknown => "unknown (Hit \"Run\" again to obtain more results)",
+                }
+            ))
+            .formatting(Vec::new())
+            .read_only(true)
+            .build(),
+    );
+    let statistics_cell = Cell::Text(
+        TextCell::builder()
+            .id("query-statistics".to_string())
+            .content(format!(
+                "Query statistics:\n\tRecords: {} matched / {} scanned\n\t(Bytes scanned: {})",
+                display_f64(results.query_statistics.records_matched),
+                display_f64(results.query_statistics.records_scanned),
+                display_f64(results.query_statistics.bytes_scanned),
+            ))
+            .formatting(Vec::new())
+            .read_only(true)
+            .build(),
+    );
+    let logs_cell = Cell::Log(
+        LogCell::builder()
+            .id("query-results".to_string())
+            .data_links(vec![format!("cell-data:{EVENTS_MIME_TYPE},self")])
+            .build(),
+    );
 
     Ok(vec![status_cell, statistics_cell, logs_cell])
 }
@@ -143,10 +143,10 @@ impl TryFrom<QueryResults> for Blob {
     type Error = Error;
 
     fn try_from(value: QueryResults) -> Result<Self, Self::Error> {
-        Ok(Self {
-            data: rmp_serde::to_vec_named(&value)?.into(),
-            mime_type: format!("{QUERY_RESULTS_MIME_TYPE}+msgpack"),
-        })
+        Ok(Self::builder()
+            .data(rmp_serde::to_vec_named(&value)?)
+            .mime_type(format!("{QUERY_RESULTS_MIME_TYPE}+msgpack"))
+            .build())
     }
 }
 
@@ -252,37 +252,39 @@ impl LogLines {
             None => Default::default(),
         };
         let trace_id = kv.get(TRACE_KEY.0).map(|t_id| {
-            OtelTraceId(
+            OtelTraceId::new(
                 t_id.as_bytes()[0..16]
                     .try_into()
                     .expect("OtelSpanId wraps a [u8; 16]"),
             )
         });
         let span_id = kv.get(SPAN_KEY.0).map(|s_id| {
-            OtelSpanId(
+            OtelSpanId::new(
                 s_id.as_bytes()[0..8]
                     .try_into()
                     .expect("OtelSpanId wraps a [u8; 8]"),
             )
         });
-        let otel = OtelMetadata {
-            resource,
-            trace_id,
-            span_id,
-            attributes: labels
-                .iter()
-                .map(|(k, v)| (k.to_string(), v.to_string().into()))
-                .collect(),
-        };
-        Event {
-            time: time.into(),
-            end_time: None,
-            otel,
-            title,
-            description,
-            severity: None,
-            labels,
-        }
+        let otel = OtelMetadata::builder()
+            .resource(resource)
+            .trace_id(trace_id)
+            .span_id(span_id)
+            .attributes(
+                labels
+                    .iter()
+                    .map(|(k, v)| (k.to_string(), v.to_string().into()))
+                    .collect(),
+            )
+            .build();
+        Event::builder()
+            .time(time.into())
+            .end_time(None)
+            .otel(otel)
+            .title(title)
+            .description(description)
+            .severity(None)
+            .labels(labels)
+            .build()
     }
 }
 
@@ -316,9 +318,9 @@ impl TryFrom<LogLines> for Blob {
     type Error = Error;
 
     fn try_from(value: LogLines) -> Result<Self, Self::Error> {
-        Ok(Self {
-            data: rmp_serde::to_vec_named(&value.0)?.into(),
-            mime_type: EVENTS_MSGPACK_MIME_TYPE.to_owned(),
-        })
+        Ok(Self::builder()
+            .data(rmp_serde::to_vec_named(&value.0)?)
+            .mime_type(EVENTS_MSGPACK_MIME_TYPE.to_owned())
+            .build())
     }
 }
