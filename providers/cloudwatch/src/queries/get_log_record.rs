@@ -76,59 +76,57 @@ pub fn convert_log_entry_to_event(res: HashMap<String, String>) -> Result<Event,
         None => Default::default(),
     };
     let trace_id = res.get(TRACE_KEY.0).map(|t_id| {
-        OtelTraceId(
+        OtelTraceId::new(
             t_id.as_bytes()[0..16]
                 .try_into()
                 .expect("OtelSpanId wraps a [u8; 16]"),
         )
     });
     let span_id = res.get(SPAN_KEY.0).map(|s_id| {
-        OtelSpanId(
+        OtelSpanId::new(
             s_id.as_bytes()[0..8]
                 .try_into()
                 .expect("OtelSpanId wraps a [u8; 8]"),
         )
     });
-    let otel = OtelMetadata {
-        resource,
-        trace_id,
-        span_id,
-        attributes: labels
-            .iter()
-            .map(|(k, v)| (k.to_string(), v.to_string().into()))
-            .collect(),
-    };
-    Ok(Event {
-        time: time.into(),
-        end_time: None,
-        otel,
-        title,
-        description,
-        severity: None,
-        labels,
-    })
+    let otel = OtelMetadata::builder()
+        .resource(resource)
+        .trace_id(trace_id)
+        .span_id(span_id)
+        .attributes(
+            labels
+                .iter()
+                .map(|(k, v)| (k.to_string(), v.to_string().into()))
+                .collect(),
+        )
+        .build();
+    Ok(Event::builder()
+        .time(time.into())
+        .end_time(None)
+        .otel(otel)
+        .title(title)
+        .description(description)
+        .severity(None)
+        .labels(labels)
+        .build())
 }
 
 fn try_into_blob(res: HashMap<String, String>) -> Result<Blob, Error> {
     let event = vec![convert_log_entry_to_event(res)?];
-    Ok(Blob {
-        data: rmp_serde::to_vec_named(&event)?.into(),
-        mime_type: EVENTS_MSGPACK_MIME_TYPE.to_owned(),
-    })
+    Ok(Blob::builder()
+        .data(rmp_serde::to_vec_named(&event)?)
+        .mime_type(EVENTS_MSGPACK_MIME_TYPE.to_owned())
+        .build())
 }
 
 pub fn create_cells_handler(_response: Blob) -> Result<Vec<Cell>, Error> {
-    let logs_cell = Cell::Log(LogCell {
-        id: "query-results".to_string(),
-        data_links: vec![format!("cell-data:{EVENTS_MIME_TYPE},self")],
-        read_only: None,
-        display_fields: None,
-        hide_similar_values: Some(false),
-        expanded_indices: None,
-        visibility_filter: None,
-        selected_indices: None,
-        highlighted_indices: None,
-    });
+    let logs_cell = Cell::Log(
+        LogCell::builder()
+            .id("query-results".to_string())
+            .data_links(vec![format!("cell-data:{EVENTS_MIME_TYPE},self")])
+            .hide_similar_values(false)
+            .build(),
+    );
 
     Ok(vec![logs_cell])
 }

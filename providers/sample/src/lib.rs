@@ -108,18 +108,19 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
             },
     } = ShowcaseCustomData::parse_blob(response)?;
 
-    Ok(vec![Cell::Text(TextCell {
-        id: "result".to_owned(),
-        content: format!(
-            "Your query was: {query}\n\
+    Ok(vec![Cell::Text(
+        TextCell::builder()
+            .id("result".to_owned())
+            .content(format!(
+                "Your query was: {query}\n\
             Your time range: {from} - {to}\n\
             Live mode was {live}\n\
             Provided tags: {:?}",
-            tags.split('\n').collect::<Vec<_>>()
-        ),
-        formatting: Formatting::default(),
-        read_only: None,
-    })])
+                tags.split('\n').collect::<Vec<_>>()
+            ))
+            .formatting(Formatting::default())
+            .build(),
+    )])
 }
 
 /// The most basic of health-check functions: Always returns "ok".
@@ -137,12 +138,12 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
 /// the provider doesn't support health checks, and the provider is assumed to
 /// be always available.
 fn check_status() -> Result<Blob> {
-    ProviderStatus {
-        status: Ok(()),
-        version: COMMIT_HASH.to_owned(),
-        built_at: BUILD_TIMESTAMP.to_owned(),
-    }
-    .to_blob()
+    ProviderStatus::builder()
+        .status(Ok(()))
+        .version(COMMIT_HASH.to_owned())
+        .built_at(BUILD_TIMESTAMP.to_owned())
+        .build()
+        .to_blob()
 }
 
 /// This showcase shows how to return cells directly, without the need for

@@ -115,18 +115,18 @@ async fn fetch_logs(request: ProviderRequest, config: ElasticConfig) -> Result<B
     let body = SearchRequestBody { size: None };
     url.set_query(Some(&format!("q={}", &query_string)));
 
-    let request = HttpRequest {
-        body: Some(
+    let request = HttpRequest::builder()
+        .body(Some(
             serde_json::to_vec(&body)
                 .map_err(|err| Error::Data {
                     message: format!("Error serializing query: {err:?}"),
                 })?
                 .into(),
-        ),
-        headers: Some(headers),
-        method: HttpRequestMethod::Post,
-        url: url.to_string(),
-    };
+        ))
+        .headers(Some(headers))
+        .method(HttpRequestMethod::Post)
+        .url(url.to_string())
+        .build();
 
     // Parse response
     let response = make_http_request(request).await?.body;
@@ -293,12 +293,12 @@ async fn check_status(config: ElasticConfig) -> Result<Blob, Error> {
     let mut headers = HashMap::new();
     headers.insert("Content-Type".to_string(), "application/json".to_string());
 
-    let request = HttpRequest {
-        body: None,
-        headers: Some(headers),
-        method: HttpRequestMethod::Get,
-        url: url.to_string(),
-    };
+    let request = HttpRequest::builder()
+        .body(None)
+        .headers(Some(headers))
+        .method(HttpRequestMethod::Get)
+        .url(url.to_string())
+        .build();
 
     let _ = make_http_request(request).await?;
 

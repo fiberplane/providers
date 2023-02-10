@@ -64,20 +64,20 @@ fn validate_or_parse_message(query: &str, message: &str) -> Error {
                 // from Prometheus
                 if let Some(error) = response.error {
                     return Error::ValidationError {
-                        errors: vec![ValidationError {
-                            field_name: QUERY_PARAM_NAME.to_owned(),
-                            message: error,
-                        }],
+                        errors: vec![ValidationError::builder()
+                            .field_name(QUERY_PARAM_NAME.to_owned())
+                            .message(error)
+                            .build()],
                     };
                 }
             }
         }
         Err(error) => {
             return Error::ValidationError {
-                errors: vec![ValidationError {
-                    field_name: QUERY_PARAM_NAME.to_owned(),
-                    message: format!("{error}"),
-                }],
+                errors: vec![ValidationError::builder()
+                    .field_name(QUERY_PARAM_NAME.to_owned())
+                    .message(format!("{error}"))
+                    .build()],
             };
         }
     };
@@ -100,10 +100,10 @@ pub async fn query_series(query_data: Blob, config: Config) -> Result<Blob> {
     form_data.append_pair("step", &step.to_string());
     let query_string = form_data.finish();
 
-    let body = Blob {
-        data: query_string.into_bytes().into(),
-        mime_type: FORM_ENCODED_MIME_TYPE.to_owned(),
-    };
+    let body = Blob::builder()
+        .data(query_string.into_bytes())
+        .mime_type(FORM_ENCODED_MIME_TYPE.to_owned())
+        .build();
 
     let response: PrometheusResponse =
         query_direct_and_proxied(&config, "prometheus", "api/v1/query_range", Some(body))
@@ -120,21 +120,22 @@ pub async fn query_series(query_data: Blob, config: Config) -> Result<Blob> {
         .map(RangeVector::into_series)
         .collect::<core::result::Result<Vec<_>, Error>>()
         .and_then(|series_vector| {
-            Ok(Blob {
-                data: rmp_serde::to_vec_named(&series_vector)?.into(),
-                mime_type: TIMESERIES_MSGPACK_MIME_TYPE.to_owned(),
-            })
+            Ok(Blob::builder()
+                .data(rmp_serde::to_vec_named(&series_vector)?)
+                .mime_type(TIMESERIES_MSGPACK_MIME_TYPE.to_owned())
+                .build())
         })
 }
 
 pub fn create_graph_cell() -> Result<Vec<Cell>> {
-    let graph_cell = Cell::Graph(GraphCell {
-        id: "graph".to_owned(),
-        data_links: vec![format!("cell-data:{TIMESERIES_MIME_TYPE},self")],
-        graph_type: GraphType::Line,
-        read_only: None,
-        stacking_type: StackingType::None,
-    });
+    let graph_cell = Cell::Graph(
+        GraphCell::builder()
+            .id("graph".to_owned())
+            .data_links(vec![format!("cell-data:{TIMESERIES_MIME_TYPE},self")])
+            .graph_type(GraphType::Line)
+            .stacking_type(StackingType::None)
+            .build(),
+    );
     Ok(vec![graph_cell])
 }
 
@@ -161,16 +162,20 @@ fn parse_metrics_request(query_data: Blob) -> Result<SeriesRequest> {
 
     let mut errors = Vec::new();
     if query.is_empty() {
-        errors.push(ValidationError {
-            field_name: QUERY_PARAM_NAME.to_owned(),
-            message: "Please enter a query".to_owned(),
-        });
+        errors.push(
+            ValidationError::builder()
+                .field_name(QUERY_PARAM_NAME.to_owned())
+                .message("Please enter a query".to_owned())
+                .build(),
+        );
     }
     if from == 0.0 || to == 0.0 {
-        errors.push(ValidationError {
-            field_name: TIME_RANGE_PARAM_NAME.to_owned(),
-            message: "Please enter a valid time range".to_owned(),
-        });
+        errors.push(
+            ValidationError::builder()
+                .field_name(TIME_RANGE_PARAM_NAME.to_owned())
+                .message("Please enter a valid time range".to_owned())
+                .build(),
+        );
     }
 
     if !errors.is_empty() {

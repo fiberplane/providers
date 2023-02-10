@@ -74,37 +74,49 @@ impl HttpsProviderResponse {
     }
 
     fn text_cell(id: String, content: String) -> Cell {
-        Cell::Text(TextCell {
-            id,
-            content,
-            formatting: Vec::new(),
-            read_only: Some(true),
-        })
+        Cell::Text(
+            TextCell::builder()
+                .id(id)
+                .content(content)
+                .formatting(Vec::new())
+                .read_only(true)
+                .build(),
+        )
     }
 
     pub(crate) fn try_into_cells(self) -> Result<Vec<Cell>, Error> {
-        let status_cell = Cell::Code(CodeCell {
-            id: "status".to_string(),
-            content: self.status,
-            syntax: Some("json".to_string()),
-            read_only: Some(true),
-        });
+        let status_cell = Cell::Code(
+            CodeCell::builder()
+                .id("status".to_string())
+                .content(self.status)
+                .syntax("json".to_string())
+                .read_only(true)
+                .build(),
+        );
         let headers_cell = self.headers.as_ref().map(|headers| {
-            Cell::Code(CodeCell {
-                id: "headers".to_string(),
-                content: format!("{headers:#?}"),
-                syntax: Some("json".to_string()),
-                read_only: Some(true),
-            })
+            Cell::Code(
+                CodeCell::builder()
+                    .id("headers".to_string())
+                    .content(format!("{headers:#?}"))
+                    .syntax("json".to_string())
+                    .read_only(true)
+                    .build(),
+            )
         });
-        let response_cell = Cell::Code(CodeCell {
-            id: "response".to_string(),
-            content: serde_json::from_slice::<Value>(self.payload.as_slice())
-                .and_then(|value| serde_json::to_string_pretty(&value))
-                .unwrap_or_else(|_| String::from_utf8_lossy(self.payload.as_slice()).to_string()),
-            syntax: Some("json".to_string()),
-            read_only: Some(true),
-        });
+        let response_cell = Cell::Code(
+            CodeCell::builder()
+                .id("response".to_string())
+                .content(
+                    serde_json::from_slice::<Value>(self.payload.as_slice())
+                        .and_then(|value| serde_json::to_string_pretty(&value))
+                        .unwrap_or_else(|_| {
+                            String::from_utf8_lossy(self.payload.as_slice()).to_string()
+                        }),
+                )
+                .syntax("json".to_string())
+                .read_only(true)
+                .build(),
+        );
         let results = {
             let mut accumulator = vec![
                 Self::text_cell("status-heading".to_string(), "Status Code".to_string()),
@@ -126,8 +138,8 @@ impl HttpsProviderResponse {
 }
 
 fn serialize_cells(cells: Vec<Cell>) -> Result<Blob, Error> {
-    Ok(Blob {
-        data: rmp_serde::to_vec_named(&cells)?.into(),
-        mime_type: CELLS_MSGPACK_MIME_TYPE.to_owned(),
-    })
+    Ok(Blob::builder()
+        .data(rmp_serde::to_vec_named(&cells)?)
+        .mime_type(CELLS_MSGPACK_MIME_TYPE.to_owned())
+        .build())
 }

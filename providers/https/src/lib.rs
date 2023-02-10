@@ -133,12 +133,12 @@ async fn send_query(
         headers.insert("Content-Type".to_string(), blob.mime_type.clone());
     };
 
-    let request = HttpRequest {
-        url,
-        headers: Some(headers),
-        method,
-        body: body.map(|blob| blob.data),
-    };
+    let request = HttpRequest::builder()
+        .url(url)
+        .headers(Some(headers))
+        .method(method)
+        .body(body.map(|blob| blob.data))
+        .build();
     log(format!(
         "Sending {:?} request to {}",
         request.method, request.url
@@ -187,12 +187,12 @@ async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> 
                 "GET" => method = HttpRequestMethod::Get,
                 unsupported => {
                     return Err(Error::ValidationError {
-                        errors: vec![ValidationError {
-                            field_name: HTTP_METHOD_PARAM_NAME.to_string(),
-                            message: format!(
+                        errors: vec![ValidationError::builder()
+                            .field_name(HTTP_METHOD_PARAM_NAME.to_string())
+                            .message(format!(
                                 "{unsupported} is not a supported HTTPS method with this provider."
-                            ),
-                        }],
+                            ))
+                            .build()],
                     })
                 }
             },
@@ -200,11 +200,13 @@ async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> 
                 if let Some(ref api) = config.api {
                     if value.parse::<Url>().is_ok() {
                         return Err(Error::ValidationError {
-                            errors: vec![ValidationError {
-                                field_name: PATH_PARAM_NAME.to_string(),
-                                message: "a provider with a baseUrl cannot query arbitrary URLs"
-                                    .to_string(),
-                            }],
+                            errors: vec![ValidationError::builder()
+                                .field_name(PATH_PARAM_NAME.to_string())
+                                .message(
+                                    "a provider with a baseUrl cannot query arbitrary URLs"
+                                        .to_string(),
+                                )
+                                .build()],
                         });
                     }
                     url = Ok(api.base_url.clone());
@@ -222,10 +224,10 @@ async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> 
                     url = Ok(full_url);
                 } else {
                     return Err(Error::ValidationError {
-                        errors: vec![ValidationError {
-                            field_name: PATH_PARAM_NAME.to_string(),
-                            message: format!("invalid url: {value:?}"),
-                        }],
+                        errors: vec![ValidationError::builder()
+                            .field_name(PATH_PARAM_NAME.to_string())
+                            .message(format!("invalid url: {value:?}"))
+                            .build()],
                     });
                 }
             }

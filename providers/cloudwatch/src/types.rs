@@ -56,14 +56,12 @@ pub struct Metric {
 impl MetricList {
     // Not a TryFrom trait because that might depend on configuration
     pub fn try_into_blob(self) -> Result<Blob, Error> {
-        Ok(Blob {
-            mime_type: LIST_METRICS_MIME_TYPE.to_string(),
-            data: serde_json::to_string(&self)
-                .map_err(|e| Error::Invocation {
-                    message: format!("could not serialize MetricList: {e}"),
-                })?
-                .into(),
-        })
+        Ok(Blob::builder()
+            .mime_type(LIST_METRICS_MIME_TYPE.to_string())
+            .data(serde_json::to_string(&self).map_err(|e| Error::Invocation {
+                message: format!("could not serialize MetricList: {e}"),
+            })?)
+            .build())
     }
 
     // Not a TryFrom trait because that might depend on configuration
@@ -153,37 +151,45 @@ impl GraphMetricQuery {
                         }
                         PERIOD_PARAM_NAME => match value.parse::<u32>() {
                             Ok(secs) => acc.period = Duration::seconds(secs.into()),
-                            Err(e) => errors.push(ValidationError {
-                                field_name: PERIOD_PARAM_NAME.to_string(),
-                                message: format!("Invalid period: {e}"),
-                            }),
+                            Err(e) => errors.push(
+                                ValidationError::builder()
+                                    .field_name(PERIOD_PARAM_NAME.to_string())
+                                    .message(format!("Invalid period: {e}"))
+                                    .build(),
+                            ),
                         },
                         TIME_RANGE_PARAM_NAME => {
                             if let Some(split) = value.split_once(' ') {
                                 match Self::parse_iso_date(split.0) {
                                     Ok(ts) => acc.from = ts,
-                                    Err(e) => errors.push(ValidationError {
-                                        field_name: TIME_RANGE_PARAM_NAME.to_string(),
-                                        message: format!("Invalid start of time range: {e}"),
-                                    }),
+                                    Err(e) => errors.push(
+                                        ValidationError::builder()
+                                            .field_name(TIME_RANGE_PARAM_NAME.to_string())
+                                            .message(format!("Invalid start of time range: {e}"))
+                                            .build(),
+                                    ),
                                 };
                                 match Self::parse_iso_date(split.1) {
                                     Ok(ts) => acc.to = ts,
-                                    Err(e) => errors.push(ValidationError {
-                                        field_name: TIME_RANGE_PARAM_NAME.to_string(),
-                                        message: format!("Invalid end of time range: {e}"),
-                                    }),
+                                    Err(e) => errors.push(
+                                        ValidationError::builder()
+                                            .field_name(TIME_RANGE_PARAM_NAME.to_string())
+                                            .message(format!("Invalid end of time range: {e}"))
+                                            .build(),
+                                    ),
                                 };
                             }
                             if acc.from >= acc.to {
-                                errors.push(ValidationError {
-                                    field_name: TIME_RANGE_PARAM_NAME.to_string(),
-                                    message: format!(
-                                        "Time range is invalid: {} is not strictly before {}",
-                                        Self::to_iso_date(acc.from),
-                                        Self::to_iso_date(acc.to)
-                                    ),
-                                })
+                                errors.push(
+                                    ValidationError::builder()
+                                        .field_name(TIME_RANGE_PARAM_NAME.to_string())
+                                        .message(format!(
+                                            "Time range is invalid: {} is not strictly before {}",
+                                            Self::to_iso_date(acc.from),
+                                            Self::to_iso_date(acc.to)
+                                        ))
+                                        .build(),
+                                )
                             }
                         }
                         unknown => {
