@@ -8,6 +8,7 @@ edition = "2021"
 rust-version = "1.65"
 version = "1.0.0-alpha.3"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/fiberplane/providers"
 
 [workspace.dependencies]
 fp-bindgen = { version = "3.0.0-alpha.1" }
