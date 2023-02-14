@@ -75,6 +75,16 @@ style and you can use this command locally to verify your changes before
 pushing. In addition, we use `cargo clippy` to detect common issues with the
 code itself.
 
+## Documentation
+
+Be careful editing any of the `README.md` files directly. Some contain
+`<!-- cargo-rdme start/end -->` directives, in which case you should follow
+these instructions to update those blocks:
+
+- Make modifications to `<crate>/src/lib.rs`
+- Make sure `cargo-rdme` is installed: `cargo install cargo-rdme`
+- Run `cargo-rdme` in the crate folder where you wish to update the README.
+
 ## References
 
 This document was adapted from the contribution guidelines for
