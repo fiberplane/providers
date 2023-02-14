@@ -1,6 +1,7 @@
 [package]
 name = "fiberplane-pdk"
 description = "Fiberplane Provider Development Kit"
+readme = "README.md"
 authors = { workspace = true }
 edition = { workspace = true }
 rust-version = { workspace = true }
