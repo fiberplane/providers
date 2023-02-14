@@ -6,7 +6,7 @@
 This crate provides high-level macros and abstractions for more ergonomic
 provider development.
 
-Follow the tutorial: [How to create a provider](https://docs.fiberplane.com/docs/tutorial-create-a-provider)
+Follow the tutorial: [How to create a provider](https://docs.fiberplane.com/docs/create-a-provider)
 
 ## Overview
 
