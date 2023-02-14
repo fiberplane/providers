@@ -1,6 +1,7 @@
 [package]
 name = "fiberplane-pdk-macros"
 description = "Macros for the Fiberplane PDK"
+readme = "README.md"
 authors = { workspace = true }
 edition = { workspace = true }
 rust-version = { workspace = true }

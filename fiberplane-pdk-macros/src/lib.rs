@@ -1,3 +1,10 @@
+/*!
+# Fiberplane PDK macros
+
+Macro crate to support the [Fiberplane PDK](https://docs.rs/fiberplane-pdk).
+
+*/
+
 mod casing;
 mod config_schema;
 mod field_attrs;
