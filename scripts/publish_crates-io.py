@@ -35,7 +35,9 @@ def crates_io_published_versions(crate: str) -> List[str]:
     """
     index_url = f"https://index.crates.io/{index_url_path(crate)}"
     print(f"Requesting {index_url}")
-    request = urllib.request.Request(index_url)
+    request = urllib.request.Request(
+        index_url, headers={"User-Agent": "Fiberplane/Release worker/1.0"}
+    )
     with urllib.request.urlopen(request) as response:
         # We ignore anything that comes after the first newline
         data = json.loads(response.read().decode("utf-8").split("\n", 1)[0])
