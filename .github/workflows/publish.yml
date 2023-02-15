@@ -3,6 +3,7 @@ name: Publish
 on:
   push:
     branches: ["main"]
+    tags: ["*"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -33,6 +34,12 @@ jobs:
         with:
           toolchain: stable
           override: true
+
+      - name: Cargo login
+        uses: actions-rs/cargo@v1
+        with:
+          command: login
+          args: ${{ secrets.CRATES_TOKEN }}
 
       - name: Publish PDK on crates-io
         run: ./scripts/publish_crates-io.py
