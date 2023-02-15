@@ -3,13 +3,48 @@
 import argparse
 import subprocess
 import sys
+import re
 from pathlib import Path
+from typing import List
+import json
 
 
-ALL_PROVIDERS = ["loki", "elasticsearch", "cloudwatch", "https", "sentry", "prometheus"]
+# The name of the provider is included as 'name' key in the match
+PROVIDER_MATCHER = re.compile("^(?P<name>.*)-provider$")
+
+
+def list_all_providers(*, deny_list: List[str]) -> List[str]:
+    """
+    List all provider crates in the current Cargo workspace, except
+    the ones present in DENY_LIST.
+
+    A "provider crate" is a crate whose name ends with "-provider" in
+    the providers/ subdirectory
+    """
+    # We don't make sure that the provider crate is in the correct subdirectory
+    # here.
+    try:
+        cargo_metadata = json.loads(
+            subprocess.check_output(
+                f"cargo metadata --format-version 1 --no-deps",
+                shell=True,
+            )
+        )
+        result = []
+        for meta in cargo_metadata["packages"]:
+            match = PROVIDER_MATCHER.match(meta["name"])
+            if match and match.group("name") not in deny_list:
+                result.append(match.group("name"))
+        return result
+    except subprocess.CalledProcessError as e:
+        print(f"Cargo error while fetching the current version:\n{e.output}")
+        sys.exit(1)
 
 
 def compile_provider(provider: str):
+    """
+    Compile the provider named PROVIDER in release mode for WASM target.
+    """
     print(f"Compiling {provider} provider...", end=" ")
     try:
         cwd = Path(".") / "providers"
@@ -26,6 +61,9 @@ def compile_provider(provider: str):
 
 
 def optimize_provider(provider: str, destination_dir: Path):
+    """
+    Optimize the wasm blob for PROVIDER for release, and leave the artifact in DESTINATION_DIR.
+    """
     print(f"Optimizing {provider} provider...", end=" ")
     try:
         output_path = destination_dir / f"{provider}.wasm"
@@ -48,13 +86,16 @@ def optimize_provider(provider: str, destination_dir: Path):
 
 
 def single_provider(provider: str, destination_dir: Path):
+    """
+    Prepare provider PROVIDER for release, leaving the wasm blob in DESTINATION_DIR.
+    """
     compile_provider(provider)
     optimize_provider(provider, destination_dir)
 
 
 def main(provider_name: str, destination: Path):
     if provider_name.lower() == "all":
-        for provider in ALL_PROVIDERS:
+        for provider in list_all_providers(deny_list=["sample"]):
             single_provider(provider, destination)
     else:
         single_provider(provider_name, destination)
