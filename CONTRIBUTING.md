@@ -10,7 +10,7 @@ transparent as possible, whether it's:
 
 Do you want to learn how to create your own provider? Follow the
 [tutorial](https://docs.fiberplane.com/docs/create-a-provider) or have a look at
-the [sample provider](sample).
+the [sample provider](providers/sample).
 
 ## We Develop with GitHub
 
