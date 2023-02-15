@@ -18,6 +18,13 @@ that you can link against when creating your own provider. All the providers in
 this repository also make us of it. Please see the
 [`fiberplane-pdk/`](fiberplane-pdk/) directory for more details.
 
+To learn how to create your own provider, please follow the
+[tutorial](https://docs.fiberplane.com/docs/create-a-provider) or have a look at
+the [sample provider](providers/sample).
+
+There is also a
+[Provider Protocol Reference](https://docs.fiberplane.com/reference/provider-protocol-reference).
+
 ## Getting Help
 
 Please see
