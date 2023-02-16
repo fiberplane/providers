@@ -203,17 +203,19 @@ fn get_config_schema() -> Vec<ConfigField> {
         TextField::new()
             .with_name("region")
             .with_label("Region of AWS endpoints to use")
-            .with_placeholder("eu-central-2")
+            .with_placeholder("For example, eu-central-2")
             .required()
             .into(),
         TextField::new()
             .with_name("access_key_id")
             .with_label("AWS Access Key ID")
+            .with_placeholder("For example, AKIAIOSFODNN7EXAMPLE")
             .required()
             .into(),
         TextField::new()
             .with_name("secret_access_key")
             .with_label("AWS Secret Access Key")
+            .with_placeholder("For example, wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
             .required()
             .into(),
     ]
