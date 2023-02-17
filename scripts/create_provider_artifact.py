@@ -111,7 +111,7 @@ def compile_provider(provider: str):
         subprocess.run(
             f"cargo build --release -p {provider}-provider",
             cwd=cwd,
-                check=True,
+            check=True,
             shell=True,
         )
     except subprocess.CalledProcessError as e:
@@ -136,7 +136,7 @@ def optimize_provider(provider: str, destination_dir: Path):
         )
         subprocess.run(
             f'wasm-opt -Oz -c -o "{output_path}" {input_path}',
-                check=True,
+            check=True,
             shell=True,
         )
     except subprocess.CalledProcessError as e:
