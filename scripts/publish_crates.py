@@ -15,6 +15,10 @@ import urllib.request
 ALL_CRATES_PATHS_IN_ORDER = [("fiberplane-pdk-macros", "fiberplane-pdk-macros"), ("fiberplane-pdk", "fiberplane-pdk")]
 ALL_CRATES = "all"
 CRATES_IO = "crates-io"
+CRATES_IO_INDEX_URL = "https://index.crates.io"
+USER_AGENT = "Fiberplane/Release worker/1.0"
+# We assume this script is only run on Linux 64-bit platforms
+DASEL_URL = "https://github.com/TomWright/dasel/releases/download/v2.1.1/dasel_linux_amd64"
 
 
 def install_dependencies():
@@ -38,11 +42,13 @@ def install_dependencies():
 
     check_dasel = subprocess.run("which dasel", shell=True)
     if check_dasel.returncode != 0:
+        if not sys.platform.startswith("linux"):
+            print("Automatic dependency installation only works on linux for CI purposes, install dasel manually please")
+            sys.exit(1)
         print(f"Installing dasel...", end=" ")
         try:
-            dasel_url = "https://github.com/TomWright/dasel/releases/download/v2.1.1/dasel_linux_amd64"
             request = urllib.request.Request(
-                dasel_url, headers={"User-Agent": "Fiberplane/Release worker/1.0"}
+                DASEL_URL, headers={"User-Agent": USER_AGENT}
             )
             with urllib.request.urlopen(request) as response:
                 dasel_path = Path.home() / ".local" / "bin" / "dasel"
@@ -76,10 +82,10 @@ def crates_io_published_versions(crate: str) -> List[str]:
 
     Notably, this _includes_ the yanked versions
     """
-    index_url = f"https://index.crates.io/{index_url_path(crate)}"
+    index_url = f"{CRATES_IO_INDEX_URL}/{index_url_path(crate)}"
     print(f"Requesting {index_url}")
     request = urllib.request.Request(
-        index_url, headers={"User-Agent": "Fiberplane/Release worker/1.0"}
+        index_url, headers={"User-Agent": USER_AGENT}
     )
     with urllib.request.urlopen(request) as response:
         # We ignore anything that comes after the first newline
@@ -272,6 +278,7 @@ def main_alt_registry(crate: str, registry: str):
 
 
 def main(crate: str, registry: str):
+    install_dependencies()
     if registry == CRATES_IO:
         main_crates_io(crate)
         sys.exit(0)

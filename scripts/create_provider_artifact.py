@@ -8,9 +8,63 @@ from pathlib import Path
 from typing import List
 import json
 
+# Using urllib instead of requests to _only_ require
+# Python 3 stdlib to work
+import urllib.request
+
 
 # The name of the provider is included as 'name' key in the match
 PROVIDER_MATCHER = re.compile("^(?P<name>.*)-provider$")
+USER_AGENT = "Fiberplane/Release worker/1.0"
+# We assume this script is only run on Linux 64-bit platforms
+BINARYEN_VERSION = "version_112"
+WASM_OPT_URL = f"https://github.com/WebAssembly/binaryen/releases/download/{BINARYEN_VERSION}/binaryen-{BINARYEN_VERSION}-x86_64-linux.tar.gz"
+
+
+def install_dependencies():
+    """
+    Install dependencies for the script
+    """
+    check_wasm_opt = subprocess.run("which wasm-opt", shell=True)
+    if check_wasm_opt.returncode != 0:
+        if not sys.platform.startswith("linux"):
+            print(
+                "Automatic dependency installation only works on linux for CI purposes, install wasm-opt manually please"
+            )
+            sys.exit(1)
+        print(f"Installing dasel...", end=" ")
+        try:
+            request = urllib.request.Request(
+                WASM_OPT_URL, headers={"User-Agent": USER_AGENT}
+            )
+            with urllib.request.urlopen(request) as response:
+                tarball_path = Path.home() / "binaryen.tar.gz"
+                with open(tarball_path, "w") as f:
+                    f.write(response.read())
+
+            subprocess.check_output(
+                f"tar -xzf {tarball_path}",
+                stderr=subprocess.STDOUT,
+                shell=True,
+            )
+
+            subprocess.check_output(
+                f"cp binaryen-{BINARYEN_VERSION}/bin/* ~/.local/bin/",
+                stderr=subprocess.STDOUT,
+                shell=True,
+            )
+
+            # This chmod will fail on missing file, so it
+            # also acts as a check that the `wasm-opt` binary is in the correct location
+            subprocess.check_output(
+                f"chmod a+x ~/.local/bin/wasm-opt",
+                stderr=subprocess.STDOUT,
+                shell=True,
+            )
+        except Exception as e:
+            print(f"Error during installation:\n{e}")
+            sys.exit(1)
+        print("OK!")
 
 
 def list_all_providers(*, deny_list: List[str]) -> List[str]:
@@ -94,6 +148,7 @@ def single_provider(provider: str, destination_dir: Path):
 
 
 def main(provider_name: str, destination: Path):
+    install_dependencies()
     if provider_name.lower() == "all":
         for provider in list_all_providers(deny_list=["sample"]):
             single_provider(provider, destination)
