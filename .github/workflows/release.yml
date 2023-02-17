@@ -1,0 +1,77 @@
+name: Add Providers to release
+
+on:
+  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
+  release:
+    types: [published]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  providers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: setup-git-credentials
+        uses: de-vri-es/setup-git-credentials@v2
+        with:
+          credentials: "https://fiberplanebot:${{ secrets.PRIVATE_GITHUB_TOKEN }}@github.com/"
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Install latest stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Compile providers
+        run: |
+          mkdir -p artifacts
+          ./scripts/create_provider_artifact.py -d artifacts all
+
+      - name: Upload Cloudwatch
+        uses: djn24/add-asset-to-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: 'artifacts/cloudwatch.wasm'
+
+      - name: Upload Elasticsearch
+        uses: djn24/add-asset-to-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: 'artifacts/elasticsearch.wasm'
+
+      - name: Upload HTTPS
+        uses: djn24/add-asset-to-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: 'artifacts/https.wasm'
+
+      - name: Upload Loki
+        uses: djn24/add-asset-to-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: 'artifacts/loki.wasm'
+
+      - name: Upload Prometheus
+        uses: djn24/add-asset-to-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: 'artifacts/prometheus.wasm'
+
+      - name: Upload Sentry
+        uses: djn24/add-asset-to-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: 'artifacts/sentry.wasm'
