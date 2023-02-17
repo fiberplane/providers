@@ -42,29 +42,29 @@ def install_dependencies():
                 with open(tarball_path, "wb") as f:
                     f.write(response.read())
 
-            subprocess.check_output(
+            subprocess.run(
                 f"tar -xzf {tarball_path}",
-                stderr=subprocess.STDOUT,
+                check=True,
                 shell=True,
             )
 
-            subprocess.check_output(
+            subprocess.run(
                 f"mkdir -p ~/.local/bin/",
-                stderr=subprocess.STDOUT,
+                check=True,
                 shell=True,
             )
 
-            subprocess.check_output(
+            subprocess.run(
                 f"cp binaryen-{BINARYEN_VERSION}/bin/* ~/.local/bin/",
-                stderr=subprocess.STDOUT,
+                check=True,
                 shell=True,
             )
 
             # This chmod will fail on missing file, so it
             # also acts as a check that the `wasm-opt` binary is in the correct location
-            subprocess.check_output(
+            subprocess.run(
                 f"chmod a+x ~/.local/bin/wasm-opt",
-                stderr=subprocess.STDOUT,
+                check=True,
                 shell=True,
             )
         except Exception as e:
@@ -97,7 +97,7 @@ def list_all_providers(*, deny_list: List[str]) -> List[str]:
                 result.append(match.group("name"))
         return result
     except subprocess.CalledProcessError as e:
-        print(f"Cargo error while fetching the current version:\n{e.output}")
+        print(f"Cargo error while fetching the current version:\n{e.output.decode()}")
         sys.exit(1)
 
 
@@ -108,14 +108,14 @@ def compile_provider(provider: str):
     print(f"Compiling {provider} provider...", end=" ")
     try:
         cwd = Path(".") / "providers"
-        subprocess.check_output(
+        subprocess.run(
             f"cargo build --release -p {provider}-provider",
             cwd=cwd,
-            stderr=subprocess.STDOUT,
+                check=True,
             shell=True,
         )
     except subprocess.CalledProcessError as e:
-        print(f"Error during compilation:\n{e.output}")
+        print(f"Error during compilation:\n{e.output.decode()}")
         sys.exit(1)
     print("OK!")
 
@@ -134,13 +134,13 @@ def optimize_provider(provider: str, destination_dir: Path):
             / "release"
             / f"{provider}_provider.wasm"
         )
-        subprocess.check_output(
+        subprocess.run(
             f'wasm-opt -Oz -c -o "{output_path}" {input_path}',
-            stderr=subprocess.STDOUT,
+                check=True,
             shell=True,
         )
     except subprocess.CalledProcessError as e:
-        print(f"Error during optimization:\n{e.output}")
+        print(f"Error during optimization:\n{e.output.decode()}")
         sys.exit(1)
     print("OK!")
 
