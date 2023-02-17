@@ -50,3 +50,14 @@ jobs:
 
       - name: Run tests
         run: cargo test --verbose
+
+      - name: Test provider compilation
+        run: |
+          mkdir -p artifacts
+          ./scripts/create_provider_artifact.py -d artifacts all
+
+      - name: Save providers
+        uses: actions/upload-artifact@v3
+        with:
+          name: fiberplane-providers
+          path: artifacts/*.wasm
