@@ -108,3 +108,4 @@ jobs:
         with:
           name: fiberplane-providers
           path: artifacts/*.wasm
+          retention-days: 90

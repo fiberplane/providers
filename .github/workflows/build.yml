@@ -51,7 +51,29 @@ jobs:
       - name: Run tests
         run: cargo test --verbose
 
-      - name: Test provider compilation
+  providers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Install latest stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+
+      - name: Compile providers
         run: |
           mkdir -p artifacts
           ./scripts/create_provider_artifact.py -d artifacts all
@@ -61,3 +83,4 @@ jobs:
         with:
           name: fiberplane-providers
           path: artifacts/*.wasm
+          retention-days: 7
