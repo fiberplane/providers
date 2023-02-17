@@ -49,6 +49,12 @@ def install_dependencies():
             )
 
             subprocess.check_output(
+                f"mkdir -p ~/.local/bin/",
+                stderr=subprocess.STDOUT,
+                shell=True,
+            )
+
+            subprocess.check_output(
                 f"cp binaryen-{BINARYEN_VERSION}/bin/* ~/.local/bin/",
                 stderr=subprocess.STDOUT,
                 shell=True,
