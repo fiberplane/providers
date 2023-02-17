@@ -32,14 +32,14 @@ def install_dependencies():
                 "Automatic dependency installation only works on linux for CI purposes, install wasm-opt manually please"
             )
             sys.exit(1)
-        print(f"Installing dasel...", end=" ")
+        print(f"Installing wasm-opt...", end=" ")
         try:
             request = urllib.request.Request(
                 WASM_OPT_URL, headers={"User-Agent": USER_AGENT}
             )
             with urllib.request.urlopen(request) as response:
                 tarball_path = Path.home() / "binaryen.tar.gz"
-                with open(tarball_path, "w") as f:
+                with open(tarball_path, "wb") as f:
                     f.write(response.read())
 
             subprocess.check_output(
