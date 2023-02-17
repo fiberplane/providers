@@ -75,15 +75,15 @@ jobs:
   providers:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: setup-git-credentials
-        uses: fusion-engineering/setup-git-credentials@v2.0.6
+        uses: de-vri-es/setup-git-credentials@v2
         with:
           credentials: "https://fiberplanebot:${{ secrets.PRIVATE_GITHUB_TOKEN }}@github.com/"
 
       - name: Cache Rust dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/registry
