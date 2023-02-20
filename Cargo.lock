@@ -41,7 +41,8 @@ checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 
 [[package]]
 name = "base64uuid"
-version = "0.1.0"
+version = "1.0.0-alpha.2"
+source = "git+ssh://git@github.com/fiberplane/fiberplane-rs.git?branch=main#24a583b3e68b841ba1266de06c137dd5de71906e"
 dependencies = [
  "base64",
  "serde",
@@ -97,26 +98,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "const_format"
-version = "0.2.30"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7309d9b4d3d2c0641e018d449232f2e28f1b22933c137f157d3dbc14228b8c0e"
-dependencies = [
- "const_format_proc_macros",
-]
-
-[[package]]
-name = "const_format_proc_macros"
-version = "0.2.29"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d897f47bf7270cf70d370f8f98c1abb6d2d4cf60a6845d30e05bfb90c6568650"
-dependencies = [
- "proc-macro2",
- "quote",
- "unicode-xid",
-]
-
-[[package]]
 name = "ctor"
 version = "0.1.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -146,7 +127,7 @@ dependencies = [
 
 [[package]]
 name = "elasticsearch-provider"
-version = "1.0.0"
+version = "1.0.0-alpha.1"
 dependencies = [
  "elasticsearch-dsl",
  "fiberplane-pdk",
@@ -179,7 +160,8 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-models"
-version = "0.1.0"
+version = "1.0.0-alpha.2"
+source = "git+ssh://git@github.com/fiberplane/fiberplane-rs.git?branch=main#24a583b3e68b841ba1266de06c137dd5de71906e"
 dependencies = [
  "base64",
  "base64uuid",
@@ -194,17 +176,15 @@ dependencies = [
  "thiserror",
  "time",
  "url",
- "uuid",
 ]
 
 [[package]]
 name = "fiberplane-pdk"
-version = "1.0.0"
+version = "1.0.0-alpha.1"
 dependencies = [
  "fiberplane-models",
  "fiberplane-pdk-macros",
  "fiberplane-provider-bindings",
- "fiberplane-string-utils",
  "fp-bindgen",
  "rmp-serde",
  "rmpv",
@@ -216,7 +196,7 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-pdk-macros"
-version = "1.0.0"
+version = "1.0.0-alpha.1"
 dependencies = [
  "Inflector",
  "fiberplane-models",
@@ -229,6 +209,7 @@ dependencies = [
 [[package]]
 name = "fiberplane-provider-bindings"
 version = "2.0.0"
+source = "git+ssh://git@github.com/fiberplane/fiberplane-rs.git?branch=main#24a583b3e68b841ba1266de06c137dd5de71906e"
 dependencies = [
  "bytes",
  "fiberplane-models",
@@ -240,10 +221,6 @@ dependencies = [
  "serde_json",
  "time",
 ]
-
-[[package]]
-name = "fiberplane-string-utils"
-version = "0.1.0"
 
 [[package]]
 name = "fnv"
@@ -262,9 +239,9 @@ dependencies = [
 
 [[package]]
 name = "fp-bindgen"
-version = "2.4.0"
+version = "3.0.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8bae24daabd1251297c86180e0cc693340648721a945ad06621fff3a4f9cce0"
+checksum = "68001df5b79fae975469931d0d003d23da9122902c7abee675958edac2926133"
 dependencies = [
  "Inflector",
  "bytes",
@@ -282,9 +259,9 @@ dependencies = [
 
 [[package]]
 name = "fp-bindgen-macros"
-version = "2.4.0"
+version = "3.0.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5d265c6982516e33fc0232a39aa433c4bcf984544389811de27904659ab13f9"
+checksum = "0f82c18058cae910e8ed8295193165a3cff05611101e7983458f1c27ad585742"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -294,15 +271,16 @@ dependencies = [
 
 [[package]]
 name = "fp-bindgen-support"
-version = "2.4.0"
+version = "3.0.0-alpha.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f3c5a0fb4f601cd089b19d5a58529148821da7dd59f9d6fef937c740e0611e5"
+checksum = "4eeb4e810c1608a653380d5c875114fa1e00f4c05b2907677d2d1f5016861282"
 dependencies = [
  "fp-bindgen-macros",
  "once_cell",
  "rmp-serde",
  "serde",
  "serde_bytes",
+ "tracing",
 ]
 
 [[package]]
@@ -441,7 +419,7 @@ dependencies = [
 
 [[package]]
 name = "loki-provider"
-version = "1.0.0"
+version = "1.0.0-alpha.1"
 dependencies = [
  "fiberplane-pdk",
  "serde",
@@ -500,6 +478,12 @@ name = "percent-encoding"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "478c572c3d73181ff3c2539045f6eb99e5491218eae919370993b890cdbdd98e"
+
+[[package]]
+name = "pin-project-lite"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0a7ae3ac2f1173085d398531c705756c94a4c56843785df85a60c1a0afac116"
 
 [[package]]
 name = "pkg-config"
@@ -626,9 +610,8 @@ checksum = "7b4b9743ed687d4b4bcedf9ff5eaa7398495ae14e61cba0a295704edbc7decde"
 
 [[package]]
 name = "sample-provider"
-version = "1.0.0"
+version = "1.0.0-alpha.1"
 dependencies = [
- "const_format",
  "fiberplane-pdk",
  "serde",
  "vergen",
@@ -774,6 +757,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
+name = "tracing"
+version = "0.1.37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ce8c33a8d48bd45d624a6e523445fd21ec13d3653cd51f681abf67418f54eb8"
+dependencies = [
+ "cfg-if",
+ "pin-project-lite",
+ "tracing-attributes",
+ "tracing-core",
+]
+
+[[package]]
+name = "tracing-attributes"
+version = "0.1.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4017f8f45139870ca7e672686113917c71c7a6e02d4924eda67186083c03081a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "tracing-core"
+version = "0.1.30"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24eb03ba0eab1fd845050058ce5e616558e8f8d8fca633e6b163fe25c797213a"
+dependencies = [
+ "once_cell",
+]
+
+[[package]]
 name = "unicode-bidi"
 version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -795,12 +810,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "unicode-xid"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f962df74c8c05a667b5ee8bcf162993134c104e96440b663c8daa176dc772d8c"
-
-[[package]]
 name = "url"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -817,9 +826,6 @@ name = "uuid"
 version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "422ee0de9031b5b948b97a8fc04e3aa35230001a722ddd27943e0be31564ce4c"
-dependencies = [
- "serde",
-]
 
 [[package]]
 name = "vcpkg"

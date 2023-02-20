@@ -1,33 +1,42 @@
 [workspace]
-members = [
-  "fiberplane-pdk",
-  "fiberplane-pdk-macros",
-  "providers/*",
-]
+members = ["fiberplane-pdk", "fiberplane-pdk-macros", "providers/*"]
 exclude = ["providers/.cargo"]
 
 [workspace.package]
 authors = ["Fiberplane <info@fiberplane.com>"]
 edition = "2021"
 rust-version = "1.65"
-version = "1.0.0"
+version = "1.0.0-alpha.1"
+license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
-const_format = "0.2"
-fp-bindgen = { version = "2.4" }
-fp-bindgen-support = { version = "2.4" }
-fiberplane-models = { path = "../fiberplane-rs/fiberplane-models" }
-fiberplane-pdk = { path = "fiberplane-pdk", version = "1" }
-fiberplane-pdk-macros = { path = "fiberplane-pdk-macros", version = "1" }
-fiberplane-string-utils = { path = "../fiberplane-rs/fiberplane-string-utils" }
-fiberplane-provider-bindings = { path = "../fiberplane-rs/fiberplane-provider-protocol/fiberplane-provider-bindings" }
+fp-bindgen = { version = "3.0.0-alpha.1" }
+fp-bindgen-support = { version = "3.0.0-alpha.1" }
+#fiberplane-models = { version = "1.0.0-alpha.2", registry = "artifactory" }
+fiberplane-models = { git = "ssh://git@github.com/fiberplane/fiberplane-rs.git", branch = "main" }
+fiberplane-pdk = { version = "1.0.0-alpha.1", path = "fiberplane-pdk" }
+fiberplane-pdk-macros = { version = "1.0.0-alpha.1", path = "fiberplane-pdk-macros" }
+#fiberplane-provider-bindings = { version = "1.0.0-alpha.2", registry = "artifactory" }
+fiberplane-provider-bindings = { git = "ssh://git@github.com/fiberplane/fiberplane-rs.git", branch = "main" }
+
 rmpv = { version = "1", features = ["with-serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-time = { version = "0.3.15", features = [ "macros", "serde-human-readable", "serde-well-known" ] }
+time = { version = "0.3.15", features = [
+  "macros",
+  "serde-human-readable",
+  "serde-well-known",
+] }
 tracing = "0.1.36"
 url = { version = "2.2.2", features = ["serde"] }
-vergen = { version = "7.4.2", default-features = false, features = ["build", "git"] }
+vergen = { version = "7.4.2", default-features = false, features = [
+  "build",
+  "git",
+] }
+
+[patch.artifactory]
+#fiberplane-models = { path = "../fiberplane-rs/fiberplane-models" }
+#fiberplane-provider-bindings = { path = "../fiberplane-rs/fiberplane-provider-protocol/fiberplane-provider-bindings" }
 
 [patch.crates-io]
 #fp-bindgen = { path = "../fp-bindgen/fp-bindgen"}

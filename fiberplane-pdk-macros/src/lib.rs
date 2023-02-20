@@ -38,7 +38,7 @@ use quote::quote;
 ///
 /// # Example
 ///
-/// ```rust no_compile
+/// ```no_compile
 /// use fiberplane_pdk::prelude::*;
 ///
 /// pdk_query_types! {
@@ -80,7 +80,7 @@ pub fn pdk_query_types(input: TokenStream) -> TokenStream {
 ///
 /// # Example
 ///
-/// ```rust no_compile
+/// ```no_compile
 /// use fiberplane_pdk::prelude::*;
 ///
 /// #[derive(ConfigSchema, Deserialize)]
@@ -110,7 +110,7 @@ pub fn derive_config_schema(input: TokenStream) -> TokenStream {
 ///
 /// # Example
 ///
-/// ```rust no_compile
+/// ```no_compile
 /// use fiberplane_pdk::prelude::*;
 ///
 /// #[derive(ProviderData, Serialize, Deserialize)]
@@ -140,7 +140,7 @@ pub fn derive_provider_data(input: TokenStream) -> TokenStream {
 ///       methods directly. Using the `pdk_query_types!` macro, this example
 ///       can be simplified even further.
 ///
-/// ```rust no_compile
+/// ```no_compile
 /// use fiberplane_pdk::prelude::*;
 ///
 /// #[derive(Deserialize, QuerySchema)]
@@ -182,7 +182,7 @@ pub fn derive_query_schema(input: TokenStream) -> TokenStream {
 ///
 /// Example usage of implementing the `invoke2()` function:
 ///
-/// ```rust no_compile
+/// ```no_compile
 /// use fiberplane_pdk::prelude::*;
 ///
 /// #[pdk_export]

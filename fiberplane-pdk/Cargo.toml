@@ -1,10 +1,11 @@
 [package]
 name = "fiberplane-pdk"
 description = "Fiberplane Provider Development Kit"
-authors.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-version.workspace = true
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+version = { workspace = true }
+license = { workspace = true }
 
 [lib]
 crate-type = ["lib"]
@@ -13,7 +14,6 @@ crate-type = ["lib"]
 fiberplane-models = { workspace = true }
 fiberplane-pdk-macros = { workspace = true }
 fiberplane-provider-bindings = { workspace = true }
-fiberplane-string-utils = { workspace = true }
 fp-bindgen = { workspace = true }
 rmp-serde = "1"
 rmpv = { workspace = true }
