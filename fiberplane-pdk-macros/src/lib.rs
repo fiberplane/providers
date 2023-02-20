@@ -60,12 +60,12 @@ use quote::quote;
 ///     STATUS_QUERY_TYPE => {
 ///         handler: query_status(ProviderRequest).await,
 ///         supported_mime_types: [STATUS_MIME_TYPE],
-///     }
+///     },
 ///     "x-custom-query-type" => {
 ///         label: "My custom query",
 ///         handler: query_custom(ExampleQueryData).await,
 ///         supported_mime_types: ["application/vnd.fiberplane.provider.my-provider.custom-data"],
-///     },
+///     }
 /// }
 ///
 /// fn query_timeseries(query_data: ExampleQueryData, config: ExampleConfig) -> Result<Blob> {
