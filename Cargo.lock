@@ -678,7 +678,9 @@ name = "loki-provider"
 version = "1.0.0-beta.1"
 dependencies = [
  "fiberplane-pdk",
+ "grafana-common",
  "serde",
+ "time",
  "url",
  "vergen",
 ]

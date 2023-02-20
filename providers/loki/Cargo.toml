@@ -11,7 +11,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 fiberplane-pdk = { workspace = true }
+grafana-common = { path = "../grafana-common" }
 serde = { workspace = true }
+time = { workspace = true }
 url = { workspace = true }
 
 [build-dependencies]

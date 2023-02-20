@@ -1,8 +1,9 @@
 use crate::{data_mapper, Data, QueryData, QueryResponse};
-use fiberplane_pdk::bindings::LegacyLogRecord as LogRecord;
-use fiberplane_pdk::serde_json::Deserializer;
+use fiberplane_pdk::prelude::*;
+use fiberplane_pdk::serde_json::{json, Deserializer};
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
+use time::OffsetDateTime;
 
 const DATA: &str = r#"{
         "status": "success",
@@ -40,10 +41,10 @@ fn test_deserialization() {
         value,
         QueryResponse {
             data: QueryData::Streams(vec![Data {
-                labels: HashMap::from([
-                    ("filename".to_owned(), "/var/log/myproject.log".to_owned()),
-                    ("job".to_owned(), "varlogs".to_owned()),
-                    ("level".to_owned(), "info".to_owned()),
+                labels: BTreeMap::from([
+                    ("filename".to_owned(), json!("/var/log/myproject.log")),
+                    ("job".to_owned(), json!("varlogs")),
+                    ("level".to_owned(), json!("info")),
                 ]),
                 values: vec![
                     ("1569266497240578000".to_owned(), "foo".to_owned()),
@@ -58,32 +59,40 @@ fn test_deserialization() {
 #[test]
 fn test_data_mapper() {
     let value = QueryResponse::deserialize(&mut Deserializer::from_str(DATA)).unwrap();
-    if let QueryData::Streams(data) = &value.data {
-        let mapped = data_mapper(&data[0])
-            .collect::<Result<Vec<_>, _>>()
-            .unwrap();
-        assert_eq!(
-            mapped,
-            vec![
-                LogRecord {
-                    timestamp: 1_569_266_497.240_578,
-                    body: "foo".to_owned(),
-                    attributes: data[0].labels.clone(),
-                    span_id: None,
-                    trace_id: None,
-                    resource: HashMap::default(),
-                },
-                LogRecord {
-                    timestamp: 1569266492.5481548, //not the exact value due to floating point precision
-                    body: "bar".to_owned(),
-                    attributes: data[0].labels.clone(),
-                    span_id: None,
-                    trace_id: None,
-                    resource: HashMap::default(),
-                }
-            ]
-        );
-    } else {
-        panic!("unexpected query data type");
-    }
+    let QueryData::Streams(data) = &value.data else {
+      panic!("unexpected query data type");
+  };
+
+    let mapped = data_mapper(&data[0]).collect::<Result<Vec<_>>>().unwrap();
+    let metadata = OtelMetadata::builder()
+        .attributes(data[0].labels.clone())
+        .resource(BTreeMap::new())
+        .trace_id(None)
+        .span_id(None)
+        .build();
+    assert_eq!(mapped.len(), 2);
+    assert_eq!(
+        mapped[0],
+        Event::builder()
+            .time(
+                OffsetDateTime::from_unix_timestamp_nanos(1_569_266_497_240_578_000)
+                    .unwrap()
+                    .into()
+            )
+            .title("foo".to_owned())
+            .otel(metadata.clone())
+            .build()
+    );
+    assert_eq!(
+        mapped[1],
+        Event::builder()
+            .time(
+                OffsetDateTime::from_unix_timestamp_nanos(1_569_266_492_548_155_000)
+                    .unwrap()
+                    .into()
+            )
+            .title("bar".to_owned())
+            .otel(metadata.clone())
+            .build()
+    );
 }

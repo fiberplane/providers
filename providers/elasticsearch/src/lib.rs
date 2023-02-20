@@ -209,7 +209,11 @@ fn parse_hit(hit: Hit, timestamp_field_names: &[&str], body_field_names: &[&str]
         .iter()
         .flat_map(|field_name| flattened_fields.get(*field_name))
         .next()
-        .map(Value::to_string)
+        .map(|title| match title {
+            Value::String(title) => title.clone(),
+            Value::Null => "".to_owned(),
+            other => other.to_string(),
+        })
         .unwrap_or_default();
 
     // All fields that are not mapped to the resource field

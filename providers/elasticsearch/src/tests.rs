@@ -18,30 +18,16 @@ unsafe fn __fp_gen_make_http_request(_: FatPtr) -> FatPtr {
 #[test]
 fn flatten_nested_values() {
     let mut fields = BTreeMap::new();
-    flatten_nested_value(&mut fields, "a".to_string(), json!(1));
-    assert_eq!(fields.get("a").unwrap(), "1");
+    flatten_nested_value(&mut fields, "a".to_owned(), json!(1));
+    assert_eq!(fields.get("a").unwrap(), &json!(1));
 
-    flatten_nested_value(
-        &mut fields,
-        "b".to_string(),
-        json!({
-            "c": true
-        }),
-    );
-    assert_eq!(fields.get("b.c").unwrap(), "true");
+    flatten_nested_value(&mut fields, "b".to_owned(), json!({ "c": true }));
+    assert_eq!(fields.get("b.c").unwrap(), &json!(true));
 
-    flatten_nested_value(
-        &mut fields,
-        "e.f".to_string(),
-        json!({
-            "g": {
-                "h": null
-            }
-        }),
-    );
-    assert_eq!(fields.get("e.f.g.h").unwrap(), "");
+    flatten_nested_value(&mut fields, "e.f".to_owned(), json!({ "g": { "h": null } }));
+    assert_eq!(fields.get("e.f.g.h").unwrap(), &json!(null));
 
-    flatten_nested_value(&mut fields, "j.arr".to_string(), json!(["apple", "banana"]));
+    flatten_nested_value(&mut fields, "j.arr".to_owned(), json!(["apple", "banana"]));
     assert_eq!(fields.get("j.arr[0]").unwrap(), "apple");
     assert_eq!(fields.get("j.arr[1]").unwrap(), "banana");
 }
