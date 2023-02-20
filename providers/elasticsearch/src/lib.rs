@@ -131,7 +131,7 @@ async fn fetch_logs(request: ProviderRequest, config: ElasticConfig) -> Result<B
     // Parse response
     let response = make_http_request(request).await?.body;
     let response: SearchResponse = serde_json::from_slice(&response).map_err(|e| Error::Data {
-        message: format!("Error parsing ElasticSearch response: {:?}", e),
+        message: format!("Error parsing ElasticSearch response: {e:?}"),
     })?;
 
     if response.timed_out {
@@ -152,7 +152,7 @@ fn parse_response(
     response: SearchResponse,
     timestamp_field_names: &[&str],
     body_field_names: &[&str],
-) -> Result<Vec<LogRecord>, Error> {
+) -> Result<Vec<LogRecord>> {
     let hits = response.hits.hits.into_iter();
     let mut logs: Vec<LogRecord> = hits
         .filter_map(|hit| parse_hit(hit, timestamp_field_names, body_field_names))
@@ -175,8 +175,7 @@ fn parse_hit(
         .source()
         .map_err(|err| {
             log(format!(
-                "Error parsing ElasticSearch hit as JSON object: {:?}",
-                err
+                "Error parsing ElasticSearch hit as JSON object: {err:?}"
             ));
         })
         .ok()?;
@@ -191,7 +190,7 @@ fn parse_hit(
             if let Ok(bytes) = hex::decode(val.to_string().replace('-', "")) {
                 Some(bytes.into())
             } else {
-                log(format!("unable to decode ID as hex in log: {}", val));
+                log(format!("unable to decode ID as hex in log: {val}"));
                 // Put the value back if we were unable to parse it
                 flattened_fields.insert(key, val);
                 None
@@ -256,13 +255,13 @@ fn flatten_nested_value(output: &mut HashMap<String, String>, key: String, value
     match value {
         Value::Object(v) => {
             for (sub_key, val) in v.into_iter() {
-                flatten_nested_value(output, format!("{}.{}", key, sub_key), val);
+                flatten_nested_value(output, format!("{key}.{sub_key}"), val);
             }
         }
         Value::Array(v) => {
             for (index, val) in v.into_iter().enumerate() {
                 // TODO should the separator be dots instead?
-                flatten_nested_value(output, format!("{}[{}]", key, index), val);
+                flatten_nested_value(output, format!("{key}[{index}]"), val);
             }
         }
         Value::String(v) => {

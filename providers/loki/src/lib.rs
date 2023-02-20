@@ -13,8 +13,7 @@ static BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
 #[pdk_export]
 async fn invoke(request: ProviderRequest, config: ProviderConfig) -> ProviderResponse {
     log(format!(
-        "Loki provider (commit: {}, built at: {}) invoked with request: {:?}",
-        COMMIT_HASH, BUILD_TIMESTAMP, request
+        "Loki provider (commit: {COMMIT_HASH}, built at: {BUILD_TIMESTAMP}) invoked with request: {request:?}"
     ));
 
     let config: Config = match serde_json::from_value(config) {
@@ -22,7 +21,7 @@ async fn invoke(request: ProviderRequest, config: ProviderConfig) -> ProviderRes
         Err(err) => {
             return ProviderResponse::Error {
                 error: Error::Config {
-                    message: format!("Error parsing config: {:?}", err),
+                    message: format!("Error parsing config: {err:?}"),
                 },
             }
         }
@@ -67,7 +66,7 @@ struct Data {
     values: Vec<(String, String)>,
 }
 
-async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, Error> {
+async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>> {
     // Convert unix epoch in seconds to epoch in nanoseconds
     let from = (query.time_range.from * CONVERSION_FACTOR).to_string();
     let to = (query.time_range.to * CONVERSION_FACTOR).to_string();
@@ -110,9 +109,9 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, 
     let logs = data
         .iter()
         .flat_map(data_mapper)
-        .collect::<Result<Vec<LogRecord>, _>>()
+        .collect::<core::result::Result<Vec<LogRecord>, _>>()
         .map_err(|e| Error::Data {
-            message: format!("Failed to parse data, got error: {:?}", e),
+            message: format!("Failed to parse data, got error: {e:?}"),
         })?;
 
     Ok(logs)
@@ -120,7 +119,7 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>, 
 
 fn data_mapper(
     d: &Data,
-) -> impl Iterator<Item = Result<LogRecord, <LegacyTimestamp as FromStr>::Err>> + '_ {
+) -> impl Iterator<Item = core::result::Result<LogRecord, <LegacyTimestamp as FromStr>::Err>> + '_ {
     let att = &d.labels;
     d.values.iter().map(move |(ts, v)| {
         //convert unix epoch in nanoseconds to unix epoch in seconds
@@ -137,7 +136,7 @@ fn data_mapper(
     })
 }
 
-async fn check_status(config: Config) -> Result<(), Error> {
+async fn check_status(config: Config) -> Result<()> {
     // Send a fake query to check the status
     let query_string = url::form_urlencoded::Serializer::new(String::new())
         .append_pair("query", r#"{job="fiberplane_check_status"} != ``"#)
