@@ -25,6 +25,7 @@ pub fn define_query_types(input: TokenStream) -> TokenStream {
                 .handler()
                 .as_ref()
                 .and_then(|handler| handler.arg_types.first())
+                .filter(|&ty| ty != "ProviderRequest")
                 .map(|query_type| {
                     quote! { .with_schema(#query_type::schema()) }
                 });
@@ -57,12 +58,16 @@ pub fn define_query_types(input: TokenStream) -> TokenStream {
             let handler = query_type.handler().map(|handler| {
                 let fn_name = handler.ident;
                 let args = handler.arg_types.iter().enumerate().map(|(pos, ty)| {
-                    let parse_arg = match pos {
-                        0 => quote! { request.query_data },
-                        1 => quote! { request.config },
-                        _ => abort_call_site!("handlers may specify at most two arguments"),
-                    };
-                    quote! { #ty::parse(#parse_arg)? }
+                    if ty == "ProviderRequest" {
+                        quote! { request }
+                    } else {
+                        let parse_arg = match pos {
+                            0 => quote! { request.query_data },
+                            1 => quote! { request.config },
+                            _ => abort_call_site!("handlers may specify at most two arguments"),
+                        };
+                        quote! { #ty::parse(#parse_arg)? }
+                    }
                 });
                 if handler.is_async {
                     quote! { #fn_name(#(#args),*).await }

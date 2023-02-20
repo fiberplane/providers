@@ -7,7 +7,8 @@ use elasticsearch_dsl::{Hit, SearchResponse};
 use fiberplane_pdk::prelude::*;
 use fiberplane_pdk::serde_json::{self, Map, Value};
 use serde::{Deserialize, Serialize};
-use std::{cmp::Ordering, collections::HashMap, str::FromStr};
+use std::collections::BTreeMap;
+use std::{cmp::Ordering, collections::HashMap};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 pub(crate) static TIMESTAMP_FIELDS: &[&str] = &["@timestamp", "timestamp", "fields.timestamp"];
@@ -39,39 +40,20 @@ struct SearchRequestBody {
     size: Option<u32>,
 }
 
-#[pdk_export]
-async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQueryType> {
-    vec![
-        SupportedQueryType::new(EVENTS_QUERY_TYPE)
-            .with_label("Elasticsearch query")
-            .with_schema(ElasticQuery::schema())
-            .supporting_mime_types(&[EVENTS_MIME_TYPE]),
-        SupportedQueryType::new(STATUS_QUERY_TYPE).supporting_mime_types(&[STATUS_MIME_TYPE]),
-        // TODO: implement AutoSuggest
-    ]
-}
-
-#[pdk_export]
-async fn invoke2(request: ProviderRequest) -> Result<Blob, Error> {
-    log(format!(
-        "Elasticsearch provider (commit: {COMMIT_HASH}, built at: {BUILD_TIMESTAMP}) \
-        invoked for query type \"{}\" and query data \"{:?}\"",
-        request.query_type, request.query_data
-    ));
-
-    let config = ElasticConfig::parse(request.config)?;
-
-    match request.query_type.as_str() {
-        EVENTS_QUERY_TYPE => fetch_logs(request, config).await,
-        STATUS_QUERY_TYPE => check_status(config).await,
-        _ => Err(Error::UnsupportedRequest),
+pdk_query_types! {
+    EVENTS_QUERY_TYPE => {
+        label: "Elasticsearch query",
+        handler: fetch_logs(ElasticQuery, ElasticConfig).await,
+        supported_mime_types: [EVENTS_MIME_TYPE]
+    },
+    STATUS_QUERY_TYPE => {
+        supported_mime_types: [STATUS_MIME_TYPE],
+        handler: check_status(ProviderRequest).await
     }
 }
 
-async fn fetch_logs(request: ProviderRequest, config: ElasticConfig) -> Result<Blob, Error> {
+async fn fetch_logs(query: ElasticQuery, config: ElasticConfig) -> Result<Blob> {
     let mut url = config.parse_url()?;
-
-    let query = ElasticQuery::parse(request.query_data)?;
 
     // Look for the timestamp and body first in the configured fields and then
     // in the default fields:
@@ -96,11 +78,10 @@ async fn fetch_logs(request: ProviderRequest, config: ElasticConfig) -> Result<B
         path_segments.push("_search");
     }
 
-    let mut headers = HashMap::new();
+    let mut headers = HashMap::from([("Content-Type".to_owned(), "application/json".to_owned())]);
     if let Some(api_key) = config.api_key {
-        headers.insert("Authorization".to_string(), format!("ApiKey {}", api_key));
+        headers.insert("Authorization".to_owned(), format!("ApiKey {api_key}"));
     }
-    headers.insert("Content-Type".to_string(), "application/json".to_string());
 
     // Lucene Query Syntax: https://www.elastic.co/guide/en/kibana/current/lucene-query.html
     // TODO should we determine timestamp field name from API?
@@ -108,8 +89,8 @@ async fn fetch_logs(request: ProviderRequest, config: ElasticConfig) -> Result<B
         "{} AND {}:[{} TO {}]",
         query.query,
         timestamp_field_names[0],
-        timestamp_to_rfc3339(query.time_range.from),
-        timestamp_to_rfc3339(query.time_range.to)
+        timestamp_to_rfc3339(query.time_range.from)?,
+        timestamp_to_rfc3339(query.time_range.to)?
     );
 
     let body = SearchRequestBody { size: None };
@@ -129,48 +110,44 @@ async fn fetch_logs(request: ProviderRequest, config: ElasticConfig) -> Result<B
         .build();
 
     // Parse response
-    let response = make_http_request(request).await?.body;
-    let response: SearchResponse = serde_json::from_slice(&response).map_err(|e| Error::Data {
-        message: format!("Error parsing ElasticSearch response: {e:?}"),
-    })?;
+    let response = make_http_request(request).await?;
+    let response: SearchResponse =
+        serde_json::from_slice(&response.body).map_err(|err| Error::Data {
+            message: format!("Error parsing ElasticSearch response: {err:?}"),
+        })?;
 
     if response.timed_out {
         return Err(Error::Other {
-            message: "ElasticSearch query timed out".to_string(),
+            message: "ElasticSearch query timed out".to_owned(),
         });
     }
 
-    log(format!(
-        "Got {} query results from Elasticsearch",
-        response.hits.hits.len()
-    ));
+    let num_hits = response.hits.hits.len();
+    log(format!("Got {num_hits} query results from Elasticsearch"));
 
-    parse_response(response, &timestamp_field_names, &body_field_names)
+    Events(parse_response(
+        response,
+        &timestamp_field_names,
+        &body_field_names,
+    ))
+    .to_blob()
 }
 
 fn parse_response(
     response: SearchResponse,
     timestamp_field_names: &[&str],
     body_field_names: &[&str],
-) -> Result<Vec<LogRecord>> {
+) -> Vec<Event> {
     let hits = response.hits.hits.into_iter();
-    let mut logs: Vec<LogRecord> = hits
+    let mut log_lines: Vec<Event> = hits
         .filter_map(|hit| parse_hit(hit, timestamp_field_names, body_field_names))
         .collect();
     // Sort logs so the newest ones are first
-    logs.sort_by(|a, b| {
-        b.timestamp
-            .partial_cmp(&a.timestamp)
-            .unwrap_or(Ordering::Equal)
-    });
-    Ok(logs)
+    log_lines.sort_by(|a, b| b.time.partial_cmp(&a.time).unwrap_or(Ordering::Equal));
+    log_lines
 }
 
-fn parse_hit(
-    hit: Hit,
-    timestamp_field_names: &[&str],
-    body_field_names: &[&str],
-) -> Option<LogRecord> {
+fn parse_hit(hit: Hit, timestamp_field_names: &[&str], body_field_names: &[&str]) -> Option<Event> {
     let source: Map<String, Value> = hit
         .source()
         .map_err(|err| {
@@ -179,61 +156,66 @@ fn parse_hit(
             ));
         })
         .ok()?;
-    let mut flattened_fields = HashMap::new();
+    let mut flattened_fields = BTreeMap::new();
     for (key, val) in source.into_iter() {
         flatten_nested_value(&mut flattened_fields, key, val);
     }
 
     // Parse the trace ID and span ID from hex if they exist
-    let mut parse_id = |key: &str| {
-        if let Some((key, val)) = flattened_fields.remove_entry(key) {
-            if let Ok(bytes) = hex::decode(val.to_string().replace('-', "")) {
-                Some(bytes.into())
-            } else {
-                log(format!("unable to decode ID as hex in log: {val}"));
-                // Put the value back if we were unable to parse it
-                flattened_fields.insert(key, val);
-                None
-            }
+    let trace_id = flattened_fields.remove("trace.id").and_then(|trace_id| {
+        if let Ok(bytes) = hex::decode(trace_id.to_string().replace('-', "")) {
+            bytes.try_into().ok().map(OtelTraceId::new)
         } else {
+            log(format!("unable to decode ID as hex in log: {trace_id}"));
+            // Put the value back if we were unable to parse it
+            flattened_fields.insert("trace.id".to_owned(), trace_id);
             None
         }
-    };
-    let trace_id = parse_id("trace.id");
-    let span_id = parse_id("span.id");
-
-    // Find the timestamp field (or set it to NaN if none is found)
-    // Note: this will leave the original timestamp field in the flattened_fields
-    let mut timestamp = None;
-    for field_name in timestamp_field_names {
-        if let Some(ts) = flattened_fields.get(*field_name) {
-            // Try parsing the field either as an RFC 3339 timestamp or a unix timestamp
-            if let Ok(ts) = OffsetDateTime::parse(ts, &Rfc3339) {
-                timestamp = Some(ts.unix_timestamp() as f64);
-                break;
-            } else if let Ok(ts) = f64::from_str(ts) {
-                timestamp = Some(ts);
-                break;
-            }
+    });
+    let span_id = flattened_fields.remove("span.id").and_then(|span_id| {
+        if let Ok(bytes) = hex::decode(span_id.to_string().replace('-', "")) {
+            bytes.try_into().ok().map(OtelSpanId::new)
+        } else {
+            log(format!("unable to decode ID as hex in log: {span_id}"));
+            // Put the value back if we were unable to parse it
+            flattened_fields.insert("span.id".to_owned(), span_id);
+            None
         }
-    }
-    let timestamp = timestamp.unwrap_or(f64::NAN);
+    });
+
+    // Find the timestamp field (or set it to the Epoch if none is found)
+    // Note: this will leave the original timestamp field in the flattened_fields
+    let timestamp = timestamp_field_names
+        .iter()
+        .flat_map(|field_name| flattened_fields.get(*field_name))
+        .flat_map(|value| {
+            // Try parsing the field either as an RFC 3339 timestamp or a UNIX timestamp
+            match value {
+                Value::String(string) => OffsetDateTime::parse(&string, &Rfc3339).ok(),
+                Value::Number(number) => number.as_f64().and_then(|seconds| {
+                    OffsetDateTime::from_unix_timestamp_nanos((seconds * 1_000_000_000.0) as i128)
+                        .ok()
+                }),
+                _ => None,
+            }
+        })
+        .next()
+        .unwrap_or(OffsetDateTime::UNIX_EPOCH);
 
     // Find the body field (or set it to an empty string if none is found)
     // Note: this will leave the body field in the flattened_fields and copy
-    // it into the body of the LogRecord
-    let mut body = String::new();
-    for field_name in body_field_names {
-        if let Some(b) = flattened_fields.get(*field_name) {
-            body = b.to_string();
-            break;
-        }
-    }
+    // it into the title of the Event
+    let title = body_field_names
+        .iter()
+        .flat_map(|field_name| flattened_fields.get(*field_name))
+        .next()
+        .map(Value::to_string)
+        .unwrap_or_default();
 
     // All fields that are not mapped to the resource field
     // become part of the attributes field
     // TODO refactor this so we only make one pass over the fields
-    let (resource, attributes): (HashMap<String, String>, HashMap<String, String>) =
+    let (resource, attributes): (BTreeMap<String, Value>, BTreeMap<String, Value>) =
         flattened_fields.into_iter().partition(|(key, _)| {
             RESOURCE_FIELD_PREFIXES
                 .iter()
@@ -241,17 +223,22 @@ fn parse_hit(
                 && !RESOURCE_FIELD_EXCEPTIONS.contains(&key.as_str())
         });
 
-    Some(LogRecord {
-        body,
-        timestamp,
-        attributes,
-        resource,
-        trace_id,
-        span_id,
-    })
+    let metadata = OtelMetadata::builder()
+        .attributes(attributes)
+        .resource(resource)
+        .trace_id(trace_id)
+        .span_id(span_id)
+        .build();
+    let event = Event::builder()
+        .title(title)
+        .time(timestamp.into())
+        .otel(metadata)
+        .build();
+
+    Some(event)
 }
 
-fn flatten_nested_value(output: &mut HashMap<String, String>, key: String, value: Value) {
+fn flatten_nested_value(output: &mut BTreeMap<String, Value>, key: String, value: Value) {
     match value {
         Value::Object(v) => {
             for (sub_key, val) in v.into_iter() {
@@ -264,22 +251,14 @@ fn flatten_nested_value(output: &mut HashMap<String, String>, key: String, value
                 flatten_nested_value(output, format!("{key}[{index}]"), val);
             }
         }
-        Value::String(v) => {
-            output.insert(key, v);
-        }
-        Value::Number(v) => {
-            output.insert(key, v.to_string());
-        }
-        Value::Bool(v) => {
-            output.insert(key, v.to_string());
-        }
-        Value::Null => {
-            output.insert(key, "".to_string());
+        primitive => {
+            output.insert(key, primitive);
         }
     };
 }
 
-async fn check_status(config: ElasticConfig) -> Result<Blob, Error> {
+async fn check_status(request: ProviderRequest) -> Result<Blob> {
+    let config = ElasticConfig::parse(request.config)?;
     let mut url = config.parse_url()?;
 
     // Add "_xpack" to the path
@@ -290,8 +269,7 @@ async fn check_status(config: ElasticConfig) -> Result<Blob, Error> {
         path_segments.push("_xpack");
     }
 
-    let mut headers = HashMap::new();
-    headers.insert("Content-Type".to_string(), "application/json".to_string());
+    let headers = HashMap::from([("Content-Type".to_owned(), "application/json".to_owned())]);
 
     let request = HttpRequest::builder()
         .body(None)
@@ -300,27 +278,25 @@ async fn check_status(config: ElasticConfig) -> Result<Blob, Error> {
         .url(url.to_string())
         .build();
 
+    // At this point we don't care to validate the info Loki sends back.
+    // We just care it responded with 200 OK.
     let _ = make_http_request(request).await?;
 
-    // At this point we don't care to validate the info LOKI sends back
-    // We just care it responded with 200 OK
-    Ok(Blob {
-        data: ProviderStatus {
-            status: Ok(()),
-            version: COMMIT_HASH.to_owned(),
-            built_at: BUILD_TIMESTAMP.to_owned(),
-        },
-        mime_type: STATUS_MIME_TYPE.to_owned(),
-    })
+    ProviderStatus::builder()
+        .status(Ok(()))
+        .version(COMMIT_HASH.to_owned())
+        .built_at(BUILD_TIMESTAMP.to_owned())
+        .build()
+        .to_blob()
 }
 
-fn timestamp_to_rfc3339(timestamp: OffsetDateTime) -> Result<String, Error> {
+fn timestamp_to_rfc3339(timestamp: OffsetDateTime) -> Result<String> {
     timestamp
         .format(&Rfc3339)
         .map_err(|err| Error::ValidationError {
-            errors: vec![ValidationError {
-                field_name: "time_range".to_owned(),
-                message: format!("Invalid timestamp in range: {err}"),
-            }],
+            errors: vec![ValidationError::builder()
+                .field_name("time_range".to_owned())
+                .message(format!("Invalid timestamp in range: {err}"))
+                .build()],
         })
 }
