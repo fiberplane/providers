@@ -1,21 +1,51 @@
-name: Build
+name: Publish
 
 on:
   push:
-    branches: ["*"]
+    branches: ["main"]
+    tags: ["*"]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  provider-development-kit-crates-io:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - id: branch
-        name: Export branch
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF##refs/heads/}}" >> $GITHUB_OUTPUT
+      - name: Cache Rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Install latest stable
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Cargo login
+        uses: actions-rs/cargo@v1
+        with:
+          command: login
+          args: ${{ secrets.CRATES_TOKEN }}
+
+      - name: Publish PDK on crates-io
+        run: ./scripts/publish_crates.py
+
+  provider-development-kit-artifactory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # Fetching all tags to get a nice Crate version from git describe
+          fetch-depth: 0
 
       - name: setup-git-credentials
         uses: de-vri-es/setup-git-credentials@v2
@@ -37,24 +67,20 @@ jobs:
         with:
           toolchain: stable
           override: true
-          components: rustfmt, clippy
 
-      - name: Check format
-        run: cargo fmt -- --check
+      - name: Publish PDK on crates-io
+        run: ./scripts/publish_crates.py --registry artifactory
 
-      - name: Lint code
-        uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features
-
-      - name: Run tests
-        run: cargo test --verbose
 
   providers:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: setup-git-credentials
+        uses: de-vri-es/setup-git-credentials@v2
+        with:
+          credentials: "https://fiberplanebot:${{ secrets.PRIVATE_GITHUB_TOKEN }}@github.com/"
 
       - name: Cache Rust dependencies
         uses: actions/cache@v3
@@ -71,8 +97,6 @@ jobs:
         with:
           toolchain: stable
           override: true
-          target: wasm32-unknown-unknown
-          components: rustfmt, clippy
 
       - name: Compile providers
         run: |
@@ -84,4 +108,4 @@ jobs:
         with:
           name: fiberplane-providers
           path: artifacts/*.wasm
-          retention-days: 7
+          retention-days: 90
