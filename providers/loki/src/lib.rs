@@ -1,6 +1,6 @@
 use fiberplane_pdk::prelude::*;
 use fiberplane_pdk::serde_json::{self, Value};
-use grafana_common::query_direct_and_proxied;
+use grafana_common::{query_direct_and_proxied, Config};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::str::FromStr;
@@ -26,7 +26,7 @@ pub struct LokiQuery {
 pdk_query_types! {
     EVENTS_QUERY_TYPE => {
         label: "Loki query",
-        handler: fetch_logs(ProviderRequest).await,
+        handler: fetch_logs(LokiQuery, Config).await,
         supported_mime_types: [EVENTS_MIME_TYPE]
     },
     STATUS_QUERY_TYPE => {
@@ -59,10 +59,7 @@ struct Data {
     values: Vec<(String, String)>,
 }
 
-async fn fetch_logs(request: ProviderRequest) -> Result<Blob> {
-    let config = serde_json::from_value(request.config)?;
-    let query = LokiQuery::parse(request.query_data)?;
-
+async fn fetch_logs(query: LokiQuery, config: Config) -> Result<Blob> {
     // Convert unix epoch in seconds to epoch in nanoseconds
     let from = (query.time_range.from.unix_timestamp_nanos()).to_string();
     let to = (query.time_range.to.unix_timestamp_nanos()).to_string();
