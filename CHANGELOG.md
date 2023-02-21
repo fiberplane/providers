@@ -13,8 +13,12 @@ changes if the major version hasn't changed.
 
 ## [Unreleased]
 
-### Fixed
-- Use less confusing placeholders for the configuration schema of Cloudwatch provider
+### Changed
+
+- The Elasticsearch and Loki providers have been upgraded to the latest provider
+  protocol.
+- Use less confusing placeholders for the configuration schema of the Cloudwatch
+  provider.
 
 ## [1.0.0-beta.1] - 2023-02-14
 
