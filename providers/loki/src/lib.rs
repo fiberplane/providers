@@ -9,6 +9,8 @@ use time::OffsetDateTime;
 #[cfg(test)]
 mod tests;
 
+const PAGE_SIZE: &str = "30";
+
 static COMMIT_HASH: &str = env!("VERGEN_GIT_SHA");
 static BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
 
@@ -68,6 +70,7 @@ async fn fetch_logs(request: ProviderRequest) -> Result<Blob> {
     let query_string: String =
         url::form_urlencoded::Serializer::new(String::with_capacity(query.query.capacity()))
             .append_pair("query", &query.query)
+            .append_pair("limit", PAGE_SIZE)
             .append_pair("start", &from)
             .append_pair("end", &to)
             .finish();

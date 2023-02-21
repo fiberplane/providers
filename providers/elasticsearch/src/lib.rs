@@ -11,6 +11,8 @@ use std::collections::BTreeMap;
 use std::{cmp::Ordering, collections::HashMap};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
+const PAGE_SIZE: u32 = 30;
+
 pub(crate) static TIMESTAMP_FIELDS: &[&str] = &["@timestamp", "timestamp", "fields.timestamp"];
 pub(crate) static BODY_FIELDS: &[&str] =
     &["body", "message", "fields.body", "fields.message", "log"];
@@ -93,7 +95,9 @@ async fn fetch_logs(query: ElasticQuery, config: ElasticConfig) -> Result<Blob> 
         timestamp_to_rfc3339(query.time_range.to)?
     );
 
-    let body = SearchRequestBody { size: None };
+    let body = SearchRequestBody {
+        size: Some(PAGE_SIZE),
+    };
     url.set_query(Some(&format!("q={}", &query_string)));
 
     let request = HttpRequest::builder()
