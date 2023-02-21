@@ -11,6 +11,11 @@ means that individual crates do not strictly follow _SemVer_ although their
 versioning remains _compatible with_ SemVer, i.e. they will not contain breaking
 changes if the major version hasn't changed.
 
+## [Unreleased]
+
+### Fixed
+- Use less confusing placeholders for the configuration schema of Cloudwatch provider
+
 ## [1.0.0-beta.1] - 2023-02-14
 
 ### Added
