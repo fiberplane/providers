@@ -176,7 +176,7 @@ def set_cargo_manifests_git_version(registry: str):
             # it refuses to downgrade packages (the version numbers don't really match anything
             # between crates-io and the artifactory)
             subprocess.run(
-                f'dasel put -f Cargo.toml -s ".package.version" -v "={version}"',
+                f'dasel put -f Cargo.toml -s ".package.version" -v "{version}"',
                 cwd=crate_dir,
                 check=True,
                 shell=True,
