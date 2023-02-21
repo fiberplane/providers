@@ -12,9 +12,9 @@ from pathlib import Path
 import urllib.request
 
 
-ALL_CRATES_PATHS_IN_ORDER = [
-    ("fiberplane-pdk-macros", "fiberplane-pdk-macros"),
-    ("fiberplane-pdk", "fiberplane-pdk"),
+ALL_CRATES_IN_ORDER = [
+    "fiberplane-pdk-macros",
+    "fiberplane-pdk",
 ]
 ALL_CRATES = "all"
 CRATES_IO = "crates-io"
@@ -185,8 +185,7 @@ def set_cargo_manifests_git_version(registry: str):
             end=" ",
         )
         try:
-            for pair in ALL_CRATES_PATHS_IN_ORDER:
-                crate = pair[0]
+            for crate in ALL_CRATES_IN_ORDER:
                 subprocess.run(
                     f'dasel put -f Cargo.toml -s ".workspace.dependencies.{crate}.version" -v "={version}"',
                     check=True,
@@ -204,8 +203,8 @@ def set_cargo_manifests_git_version(registry: str):
 
     git_version = git_based_crate_version()
     edit_root_dependencies(git_version, registry)
-    for pair in ALL_CRATES_PATHS_IN_ORDER:
-        set_version(pair[0], pair[1], git_version)
+    for crate in ALL_CRATES_IN_ORDER:
+        set_version(crate, Path(".") / crate, git_version)
 
 
 def reset_cargo_manifests():
@@ -258,7 +257,7 @@ def main_crates_io(crate: str):
     Check whether CRATE needs a publish on crates-io, and does the publish if needed.
     """
     if crate == ALL_CRATES:
-        for crate in ALL_CRATES_PATHS_IN_ORDER:
+        for crate in ALL_CRATES_IN_ORDER:
             crate_version = current_version(crate)
             if not version_published_on_crates_io(crate, crate_version):
                 publish(crate, crate_version, CRATES_IO)
@@ -278,8 +277,8 @@ def main_alt_registry(crate: str, registry: str):
         set_cargo_manifests_git_version(registry)
         git_version = git_based_crate_version()
         if crate == ALL_CRATES:
-            for crate in ALL_CRATES_PATHS_IN_ORDER:
-                publish(crate[0], git_version, registry)
+            for crate in ALL_CRATES_IN_ORDER:
+                publish(crate, git_version, registry)
             sys.exit(0)
 
         publish(crate, git_version, registry)
