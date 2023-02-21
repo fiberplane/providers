@@ -52,9 +52,8 @@ const PROM_QL_FUNCTIONS: &[&str] = &[
     "stdvar_over_time",
 ];
 
-pub async fn query_suggestions(query_data: Blob, config: Config) -> Result<Blob> {
-    let query = AutoSuggestRequest::from_query_data(&query_data)?.query;
-    let (identifier, from) = extract_identifier(&query);
+pub async fn query_suggestions(query: AutoSuggestRequest, config: Config) -> Result<Blob> {
+    let (identifier, from) = extract_identifier(&query.query);
 
     let response: PrometheusMetadataResponse =
         query_direct_and_proxied(&config, "prometheus", "api/v1/metadata", None).await?;

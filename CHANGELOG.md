@@ -20,6 +20,12 @@ changes if the major version hasn't changed.
 - Use less confusing placeholders for the configuration schema of the Cloudwatch
   provider.
 
+### Fixed
+
+- Fixed required fields in schemas generated using the `QuerySchema` macro.
+- Fixed support for the `supports_suggestions` annotation in the `QuerySchema`
+  macro.
+
 ## [1.0.0-beta.1] - 2023-02-14
 
 ### Added

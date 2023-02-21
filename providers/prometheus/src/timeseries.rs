@@ -6,10 +6,18 @@ use serde_json::Result as SerdeResult;
 use std::time::SystemTime;
 use time::{ext::NumericalDuration, format_description::well_known::Rfc3339, OffsetDateTime};
 
-struct SeriesRequest {
+#[derive(Deserialize, QuerySchema)]
+pub(crate) struct TimeseriesQuery {
+    #[pdk(label = "Enter your Prometheus query", supports_suggestions)]
     query: String,
-    from: f64,
-    to: f64,
+
+    #[pdk(label = "Specify a time range")]
+    time_range: DateTimeRange,
+
+    #[allow(dead_code)]
+    #[pdk(label = "Enable live mode", value = "true")]
+    #[serde(default)]
+    live: bool,
 }
 
 #[derive(Clone, Copy)]
@@ -87,14 +95,17 @@ fn validate_or_parse_message(query: &str, message: &str) -> Error {
     }
 }
 
-pub async fn query_series(query_data: Blob, config: Config) -> Result<Blob> {
-    let request = parse_metrics_request(query_data)?;
-    let step = step_for_range(request.from, request.to);
-    let start = to_iso_date(round_to_grid(request.from, step, RoundToGridEdge::Start));
-    let end = to_iso_date(round_to_grid(request.to, step, RoundToGridEdge::End));
+pub(crate) async fn query_series(query: TimeseriesQuery, config: Config) -> Result<Blob> {
+    validate_query(&query)?;
+
+    let from = to_float(query.time_range.from);
+    let to = to_float(query.time_range.to);
+    let step = step_for_range(from, to);
+    let start = to_iso_date(round_to_grid(from, step, RoundToGridEdge::Start));
+    let end = to_iso_date(round_to_grid(to, step, RoundToGridEdge::End));
 
     let mut form_data = form_urlencoded::Serializer::new(String::new());
-    form_data.append_pair("query", &request.query);
+    form_data.append_pair("query", &query.query);
     form_data.append_pair("start", &start);
     form_data.append_pair("end", &end);
     form_data.append_pair("step", &step.to_string());
@@ -109,7 +120,7 @@ pub async fn query_series(query_data: Blob, config: Config) -> Result<Blob> {
         query_direct_and_proxied(&config, "prometheus", "api/v1/query_range", Some(body))
             .await
             .map_err(|err| match err {
-                Error::Other { message } => validate_or_parse_message(&request.query, &message),
+                Error::Other { message } => validate_or_parse_message(&query.query, &message),
                 err => err,
             })?;
 
@@ -137,52 +148,6 @@ pub fn create_graph_cell() -> Result<Vec<Cell>> {
             .build(),
     );
     Ok(vec![graph_cell])
-}
-
-fn parse_metrics_request(query_data: Blob) -> Result<SeriesRequest> {
-    if query_data.mime_type != FORM_ENCODED_MIME_TYPE {
-        return Err(Error::UnsupportedRequest);
-    }
-
-    let mut query = String::new();
-    let mut from = 0.0;
-    let mut to = 0.0;
-    for (key, value) in form_urlencoded::parse(&query_data.data) {
-        match key.as_ref() {
-            QUERY_PARAM_NAME => query = value.to_string(),
-            TIME_RANGE_PARAM_NAME => {
-                if let Some(split) = value.split_once(' ') {
-                    from = from_iso_date(split.0)?;
-                    to = from_iso_date(split.1)?;
-                }
-            }
-            _ => {}
-        }
-    }
-
-    let mut errors = Vec::new();
-    if query.is_empty() {
-        errors.push(
-            ValidationError::builder()
-                .field_name(QUERY_PARAM_NAME.to_owned())
-                .message("Please enter a query".to_owned())
-                .build(),
-        );
-    }
-    if from == 0.0 || to == 0.0 {
-        errors.push(
-            ValidationError::builder()
-                .field_name(TIME_RANGE_PARAM_NAME.to_owned())
-                .message("Please enter a valid time range".to_owned())
-                .build(),
-        );
-    }
-
-    if !errors.is_empty() {
-        return Err(Error::ValidationError { errors });
-    }
-
-    Ok(SeriesRequest { query, from, to })
 }
 
 enum RoundToGridEdge {
@@ -233,9 +198,8 @@ fn step_for_range(from: f64, to: f64) -> StepSize {
     }
 }
 
-fn from_iso_date(timestamp: &str) -> core::result::Result<f64, time::error::Parse> {
-    OffsetDateTime::parse(timestamp, &Rfc3339)
-        .map(|timestamp| timestamp.unix_timestamp_nanos() as f64 / 1_000_000_000.0)
+fn to_float(timestamp: OffsetDateTime) -> f64 {
+    timestamp.unix_timestamp_nanos() as f64 / 1_000_000_000.0
 }
 
 fn to_iso_date(timestamp: f64) -> String {
@@ -243,4 +207,21 @@ fn to_iso_date(timestamp: f64) -> String {
     OffsetDateTime::from(time)
         .format(&Rfc3339)
         .expect("Error formatting timestamp as RFC3339 timestamp")
+}
+
+fn validate_query(query: &TimeseriesQuery) -> Result<()> {
+    let mut errors = Vec::new();
+    if query.query.is_empty() {
+        errors.push(
+            ValidationError::builder()
+                .field_name(QUERY_PARAM_NAME.to_owned())
+                .message("Please enter a query".to_owned())
+                .build(),
+        );
+    }
+
+    match errors.is_empty() {
+        true => Ok(()),
+        false => Err(Error::ValidationError { errors }),
+    }
 }

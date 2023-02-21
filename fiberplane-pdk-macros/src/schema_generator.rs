@@ -80,6 +80,9 @@ fn determine_field_type(field: &Field) -> SchemaField {
                             .collect::<Vec<_>>(),
                     );
                 }
+                if attrs.supports_suggestions {
+                    field = field.with_suggestions();
+                }
                 SchemaField::Select(field)
             } else {
                 let mut field = TextField::new();
@@ -97,6 +100,9 @@ fn determine_field_type(field: &Field) -> SchemaField {
                             .map(String::as_str)
                             .collect::<Vec<_>>(),
                     );
+                }
+                if attrs.supports_suggestions {
+                    field = field.with_suggestions();
                 }
                 SchemaField::Text(field)
             }
@@ -126,7 +132,7 @@ fn get_ident(field: &Field) -> (String, bool, bool) {
     };
 
     let mut multiple = false;
-    let mut required = true;
+    let mut required = !path.is_ident("bool");
 
     let Some(mut path_segment) = path.segments.last().cloned() else {
         abort!(path, "unsupported type in schema")
