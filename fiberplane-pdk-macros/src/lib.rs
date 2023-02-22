@@ -26,10 +26,12 @@ use quote::quote;
 ///
 /// * **handler** - This is the function that will be called for handling
 ///   requests of the given type. Handlers may have one or two arguments, the
-///   types of which are given between parentheses. The first argument is always
-///   the type of the query data, while the second optionally specifies a type
-///   for the provider's config. Add a `.await` call to the handler
-///   if the handler is asynchronous. Providing a handler is mandatory.
+///   types of which are given between parentheses. The first argument is either
+///   `ProviderRequest`, in which case the entire request is passed through
+///   without processing, or the type of the query data. The second argument,
+///   which is optional, specifies a type for the provider's config. Add a
+///   `.await` call to the handler if the handler is asynchronous. Providing a
+///   handler is mandatory.
 /// * **label** - A label that is used when presenting the query type to the
 ///   user. Some query types are not intended to be user-selected (such as the
 ///   `status` query type) in which case they should not define a label.
@@ -55,6 +57,10 @@ use quote::quote;
 ///         handler: query_timeseries(ExampleQueryData, ExampleConfig),
 ///         supported_mime_types: [TIMESERIES_MIME_TYPE],
 ///     },
+///     STATUS_QUERY_TYPE => {
+///         handler: query_status(ProviderRequest).await,
+///         supported_mime_types: [STATUS_MIME_TYPE],
+///     },
 ///     "x-custom-query-type" => {
 ///         label: "My custom query",
 ///         handler: query_custom(ExampleQueryData).await,
@@ -64,6 +70,10 @@ use quote::quote;
 ///
 /// fn query_timeseries(query_data: ExampleQueryData, config: ExampleConfig) -> Result<Blob> {
 ///     todo!("Implement timeseries query handling")
+/// }
+///
+/// async fn query_status(request: ProviderRequest) -> Result<Blob> {
+///     todo!("Implement status checking")
 /// }
 ///
 /// async fn query_custom(query_data: ExampleQueryData) -> Result<Blob> {

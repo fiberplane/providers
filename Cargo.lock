@@ -42,7 +42,7 @@ checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 [[package]]
 name = "base64uuid"
 version = "1.0.0"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#1b8995a2cf0df2f0ec34f88dd296d33ecb766620"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#70f6c5272fa4f24f46fe0e353187d95a37f97499"
 dependencies = [
  "base64",
  "serde",
@@ -218,14 +218,12 @@ dependencies = [
 
 [[package]]
 name = "elasticsearch-provider"
-version = "0.1.0"
+version = "1.0.0-beta.1"
 dependencies = [
  "elasticsearch-dsl",
  "fiberplane-pdk",
- "fiberplane-provider-bindings",
  "hex",
  "serde",
- "serde_json",
  "time",
  "url",
  "vergen",
@@ -263,7 +261,7 @@ dependencies = [
 [[package]]
 name = "fiberplane-models"
 version = "1.0.0-beta.1"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#1b8995a2cf0df2f0ec34f88dd296d33ecb766620"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#70f6c5272fa4f24f46fe0e353187d95a37f97499"
 dependencies = [
  "base64",
  "base64uuid",
@@ -312,7 +310,7 @@ dependencies = [
 [[package]]
 name = "fiberplane-provider-bindings"
 version = "2.0.0-beta.1"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#1b8995a2cf0df2f0ec34f88dd296d33ecb766620"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#70f6c5272fa4f24f46fe0e353187d95a37f97499"
 dependencies = [
  "bytes",
  "fiberplane-models",
@@ -677,13 +675,12 @@ dependencies = [
 
 [[package]]
 name = "loki-provider"
-version = "0.1.0"
+version = "1.0.0-beta.1"
 dependencies = [
  "fiberplane-pdk",
- "fiberplane-provider-bindings",
  "grafana-common",
  "serde",
- "serde_json",
+ "time",
  "url",
  "vergen",
 ]

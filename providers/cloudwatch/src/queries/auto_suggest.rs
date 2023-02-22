@@ -16,7 +16,7 @@ use fiberplane_pdk::prelude::*;
 use itertools::Itertools;
 
 pub async fn invoke2_handler(query_data: Blob, config: Config) -> Result<Blob> {
-    let query = AutoSuggestRequest::from_query_data(&query_data)?;
+    let query = AutoSuggestRequest::parse(query_data)?;
 
     let suggestions = match query.query_type.as_str() {
         LIST_METRICS_QUERY_TYPE => list_metrics_suggestions(query, config).await?,

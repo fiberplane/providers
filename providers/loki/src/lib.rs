@@ -1,49 +1,37 @@
 use fiberplane_pdk::prelude::*;
-use fiberplane_provider_bindings::{
-    LegacyLogRecord as LogRecord, LegacyProviderRequest as ProviderRequest,
-    LegacyProviderResponse as ProviderResponse, QueryLogs,
-};
+use fiberplane_pdk::serde_json::{self, Value};
 use grafana_common::{query_direct_and_proxied, Config};
 use serde::Deserialize;
-use serde_json::Value;
-use std::{collections::HashMap, str::FromStr};
+use std::collections::BTreeMap;
+use std::str::FromStr;
+use time::OffsetDateTime;
 
 #[cfg(test)]
 mod tests;
 
-const CONVERSION_FACTOR: f64 = 1e9;
+const PAGE_SIZE: &str = "30";
+
 static COMMIT_HASH: &str = env!("VERGEN_GIT_SHA");
 static BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
 
-#[pdk_export]
-async fn invoke(request: ProviderRequest, config: ProviderConfig) -> ProviderResponse {
-    log(format!(
-        "Loki provider (commit: {COMMIT_HASH}, built at: {BUILD_TIMESTAMP}) invoked with request: {request:?}"
-    ));
+#[derive(Deserialize, QuerySchema)]
+pub struct LokiQuery {
+    #[pdk(label = "Enter your Loki query")]
+    pub query: String,
 
-    let config: Config = match serde_json::from_value(config) {
-        Ok(config) => config,
-        Err(err) => {
-            return ProviderResponse::Error {
-                error: Error::Config {
-                    message: format!("Error parsing config: {err:?}"),
-                },
-            }
-        }
-    };
-    match request {
-        // TODO implement AutoSuggest
-        ProviderRequest::Logs(query) => fetch_logs(query, config)
-            .await
-            .map(|log_records| ProviderResponse::LogRecords { log_records })
-            .unwrap_or_else(|error| ProviderResponse::Error { error }),
-        ProviderRequest::Status => check_status(config)
-            .await
-            .map(|_| ProviderResponse::StatusOk)
-            .unwrap_or_else(|error| ProviderResponse::Error { error }),
-        _ => ProviderResponse::Error {
-            error: Error::UnsupportedRequest,
-        },
+    #[pdk(label = "Specify a time range")]
+    pub time_range: DateTimeRange,
+}
+
+pdk_query_types! {
+    EVENTS_QUERY_TYPE => {
+        label: "Loki query",
+        handler: fetch_logs(LokiQuery, Config).await,
+        supported_mime_types: [EVENTS_MIME_TYPE]
+    },
+    STATUS_QUERY_TYPE => {
+        supported_mime_types: [STATUS_MIME_TYPE],
+        handler: check_status(ProviderRequest).await
     }
 }
 
@@ -67,22 +55,19 @@ enum QueryData {
 #[serde(rename_all = "camelCase")]
 struct Data {
     #[serde(alias = "stream", alias = "metric")]
-    labels: HashMap<String, String>,
+    labels: BTreeMap<String, Value>,
     values: Vec<(String, String)>,
 }
 
-async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>> {
+async fn fetch_logs(query: LokiQuery, config: Config) -> Result<Blob> {
     // Convert unix epoch in seconds to epoch in nanoseconds
-    let from = (query.time_range.from * CONVERSION_FACTOR).to_string();
-    let to = (query.time_range.to * CONVERSION_FACTOR).to_string();
+    let from = (query.time_range.from.unix_timestamp_nanos()).to_string();
+    let to = (query.time_range.to.unix_timestamp_nanos()).to_string();
 
     let query_string: String =
         url::form_urlencoded::Serializer::new(String::with_capacity(query.query.capacity()))
             .append_pair("query", &query.query)
-            .append_pair(
-                "limit",
-                &query.limit.map_or("".to_owned(), |l| l.to_string()),
-            )
+            .append_pair("limit", PAGE_SIZE)
             .append_pair("start", &from)
             .append_pair("end", &to)
             .finish();
@@ -90,7 +75,7 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>> 
     let response: QueryResponse = query_direct_and_proxied(
         &config,
         "loki",
-        &format!("loki/api/v1/query_range?{}", &query_string),
+        &format!("loki/api/v1/query_range?{query_string}"),
         None,
     )
     .await?;
@@ -102,46 +87,51 @@ async fn fetch_logs(query: QueryLogs, config: Config) -> Result<Vec<LogRecord>> 
     }
 
     let data = match response.data {
-        QueryData::Streams(d) => d,
-        QueryData::Matrix(d) => d,
-        _ => {
-            return Err(Error::Data {
-                message: "Query didn't return a stream or matrix".to_string(),
-            })
-        }
-    };
+        QueryData::Streams(d) => Ok(d),
+        QueryData::Matrix(d) => Ok(d),
+        _ => Err(Error::Data {
+            message: "Query didn't return a stream or matrix".to_owned(),
+        }),
+    }?;
 
-    let logs = data
+    let log_lines = data
         .iter()
         .flat_map(data_mapper)
-        .collect::<core::result::Result<Vec<LogRecord>, _>>()
+        .collect::<Result<Vec<Event>>>()
         .map_err(|e| Error::Data {
             message: format!("Failed to parse data, got error: {e:?}"),
         })?;
 
-    Ok(logs)
+    Events(log_lines).to_blob()
 }
 
-fn data_mapper(
-    d: &Data,
-) -> impl Iterator<Item = core::result::Result<LogRecord, <LegacyTimestamp as FromStr>::Err>> + '_ {
-    let att = &d.labels;
-    d.values.iter().map(move |(ts, v)| {
-        //convert unix epoch in nanoseconds to unix epoch in seconds
-        //https://grafana.com/docs/loki/latest/api/#get-lokiapiv1query_range
-        let timestamp = LegacyTimestamp::from_str(ts)? / CONVERSION_FACTOR;
-        Ok(LogRecord {
-            timestamp,
-            body: v.clone(),
-            attributes: att.clone(),
-            span_id: None,
-            trace_id: None,
-            resource: HashMap::default(),
-        })
+fn data_mapper(data: &Data) -> impl Iterator<Item = Result<Event>> + '_ {
+    let attributes = &data.labels;
+    data.values.iter().map(move |(timestamp, value)| {
+        let timestamp = i128::from_str(timestamp)
+            .ok()
+            .and_then(|ts| OffsetDateTime::from_unix_timestamp_nanos(ts).ok())
+            .unwrap_or(OffsetDateTime::UNIX_EPOCH);
+
+        let metadata = OtelMetadata::builder()
+            .attributes(attributes.clone())
+            .resource(BTreeMap::new())
+            .trace_id(None)
+            .span_id(None)
+            .build();
+        let event = Event::builder()
+            .title(value.clone())
+            .time(timestamp.into())
+            .otel(metadata)
+            .build();
+
+        Ok(event)
     })
 }
 
-async fn check_status(config: Config) -> Result<()> {
+async fn check_status(request: ProviderRequest) -> Result<Blob> {
+    let config = serde_json::from_value(request.config)?;
+
     // Send a fake query to check the status
     let query_string = url::form_urlencoded::Serializer::new(String::new())
         .append_pair("query", r#"{job="fiberplane_check_status"} != ``"#)
@@ -150,9 +140,15 @@ async fn check_status(config: Config) -> Result<()> {
     query_direct_and_proxied::<Value>(
         &config,
         "loki",
-        &format!("loki/api/v1/query_range?{}", &query_string),
+        &format!("loki/api/v1/query_range?{query_string}"),
         None,
     )
     .await?;
-    Ok(())
+
+    ProviderStatus::builder()
+        .status(Ok(()))
+        .version(COMMIT_HASH.to_owned())
+        .built_at(BUILD_TIMESTAMP.to_owned())
+        .build()
+        .to_blob()
 }

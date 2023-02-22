@@ -3,7 +3,7 @@ use crate::providers::FORM_ENCODED_MIME_TYPE;
 use crate::types::Result;
 use serde::de::DeserializeOwned;
 
-/// Parses a query data to a Serde struct.
+/// Parses a query data blob to a Serde struct.
 ///
 /// You probably want to use the `QuerySchema` derive macro and use the struct's
 /// `parse()` method.
