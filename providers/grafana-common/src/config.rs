@@ -1,3 +1,4 @@
+use fiberplane_provider_bindings::Error;
 use serde::Deserialize;
 use std::collections::HashMap;
 use url::Url;
@@ -10,13 +11,13 @@ pub struct Config {
     pub auth: Option<Auth>,
 }
 
-#[derive(Deserialize)]
-#[serde(untagged, rename_all = "camelCase")]
-pub enum Auth {
-    Basic { username: String, password: String },
-    Bearer { token: String },
-}
 impl Config {
+    pub fn parse(config: serde_json::Value) -> Result<Self, Error> {
+        serde_json::from_value(config).map_err(|err| Error::Config {
+            message: format!("Error parsing config: {:?}", err),
+        })
+    }
+
     pub fn to_headers(&self) -> Option<HashMap<String, String>> {
         match &self.auth {
             Some(Auth::Basic { username, password }) => Some(HashMap::from([(
@@ -30,6 +31,13 @@ impl Config {
             None => None,
         }
     }
+}
+
+#[derive(Deserialize)]
+#[serde(untagged, rename_all = "camelCase")]
+pub enum Auth {
+    Basic { username: String, password: String },
+    Bearer { token: String },
 }
 
 #[cfg(test)]

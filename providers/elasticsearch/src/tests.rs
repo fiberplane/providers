@@ -1,7 +1,7 @@
 use super::*;
 use elasticsearch_dsl::{Hit, HitsMetadata, SearchResponse, TotalHits, TotalHitsRelation};
-use fiberplane_provider_bindings::common::mem::FatPtr;
-use serde_json::json;
+use fiberplane_pdk::bindings::common::mem::FatPtr;
+use fiberplane_pdk::serde_json::{self, json};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 #[no_mangle]
@@ -17,31 +17,17 @@ unsafe fn __fp_gen_make_http_request(_: FatPtr) -> FatPtr {
 
 #[test]
 fn flatten_nested_values() {
-    let mut fields = HashMap::new();
-    flatten_nested_value(&mut fields, "a".to_string(), json!(1));
-    assert_eq!(fields.get("a").unwrap(), "1");
+    let mut fields = BTreeMap::new();
+    flatten_nested_value(&mut fields, "a".to_owned(), json!(1));
+    assert_eq!(fields.get("a").unwrap(), &json!(1));
 
-    flatten_nested_value(
-        &mut fields,
-        "b".to_string(),
-        json!({
-            "c": true
-        }),
-    );
-    assert_eq!(fields.get("b.c").unwrap(), "true");
+    flatten_nested_value(&mut fields, "b".to_owned(), json!({ "c": true }));
+    assert_eq!(fields.get("b.c").unwrap(), &json!(true));
 
-    flatten_nested_value(
-        &mut fields,
-        "e.f".to_string(),
-        json!({
-            "g": {
-                "h": null
-            }
-        }),
-    );
-    assert_eq!(fields.get("e.f.g.h").unwrap(), "");
+    flatten_nested_value(&mut fields, "e.f".to_owned(), json!({ "g": { "h": null } }));
+    assert_eq!(fields.get("e.f.g.h").unwrap(), &json!(null));
 
-    flatten_nested_value(&mut fields, "j.arr".to_string(), json!(["apple", "banana"]));
+    flatten_nested_value(&mut fields, "j.arr".to_owned(), json!(["apple", "banana"]));
     assert_eq!(fields.get("j.arr[0]").unwrap(), "apple");
     assert_eq!(fields.get("j.arr[1]").unwrap(), "banana");
 }
@@ -61,12 +47,10 @@ fn extracts_timestamp_and_body_from_fields() {
     .unwrap();
     let record = parse_hit(hit, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
     assert_eq!(
-        record.timestamp,
-        OffsetDateTime::parse("2020-01-01T00:00:00Z", &Rfc3339)
-            .unwrap()
-            .unix_timestamp() as f64
+        record.time.0,
+        OffsetDateTime::parse("2020-01-01T00:00:00Z", &Rfc3339).unwrap()
     );
-    assert_eq!(record.body, "test");
+    assert_eq!(record.title, "test");
 
     let hit = serde_json::from_value(json!({
         "_index": "index",
@@ -83,12 +67,10 @@ fn extracts_timestamp_and_body_from_fields() {
     .unwrap();
     let record = parse_hit(hit, TIMESTAMP_FIELDS, &["body", "fields.my_body"]).unwrap();
     assert_eq!(
-        record.timestamp,
-        OffsetDateTime::parse("2020-01-01T00:00:00Z", &Rfc3339)
-            .unwrap()
-            .unix_timestamp() as f64
+        record.time.0,
+        OffsetDateTime::parse("2020-01-01T00:00:00Z", &Rfc3339).unwrap()
     );
-    assert_eq!(record.body, "test");
+    assert_eq!(record.title, "test");
 }
 
 #[test]
@@ -105,8 +87,8 @@ fn uses_default_values_if_timestamp_or_body_extraction_fails() {
     }))
     .unwrap();
     let record = parse_hit(hit, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
-    assert!(record.timestamp.is_nan());
-    assert_eq!(record.body, "");
+    assert_eq!(record.time.0, OffsetDateTime::UNIX_EPOCH);
+    assert_eq!(record.title, "");
 }
 
 #[test]
@@ -122,7 +104,10 @@ fn timestamp_deserializes_from_unix_epoch() {
     let document: Hit = serde_json::from_value(js).unwrap();
     let record = parse_hit(document, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
 
-    assert_eq!(record.timestamp, 1640010678f64);
+    assert_eq!(
+        record.time.0,
+        OffsetDateTime::from_unix_timestamp(1640010678i64).unwrap()
+    );
 }
 
 #[test]
@@ -139,10 +124,8 @@ fn timestamp_deserializes_from_rfc3339() {
     let record = parse_hit(document, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
 
     assert_eq!(
-        record.timestamp,
-        OffsetDateTime::parse("2021-12-20T15:59:32.739Z", &Rfc3339)
-            .unwrap()
-            .unix_timestamp() as f64
+        record.time.0,
+        OffsetDateTime::parse("2021-12-20T15:59:32.739Z", &Rfc3339).unwrap()
     );
 }
 
@@ -172,8 +155,8 @@ fn sorts_logs_by_timestamp_newest_first() {
         },
         ..Default::default()
     };
-    let logs = parse_response(response, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
-    assert_eq!(logs[0].body, "1");
-    assert_eq!(logs[1].body, "2");
-    assert_eq!(logs[2].body, "3");
+    let logs = parse_response(response, TIMESTAMP_FIELDS, BODY_FIELDS);
+    assert_eq!(logs[0].title, "1");
+    assert_eq!(logs[1].title, "2");
+    assert_eq!(logs[2].title, "3");
 }

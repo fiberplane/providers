@@ -13,8 +13,18 @@ changes if the major version hasn't changed.
 
 ## [Unreleased]
 
+### Changed
+
+- The Elasticsearch and Loki providers have been upgraded to the latest provider
+  protocol.
+- Use less confusing placeholders for the configuration schema of the Cloudwatch
+  provider.
+
 ### Fixed
-- Use less confusing placeholders for the configuration schema of Cloudwatch provider
+
+- Fixed required fields in schemas generated using the `QuerySchema` macro.
+- Fixed support for the `supports_suggestions` annotation in the `QuerySchema`
+  macro.
 
 ## [1.0.0-beta.1] - 2023-02-14
 

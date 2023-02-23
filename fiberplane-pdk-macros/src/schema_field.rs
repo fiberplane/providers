@@ -128,10 +128,37 @@ impl SchemaField {
             _ => quote! {},
         };
 
+        let required = match &self {
+            Checkbox(field) => field.required,
+            DateTimeRange(field) => field.required,
+            Integer(field) => field.required,
+            Label(field) => field.required,
+            Select(field) => field.required,
+            Text(field) => field.required,
+        };
+        let required = match required {
+            true => quote! { .required() },
+            false => quote! {},
+        };
+
         let step = match &self {
             Integer(IntegerField {
                 step: Some(step), ..
             }) => quote! { .with_step(#step) },
+            _ => quote! {},
+        };
+
+        let supports_suggestions = match &self {
+            Select(SelectField {
+                supports_suggestions,
+                ..
+            })
+            | Text(TextField {
+                supports_suggestions,
+                ..
+            }) if *supports_suggestions => {
+                quote! { .with_suggestions() }
+            }
             _ => quote! {},
         };
 
@@ -153,7 +180,9 @@ impl SchemaField {
                 #options
                 #placeholder
                 #prerequisites
+                #required
                 #step
+                #supports_suggestions
                 #value)
         }
     }
