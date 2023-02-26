@@ -28,6 +28,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2cb2f989d18dd141ab8ae82f64d1a8cdd37e0840f73a406896cf5e99502fab61"
 
 [[package]]
+name = "async-recursion"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b015a331cc64ebd1774ba119538573603427eaace0a1950c423ab971f903796"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -42,7 +53,7 @@ checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 [[package]]
 name = "base64uuid"
 version = "1.0.0"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#70f6c5272fa4f24f46fe0e353187d95a37f97499"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=hierarchy#dc623c32094389a34e603d2e0cf6f23aba36fa1c"
 dependencies = [
  "base64",
  "serde",
@@ -261,7 +272,7 @@ dependencies = [
 [[package]]
 name = "fiberplane-models"
 version = "1.0.0-beta.1"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#70f6c5272fa4f24f46fe0e353187d95a37f97499"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=hierarchy#dc623c32094389a34e603d2e0cf6f23aba36fa1c"
 dependencies = [
  "base64",
  "base64uuid",
@@ -310,7 +321,7 @@ dependencies = [
 [[package]]
 name = "fiberplane-provider-bindings"
 version = "2.0.0-beta.1"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#70f6c5272fa4f24f46fe0e353187d95a37f97499"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=hierarchy#dc623c32094389a34e603d2e0cf6f23aba36fa1c"
 dependencies = [
  "bytes",
  "fiberplane-models",
@@ -884,6 +895,7 @@ dependencies = [
 name = "prometheus-provider"
 version = "0.1.0"
 dependencies = [
+ "async-recursion",
  "const_format",
  "fiberplane-models",
  "fiberplane-pdk",

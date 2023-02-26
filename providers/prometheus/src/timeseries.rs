@@ -21,7 +21,7 @@ pub(crate) struct TimeseriesQuery {
 }
 
 #[derive(Clone, Copy)]
-struct StepSize {
+pub struct StepSize {
     amount: u32,
     unit: StepUnit,
 }
@@ -61,7 +61,7 @@ enum Status {
     Success,
 }
 
-fn validate_or_parse_message(query: &str, message: &str) -> Error {
+pub fn validate_or_parse_message(query: &str, message: &str) -> Error {
     // Validate first
     match prometheus_parser::parse_expr(query) {
         Ok(_) => {
@@ -150,7 +150,7 @@ pub fn create_graph_cell() -> Result<Vec<Cell>> {
     Ok(vec![graph_cell])
 }
 
-enum RoundToGridEdge {
+pub enum RoundToGridEdge {
     Start,
     End,
 }
@@ -159,7 +159,7 @@ enum RoundToGridEdge {
 /// This assures that when we scroll a chart forward or backward in time, we
 /// "snap" to the same grid, to avoid the issue of bucket realignment, giving
 /// unexpected jumps in the graph.
-fn round_to_grid(timestamp: f64, step: StepSize, edge: RoundToGridEdge) -> f64 {
+pub fn round_to_grid(timestamp: f64, step: StepSize, edge: RoundToGridEdge) -> f64 {
     let step_seconds = step_to_seconds(step);
     let round = match edge {
         RoundToGridEdge::Start => f64::floor,
@@ -180,7 +180,7 @@ fn step_to_seconds(step: StepSize) -> u32 {
 /// to maintain roughly 30 steps for whatever the duration is, so that for a
 /// duration of one hour, we fetch per 2 minutes, and for a duration of one
 /// minute, we fetch per 2 seconds.
-fn step_for_range(from: f64, to: f64) -> StepSize {
+pub fn step_for_range(from: f64, to: f64) -> StepSize {
     let mut step = (to - from) / 30.0;
     let mut unit = StepUnit::Seconds;
     if step >= 60.0 {
@@ -198,11 +198,11 @@ fn step_for_range(from: f64, to: f64) -> StepSize {
     }
 }
 
-fn to_float(timestamp: OffsetDateTime) -> f64 {
+pub fn to_float(timestamp: OffsetDateTime) -> f64 {
     timestamp.unix_timestamp_nanos() as f64 / 1_000_000_000.0
 }
 
-fn to_iso_date(timestamp: f64) -> String {
+pub fn to_iso_date(timestamp: f64) -> String {
     let time = SystemTime::UNIX_EPOCH + timestamp.seconds();
     OffsetDateTime::from(time)
         .format(&Rfc3339)

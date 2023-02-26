@@ -21,6 +21,7 @@ serde_json = { workspace = true }
 time = { workspace = true, features = ["formatting"] }
 url = { version = "2.2.2", features = ["serde"] }
 prometheus-parser = "0.4.2"
+async-recursion = "1.0.2"
 
 [build-dependencies]
 vergen = { workspace = true }

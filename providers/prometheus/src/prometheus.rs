@@ -67,4 +67,18 @@ impl RangeVector {
             .visible(true)
             .build())
     }
+
+    pub fn into_node(self, prefix: &str) -> Result<Node, Error> {
+        let mut labels = self.metric;
+        let function_name = labels.remove("function").unwrap_or_else(|| "".to_owned());
+        let module = labels.remove("module").unwrap_or_else(|| "".to_owned());
+        let id = format!("{prefix}_{function_name}");
+
+        Ok(Node::builder()
+            .id(id)
+            .name(function_name)
+            .module(module)
+            .children(Vec::new())
+            .build())
+    }
 }
