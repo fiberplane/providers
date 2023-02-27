@@ -7,7 +7,7 @@ mod timeseries;
 use auto_suggest::query_suggestions;
 use fiberplane_pdk::prelude::*;
 use grafana_common::{query_direct_and_proxied, Config};
-use node_graph::{node_graph, NodeGraphQuery};
+use node_graph::{create_hierarchy_cell, node_graph, NodeGraphQuery};
 use serde_json::Value;
 use std::env;
 use timeseries::{create_graph_cell, query_series, TimeseriesQuery};
@@ -40,6 +40,7 @@ fn create_cells(query_type: String, _response: Blob) -> Result<Vec<Cell>> {
 
     match query_type.as_str() {
         TIMESERIES_QUERY_TYPE => create_graph_cell(),
+        NODE_GRAPH_QUERY_TYPE => create_hierarchy_cell(),
         _ => Err(Error::UnsupportedRequest),
     }
 }

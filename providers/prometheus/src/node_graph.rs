@@ -25,6 +25,7 @@ pub(crate) async fn node_graph(query: NodeGraphQuery, config: Config) -> Result<
 
     run_query(
         &query.function,
+        &None,
         0,
         query.depth,
         &query.function,
@@ -46,7 +47,7 @@ pub(crate) async fn node_graph(query: NodeGraphQuery, config: Config) -> Result<
 
         Ok(Blob::builder()
             .data(rmp_serde::to_vec_named(&nodes)?)
-            .mime_type(NODE_GRAPH_MIME_TYPE.to_owned())
+            .mime_type(NODE_GRAPH_MSGPACK_MIME_TYPE.to_owned())
             .build())
     })
 }
@@ -54,13 +55,19 @@ pub(crate) async fn node_graph(query: NodeGraphQuery, config: Config) -> Result<
 #[async_recursion(?Send)]
 async fn run_query(
     function_name: &str,
+    module: &Option<&str>,
     depth: u8,
     max_depth: u8,
     prefix: &str,
     query: &NodeGraphQuery,
     config: &Config,
 ) -> Result<Vec<Node>> {
-    let function_query = format!("sum by (function, module) (increase(function_calls_count{{caller=\"{function_name}\"}}[120m]))");
+    let function_query = if let Some(module_name) = module {
+        format!("sum by (function, module) (increase(function_calls_count{{caller=\"{function_name}\", module=\"{module_name}\"}}[120m]))")
+    } else {
+        format!("sum by (function, module) (increase(function_calls_count{{caller=\"{function_name}\"}}[120m]))")
+    };
+
     let from = to_float(query.time_range.from);
     let to = to_float(query.time_range.to);
     let step = step_for_range(from, to);
@@ -74,12 +81,6 @@ async fn run_query(
     form_data.append_pair("query", &function_query);
 
     let new_depth = depth + 1;
-
-    if new_depth > max_depth {
-        return Err(Error::Other {
-            message: "Weird error".to_owned(),
-        });
-    }
 
     let query_string = form_data.finish();
     let body = Blob::builder()
@@ -110,8 +111,22 @@ async fn run_query(
 
     if let Ok(nodes) = result_nodes {
         for mut node in nodes {
-            let children_result =
-                run_query(node.name.as_str(), depth, max_depth, prefix, query, config).await;
+            let module_option = if node.module.is_empty() {
+                None
+            } else {
+                Some(node.module.as_str())
+            };
+
+            let children_result = run_query(
+                node.name.as_str(),
+                &module_option,
+                new_depth,
+                max_depth,
+                prefix,
+                query,
+                config,
+            )
+            .await;
 
             match children_result {
                 Ok(mut children) => {
@@ -193,4 +208,15 @@ fn validate_query(query: &NodeGraphQuery) -> Result<()> {
         true => Ok(()),
         false => Err(Error::ValidationError { errors }),
     }
+}
+
+pub fn create_hierarchy_cell() -> Result<Vec<Cell>> {
+    let node_cell = Cell::Hierarchy(
+        HierarchyCell::builder()
+            .id("hierarchy".to_owned())
+            .data_links(vec![format!("cell-data:{NODE_GRAPH_MIME_TYPE},self")])
+            .stacking_type(StackingType::None)
+            .build(),
+    );
+    Ok(vec![node_cell])
 }
