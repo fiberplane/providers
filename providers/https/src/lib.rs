@@ -78,6 +78,11 @@ async fn get_supported_query_types(config: ProviderConfig) -> Vec<SupportedQuery
                     .with_label("Extra headers to pass. One pair key=value per line, like 'Accept=application/json'")
                     .multiline()
                     .into(),
+                TextField::new()
+                    .with_name(BODY_PARAM_NAME)
+                    .with_label("The request body.")
+                    .multiline()
+                    .into(),
                 // TODO: Wait for Studio to implement the checkbox field (FP-2593)
                 // to add a FORCE_JSON_PARAM_NAME field that is just a
                 // checkbox that adds an 'Accept: application/json' header
