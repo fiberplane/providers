@@ -2,25 +2,11 @@ mod commands;
 mod constants;
 mod errors;
 
-use clap::{Command, Parser, Subcommand};
+use clap::Command;
 use commands::{build_command, build_providers};
-use console::{style, Emoji};
+use console::style;
+use constants::ERROR;
 use errors::TaskError;
-
-static ERROR: Emoji<'_, '_> = Emoji("🤒 ", "");
-
-#[derive(Parser)]
-#[clap(arg_required_else_help(true))]
-struct Cli {
-    #[clap(subcommand)]
-    command: Option<Commands>,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    /// Cleans all target folders
-    Build,
-}
 
 fn main() {
     if let Err(err) = handle_cli() {
