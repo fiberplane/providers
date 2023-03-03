@@ -23,8 +23,8 @@ pub(crate) fn build_providers(args: &ArgMatches) -> anyhow::Result<()> {
 
     for provider in providers {
         println!(
-            "{BUILD}{}",
-            format!("Building {} provider...", style(&provider).cyan().bold())
+            "{BUILD}Building {} provider...",
+            style(&provider).cyan().bold()
         );
 
         let mut args = vec!["build"];
@@ -45,8 +45,8 @@ pub(crate) fn build_providers(args: &ArgMatches) -> anyhow::Result<()> {
             fs::copy(input, artifact)?;
         } else {
             println!(
-                "{OPTIMIZE}{}",
-                format!("Optimizing {} provider...", style(&provider).cyan().bold())
+                "{OPTIMIZE}Optimizing {} provider...",
+                style(&provider).cyan().bold()
             );
 
             let input = format!("target/wasm32-unknown-unknown/release/{provider}_provider.wasm");
