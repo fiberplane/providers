@@ -50,7 +50,7 @@ fn determine_field_type(field: &Field) -> SchemaField {
             }
             if let Some(min) = attrs.min {
                 field = field.with_min(min);
-            } else if type_ident.as_str().starts_with("u") {
+            } else if type_ident.as_str().starts_with('u') {
                 field = field.with_min(0);
             }
             if let Some(step) = attrs.step {
