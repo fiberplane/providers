@@ -1,5 +1,5 @@
 [workspace]
-members = ["fiberplane-pdk", "fiberplane-pdk-macros", "providers/*"]
+members = ["fiberplane-pdk", "fiberplane-pdk-macros", "providers/*", "xtask"]
 exclude = ["providers/.cargo"]
 
 [workspace.package]
