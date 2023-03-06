@@ -242,9 +242,12 @@ async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> 
                 }
                 for line in value.as_ref().lines() {
                     if let Some((k, v)) = line.split_once('=') {
-                        headers
-                            .as_mut()
-                            .map(|h| h.insert(k.to_string(), v.to_string()));
+                        // HACK - to filter headers that were disabled in the UI
+                        if !k.starts_with("__$FPDISABLED__") {
+                            headers
+                                .as_mut()
+                                .map(|h| h.insert(k.to_string(), v.to_string()));
+                        }
                     }
                 }
             }
@@ -254,6 +257,8 @@ async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> 
                     value
                         .as_ref()
                         .lines()
+                        // HACK - filter query params that were disabled in the UI
+                        .filter(|line| !line.starts_with("__$FPDISABLED__"))
                         .filter_map(|line| line.split_once('=')),
                 );
                 query = serializer.finish()
