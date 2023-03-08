@@ -73,7 +73,7 @@ fn test_data_mapper() {
     assert_eq!(mapped.len(), 2);
     assert_eq!(
         mapped[0],
-        Event::builder()
+        ProviderEvent::builder()
             .time(
                 OffsetDateTime::from_unix_timestamp_nanos(1_569_266_497_240_578_000)
                     .unwrap()
@@ -85,7 +85,7 @@ fn test_data_mapper() {
     );
     assert_eq!(
         mapped[1],
-        Event::builder()
+        ProviderEvent::builder()
             .time(
                 OffsetDateTime::from_unix_timestamp_nanos(1_569_266_492_548_155_000)
                     .unwrap()
