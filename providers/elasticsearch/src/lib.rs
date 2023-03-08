@@ -117,12 +117,12 @@ async fn fetch_logs(query: ElasticQuery, config: ElasticConfig) -> Result<Blob> 
     let response = make_http_request(request).await?;
     let response: SearchResponse =
         serde_json::from_slice(&response.body).map_err(|err| Error::Data {
-            message: format!("Error parsing ElasticSearch response: {err:?}"),
+            message: format!("Error parsing Elasticsearch response: {err:?}"),
         })?;
 
     if response.timed_out {
         return Err(Error::Other {
-            message: "ElasticSearch query timed out".to_owned(),
+            message: "Elasticsearch query timed out".to_owned(),
         });
     }
 
@@ -195,7 +195,7 @@ fn parse_hit(hit: Hit, timestamp_field_names: &[&str], body_field_names: &[&str]
         .flat_map(|value| {
             // Try parsing the field either as an RFC 3339 timestamp or a UNIX timestamp
             match value {
-                Value::String(string) => OffsetDateTime::parse(&string, &Rfc3339).ok(),
+                Value::String(string) => OffsetDateTime::parse(string, &Rfc3339).ok(),
                 Value::Number(number) => number.as_f64().and_then(|seconds| {
                     OffsetDateTime::from_unix_timestamp_nanos((seconds * 1_000_000_000.0) as i128)
                         .ok()

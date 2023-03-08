@@ -32,7 +32,7 @@ impl SchemaField {
     }
 
     pub fn to_token_stream(
-        self,
+        &self,
         field_enum: &str,
         field_attrs: &[Attribute],
         struct_attrs: &[Attribute],
@@ -62,7 +62,7 @@ impl SchemaField {
                 Select(field) => &field.name,
                 Text(field) => &field.name,
             };
-            struct_attrs.rename_all.format_string(&name)
+            struct_attrs.rename_all.format_string(name)
         });
         let name = quote! { .with_name(#name) };
 

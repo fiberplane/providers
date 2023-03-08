@@ -35,9 +35,14 @@ fn determine_field_type(field: &Field) -> SchemaField {
     let (type_ident, required, multiple) = get_ident(field);
 
     let mut schema_field = match (type_ident.as_str(), multiple) {
-        ("bool", false) => SchemaField::Checkbox(
-            CheckboxField::new().with_value(attrs.value.as_deref().unwrap_or("true")),
-        ),
+        ("bool", false) => {
+            let mut field =
+                CheckboxField::new().with_value(attrs.value.as_deref().unwrap_or("true"));
+            if attrs.checked {
+                field = field.checked_by_default();
+            }
+            SchemaField::Checkbox(field)
+        }
         ("i8" | "i16" | "i32" | "i64" | "u8" | "u16" | "u32" | "u64", false) => {
             let mut field = IntegerField::new();
             if let Some(max) = attrs.max {
@@ -45,7 +50,7 @@ fn determine_field_type(field: &Field) -> SchemaField {
             }
             if let Some(min) = attrs.min {
                 field = field.with_min(min);
-            } else if type_ident.as_str().starts_with("u") {
+            } else if type_ident.as_str().starts_with('u') {
                 field = field.with_min(0);
             }
             if let Some(step) = attrs.step {
