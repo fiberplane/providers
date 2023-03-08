@@ -23,8 +23,8 @@ changes if the major version hasn't changed.
 ### Fixed
 
 - Fixed required fields in schemas generated using the `QuerySchema` macro.
-- Fixed support for the `supports_suggestions` annotation in the `QuerySchema`
-  macro.
+- Fixed support for the `checked_by_default` and `supports_suggestions`
+  annotations in the `ConfigSchema` and `QuerySchema` macros.
 
 ## [1.0.0-beta.1] - 2023-02-14
 

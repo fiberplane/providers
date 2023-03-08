@@ -25,11 +25,21 @@ struct SampleConfig {
     #[pdk(label = "Your API endpoint", placeholder = "Please specify a URL")]
     pub endpoint: String,
 
-    #[pdk(label = "I accept the Terms of Use", checked_by_default)]
-    pub accept: bool,
-
     #[pdk(label = "Number of retries if a request fails", max = 10)]
     pub num_retries: u8,
+
+    #[pdk(
+        select,
+        option = "eu-central-1",
+        option = "us-east-1",
+        option = "us-east-2",
+        placeholder = "Select an environment",
+        label = "Environment to query"
+    )]
+    pub environment: String,
+
+    #[pdk(label = "I accept the Terms of Use", checked_by_default)]
+    pub accept: bool,
 }
 
 /// This example shows how to define a struct and let the PDK generate a query
@@ -52,6 +62,16 @@ struct ShowcaseQueryData {
 
     #[pdk(multiline, label = "Input one or more tags (one per line)")]
     pub tags: String,
+
+    #[pdk(
+        select,
+        option = "eu-central-1",
+        option = "us-east-1",
+        option = "us-east-2",
+        placeholder = "Select an environment",
+        label = "Environment to query"
+    )]
+    pub environment: String,
 }
 
 /// This type shows how we can conveniently generate custom data using the
@@ -105,6 +125,7 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
                 time_range: DateTimeRange { from, to },
                 live,
                 tags,
+                environment,
             },
     } = ShowcaseCustomData::parse_blob(response)?;
 
@@ -115,7 +136,8 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
                 "Your query was: {query}\n\
             Your time range: {from} - {to}\n\
             Live mode was {live}\n\
-            Provided tags: {:?}",
+            Provided tags: {:?}\n\
+            Environment {environment}",
                 tags.split('\n').collect::<Vec<_>>()
             ))
             .formatting(Formatting::default())
