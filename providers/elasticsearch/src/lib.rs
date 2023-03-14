@@ -54,6 +54,16 @@ pdk_query_types! {
     }
 }
 
+#[pdk_export]
+fn create_cells(query_type: String, _response: Blob) -> Result<Vec<Cell>> {
+    log(format!("Creating cells for query type: {query_type}"));
+
+    match query_type.as_str() {
+        EVENTS_QUERY_TYPE => create_log_cell(),
+        _ => Err(Error::UnsupportedRequest),
+    }
+}
+
 async fn fetch_logs(query: ElasticQuery, config: ElasticConfig) -> Result<Blob> {
     let mut url = config.parse_url()?;
 
@@ -307,4 +317,15 @@ fn timestamp_to_rfc3339(timestamp: OffsetDateTime) -> Result<String> {
                 .message(format!("Invalid timestamp in range: {err}"))
                 .build()],
         })
+}
+
+pub fn create_log_cell() -> Result<Vec<Cell>> {
+    let logs_cell = Cell::Log(
+        LogCell::builder()
+            .id("query-results".to_string())
+            .data_links(vec![format!("cell-data:{EVENTS_MIME_TYPE},self")])
+            .hide_similar_values(false)
+            .build(),
+    );
+    Ok(vec![logs_cell])
 }
