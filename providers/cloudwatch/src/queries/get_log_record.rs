@@ -9,7 +9,7 @@ use crate::{
 };
 use fiberplane_pdk::prelude::{Blob, Cell, Error, LogCell, ProviderRequest};
 use fiberplane_pdk::providers::{
-    Event, OtelMetadata, OtelSpanId, OtelTraceId, FORM_ENCODED_MIME_TYPE,
+    OtelMetadata, OtelSpanId, OtelTraceId, ProviderEvent, FORM_ENCODED_MIME_TYPE,
 };
 use std::collections::{BTreeMap, HashMap};
 use time::{
@@ -27,7 +27,7 @@ pub async fn invoke2_handler(config: Config, request: ProviderRequest) -> Result
         .and_then(try_into_blob)
 }
 
-pub fn convert_log_entry_to_event(res: HashMap<String, String>) -> Result<Event, Error> {
+pub fn convert_log_entry_to_event(res: HashMap<String, String>) -> Result<ProviderEvent, Error> {
     let time = res
         .get(TS_KEY.0)
         .and_then(|x| {
@@ -100,7 +100,7 @@ pub fn convert_log_entry_to_event(res: HashMap<String, String>) -> Result<Event,
                 .collect(),
         )
         .build();
-    Ok(Event::builder()
+    Ok(ProviderEvent::builder()
         .time(time.into())
         .end_time(None)
         .otel(otel)

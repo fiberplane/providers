@@ -10,7 +10,7 @@ use crate::{
 };
 use fiberplane_pdk::prelude::{Blob, Cell, Error, LogCell, ProviderRequest, TextCell};
 use fiberplane_pdk::providers::{
-    Event, OtelMetadata, OtelSpanId, OtelTraceId, FORM_ENCODED_MIME_TYPE,
+    OtelMetadata, OtelSpanId, OtelTraceId, ProviderEvent, FORM_ENCODED_MIME_TYPE,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -173,10 +173,10 @@ impl TryFrom<Blob> for QueryResults {
 }
 
 #[derive(Serialize, Deserialize)]
-struct LogLines(Vec<Event>);
+struct LogLines(Vec<ProviderEvent>);
 
 impl LogLines {
-    fn bare_event_from_response(entry: Vec<ResultField>) -> Event {
+    fn bare_event_from_response(entry: Vec<ResultField>) -> ProviderEvent {
         let kv: std::collections::HashMap<String, String> = entry
             .into_iter()
             .filter_map(|field| {
@@ -276,7 +276,7 @@ impl LogLines {
                     .collect(),
             )
             .build();
-        Event::builder()
+        ProviderEvent::builder()
             .time(time.into())
             .end_time(None)
             .otel(otel)
@@ -294,7 +294,7 @@ impl TryFrom<Blob> for LogLines {
     fn try_from(blob: Blob) -> Result<Self, Self::Error> {
         if blob.mime_type == EVENTS_MSGPACK_MIME_TYPE {
             Ok(Self(
-                rmp_serde::from_slice::<Vec<Event>>(&blob.data).map_err(|e| {
+                rmp_serde::from_slice::<Vec<ProviderEvent>>(&blob.data).map_err(|e| {
                     Error::Deserialization {
                         message: format!("could not deserialize log events: {e}"),
                     }
@@ -302,7 +302,7 @@ impl TryFrom<Blob> for LogLines {
             ))
         } else if blob.mime_type == EVENTS_JSON_MIME_TYPE {
             Ok(Self(
-                serde_json::from_slice::<Vec<Event>>(&blob.data).map_err(|e| {
+                serde_json::from_slice::<Vec<ProviderEvent>>(&blob.data).map_err(|e| {
                     Error::Deserialization {
                         message: format!("could not deserialize log events: {e}"),
                     }
