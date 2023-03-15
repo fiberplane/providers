@@ -26,6 +26,7 @@ changes if the major version hasn't changed.
 - Fixed required fields in schemas generated using the `QuerySchema` macro.
 - Fixed support for the `checked_by_default` and `supports_suggestions`
   annotations in the `ConfigSchema` and `QuerySchema` macros.
+- Fixed lacking `create_cells()` implementation for Elasticsearch and Loki providers
 
 ## [1.0.0-beta.1] - 2023-02-14
 

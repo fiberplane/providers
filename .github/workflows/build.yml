@@ -13,10 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - id: branch
-        name: Export branch
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF##refs/heads/}}" >> $GITHUB_OUTPUT
-
       - name: setup-git-credentials
         uses: de-vri-es/setup-git-credentials@v2
         with:
@@ -55,6 +51,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: setup-git-credentials
+        uses: de-vri-es/setup-git-credentials@v2
+        with:
+          credentials: "https://fiberplanebot:${{ secrets.PRIVATE_GITHUB_TOKEN }}@github.com/"
 
       - name: Cache Rust dependencies
         uses: actions/cache@v3
