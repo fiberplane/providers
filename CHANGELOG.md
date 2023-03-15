@@ -19,6 +19,7 @@ changes if the major version hasn't changed.
   protocol.
 - Use less confusing placeholders for the configuration schema of the Cloudwatch
   provider.
+- Rename Event in the providers module to ProviderEvent (#28)
 
 ### Fixed
 

@@ -107,7 +107,7 @@ async fn fetch_logs(query: LokiQuery, config: Config) -> Result<Blob> {
     let log_lines = data
         .iter()
         .flat_map(data_mapper)
-        .collect::<Result<Vec<Event>>>()
+        .collect::<Result<Vec<ProviderEvent>>>()
         .map_err(|e| Error::Data {
             message: format!("Failed to parse data, got error: {e:?}"),
         })?;
@@ -115,7 +115,7 @@ async fn fetch_logs(query: LokiQuery, config: Config) -> Result<Blob> {
     Events(log_lines).to_blob()
 }
 
-fn data_mapper(data: &Data) -> impl Iterator<Item = Result<Event>> + '_ {
+fn data_mapper(data: &Data) -> impl Iterator<Item = Result<ProviderEvent>> + '_ {
     let attributes = &data.labels;
     data.values.iter().map(move |(timestamp, value)| {
         let timestamp = i128::from_str(timestamp)
@@ -129,7 +129,7 @@ fn data_mapper(data: &Data) -> impl Iterator<Item = Result<Event>> + '_ {
             .trace_id(None)
             .span_id(None)
             .build();
-        let event = Event::builder()
+        let event = ProviderEvent::builder()
             .title(value.clone())
             .time(timestamp.into())
             .otel(metadata)

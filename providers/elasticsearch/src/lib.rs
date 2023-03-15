@@ -151,9 +151,9 @@ fn parse_response(
     response: SearchResponse,
     timestamp_field_names: &[&str],
     body_field_names: &[&str],
-) -> Vec<Event> {
+) -> Vec<ProviderEvent> {
     let hits = response.hits.hits.into_iter();
-    let mut log_lines: Vec<Event> = hits
+    let mut log_lines: Vec<ProviderEvent> = hits
         .filter_map(|hit| parse_hit(hit, timestamp_field_names, body_field_names))
         .collect();
     // Sort logs so the newest ones are first
@@ -161,7 +161,11 @@ fn parse_response(
     log_lines
 }
 
-fn parse_hit(hit: Hit, timestamp_field_names: &[&str], body_field_names: &[&str]) -> Option<Event> {
+fn parse_hit(
+    hit: Hit,
+    timestamp_field_names: &[&str],
+    body_field_names: &[&str],
+) -> Option<ProviderEvent> {
     let source: Map<String, Value> = hit
         .source()
         .map_err(|err| {
@@ -247,7 +251,7 @@ fn parse_hit(hit: Hit, timestamp_field_names: &[&str], body_field_names: &[&str]
         .trace_id(trace_id)
         .span_id(span_id)
         .build();
-    let event = Event::builder()
+    let event = ProviderEvent::builder()
         .title(title)
         .time(timestamp.into())
         .otel(metadata)
