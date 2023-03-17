@@ -1,25 +1,29 @@
 use crate::constants::*;
-use clap::{arg, ArgMatches, Command};
+use clap::Parser;
 use console::style;
 use duct::cmd;
+use fiberplane_ci::TaskResult;
 use std::fs;
 
-pub(crate) fn build_command() -> Command {
-    Command::new("build").args(&[
-        arg!(-d --debug "keep debugging information in the built provider(s)"),
-        arg!([provider] "provider to build (default: all)"),
-    ])
+#[derive(Parser)]
+pub struct BuildArgs {
+    /// Keep debugging information in the built provider(s).
+    #[clap(short, long)]
+    pub debug: bool,
+
+    /// Provider to build.
+    #[clap(default_value = "all")]
+    provider: String,
 }
 
-pub(crate) fn build_providers(args: &ArgMatches) -> anyhow::Result<()> {
+pub(crate) fn handle_build_command(args: BuildArgs) -> TaskResult {
     fs::create_dir_all("artifacts")?;
 
-    let providers = match args.get_one::<String>("provider") {
-        Some(provider) if provider != "all" => vec![provider.clone()],
-        _ => PROVIDERS.iter().cloned().map(str::to_owned).collect(),
+    let providers = if args.provider == "all" {
+        PROVIDERS.iter().cloned().map(str::to_owned).collect()
+    } else {
+        vec![args.provider]
     };
-
-    let is_debug = args.get_flag("debug");
 
     for provider in providers {
         println!(
@@ -27,12 +31,12 @@ pub(crate) fn build_providers(args: &ArgMatches) -> anyhow::Result<()> {
             style(&provider).cyan().bold()
         );
 
-        let mut args = vec!["build"];
-        if !is_debug {
-            args.push("--release")
+        let mut cargo_args = vec!["build"];
+        if !args.debug {
+            cargo_args.push("--release")
         }
 
-        cmd("cargo", args)
+        cmd("cargo", cargo_args)
             .dir(format!("providers/{provider}"))
             .stdout_to_stderr()
             .stderr_capture()
@@ -40,7 +44,7 @@ pub(crate) fn build_providers(args: &ArgMatches) -> anyhow::Result<()> {
 
         let artifact = format!("artifacts/{provider}.wasm");
 
-        if is_debug {
+        if args.debug {
             let input = format!("target/wasm32-unknown-unknown/debug/{provider}_provider.wasm");
             fs::copy(input, artifact)?;
         } else {
