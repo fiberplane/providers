@@ -1,6 +1,6 @@
 use fiberplane_models::providers::*;
 use proc_macro2::Span;
-use quote::{quote, ToTokens};
+use quote::{format_ident, quote, ToTokens};
 use syn::ext::IdentExt;
 use syn::parenthesized;
 use syn::parse::{Parse, ParseStream};
@@ -16,6 +16,24 @@ pub enum SchemaField {
     Label(LabelField),
     Select(SelectField),
     Text(TextField),
+    Array(ArraySchema),
+}
+
+/// A compile-time representation of an ArrayField schema,
+/// useful at macro expansion time to generate the correct
+/// code.
+///
+/// This type is not meant to be interacted with outside
+/// procedural macro code.
+///
+/// This is why all fields are only exposed to the crate,
+/// and no public method is available either.
+pub struct ArraySchema {
+    pub(crate) name: String,
+    pub(crate) label: String,
+    pub(crate) element_struct_type_name: String,
+    pub(crate) minimum_length: u32,
+    pub(crate) maximum_length: Option<u32>,
 }
 
 impl SchemaField {
@@ -28,17 +46,22 @@ impl SchemaField {
             Label(field) => Label(field.required()),
             Select(field) => Select(field.required()),
             Text(field) => Text(field.required()),
+            Array(schema) => Array(ArraySchema {
+                minimum_length: 1,
+                ..schema
+            }),
         }
     }
 
+    /// Convert a SchemaField into a TokenStream representing a QueryField variant.
     pub fn to_token_stream(
         &self,
         field_enum: &str,
         field_attrs: &[Attribute],
         struct_attrs: &[Attribute],
     ) -> proc_macro2::TokenStream {
-        let field_attrs = SerdeAttrs::from_attrs(field_attrs);
-        let struct_attrs = SerdeAttrs::from_attrs(struct_attrs);
+        let serde_field_attrs = SerdeAttrs::from_attrs(field_attrs);
+        let serde_struct_attrs = SerdeAttrs::from_attrs(struct_attrs);
 
         use SchemaField::*;
 
@@ -49,11 +72,12 @@ impl SchemaField {
             Label(_) => quote! { Label },
             Select(_) => quote! { Select },
             Text(_) => quote! { Text },
+            Array(_) => quote! { Array },
         };
         let enum_ident = Ident::new(field_enum, Span::call_site());
         let field_ident = Ident::new(&format!("{field_variant}Field"), Span::call_site());
 
-        let name = field_attrs.rename.unwrap_or_else(|| {
+        let name = serde_field_attrs.rename.unwrap_or_else(|| {
             let name = match &self {
                 Checkbox(field) => &field.name,
                 DateTimeRange(field) => &field.name,
@@ -61,8 +85,9 @@ impl SchemaField {
                 Label(field) => &field.name,
                 Select(field) => &field.name,
                 Text(field) => &field.name,
+                Array(field) => &field.name,
             };
-            struct_attrs.rename_all.format_string(name)
+            serde_struct_attrs.rename_all.format_string(name)
         });
         let name = quote! { .with_name(#name) };
 
@@ -78,6 +103,7 @@ impl SchemaField {
             Label(field) => &field.label,
             Select(field) => &field.label,
             Text(field) => &field.label,
+            Array(field) => &field.label,
         };
         let label = match label.is_empty() {
             true => quote! {},
@@ -86,11 +112,18 @@ impl SchemaField {
 
         let max = match &self {
             Integer(IntegerField { max: Some(max), .. }) => quote! { .with_max(#max) },
+            Array(ArraySchema {
+                maximum_length: Some(maximum_length),
+                ..
+            }) => quote! { .with_maximum_length(Some(#maximum_length)) },
             _ => quote! {},
         };
 
         let min = match &self {
             Integer(IntegerField { min: Some(min), .. }) => quote! { .with_min(#min) },
+            Array(ArraySchema { minimum_length, .. }) => {
+                quote! { .with_minimum_length(#minimum_length) }
+            }
             _ => quote! {},
         };
 
@@ -113,6 +146,7 @@ impl SchemaField {
             Label(field) => &field.placeholder,
             Select(field) => &field.placeholder,
             Text(field) => &field.placeholder,
+            _ => "",
         };
         let placeholder = match placeholder.is_empty() {
             true => quote! {},
@@ -135,6 +169,7 @@ impl SchemaField {
             Label(field) => field.required,
             Select(field) => field.required,
             Text(field) => field.required,
+            Array(_) => false,
         };
         let required = match required {
             true => quote! { .required() },
@@ -169,6 +204,19 @@ impl SchemaField {
             _ => quote! {},
         };
 
+        let element_schema = match &self {
+            Array(ArraySchema {
+                element_struct_type_name,
+                ..
+            }) => {
+                let type_ident = format_ident!("{element_struct_type_name}");
+                quote! {
+                .with_element_schema(<#type_ident>::schema())
+                }
+            }
+            _ => quote! {},
+        };
+
         quote! {
             #enum_ident::#field_variant(#field_ident::new()
                 #name
@@ -183,7 +231,8 @@ impl SchemaField {
                 #required
                 #step
                 #supports_suggestions
-                #value)
+                #value
+                #element_schema)
         }
     }
 
@@ -196,6 +245,10 @@ impl SchemaField {
             Label(field) => Label(field.with_label(label)),
             Select(field) => Select(field.with_label(label)),
             Text(field) => Text(field.with_label(label)),
+            Array(field) => Array(ArraySchema {
+                label: label.to_string(),
+                ..field
+            }),
         }
     }
 
@@ -208,6 +261,10 @@ impl SchemaField {
             Label(field) => Label(field.with_name(name)),
             Select(field) => Select(field.with_name(name)),
             Text(field) => Text(field.with_name(name)),
+            Array(field) => Array(ArraySchema {
+                name: name.to_string(),
+                ..field
+            }),
         }
     }
 
@@ -220,6 +277,7 @@ impl SchemaField {
             Label(field) => Label(field.with_placeholder(name)),
             Select(field) => Select(field.with_placeholder(name)),
             Text(field) => Text(field.with_placeholder(name)),
+            Array(_) => self,
         }
     }
 }

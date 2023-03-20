@@ -14,6 +14,8 @@ mod query_schema;
 mod query_types;
 mod schema_field;
 mod schema_generator;
+#[cfg(test)]
+mod tests;
 
 use proc_macro::TokenStream;
 use proc_macro_error::proc_macro_error;

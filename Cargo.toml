@@ -11,10 +11,10 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/fiberplane/providers"
 
 [workspace.dependencies]
-fiberplane-models = { version = "1.0.0-beta.1", git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "main" }
+fiberplane-models = { version = "1.0.0-beta.1", git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "fp-2850-add-arrayfield-variant-to-queryfield-for" }
 fiberplane-pdk = { version = "1.0.0-beta.1", path = "fiberplane-pdk" }
 fiberplane-pdk-macros = { version = "1.0.0-beta.1", path = "fiberplane-pdk-macros" }
-fiberplane-provider-bindings = { version = "2.0.0-beta.1", git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "main" }
+fiberplane-provider-bindings = { version = "2.0.0-beta.1", git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "fp-2850-add-arrayfield-variant-to-queryfield-for" }
 fp-bindgen = { version = "3.0.0-beta.1" }
 fp-bindgen-support = { version = "3.0.0-beta.1" }
 rmpv = { version = "1", features = ["with-serde"] }
@@ -38,5 +38,6 @@ vergen = { version = "7.4.2", default-features = false, features = [
 #fp-bindgen = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
 #fp-bindgen-support = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
 
-# [patch.'ssh://git@github.com/fiberplane/fiberplane.git']
-# fiberplane-models = { path = "../fiberplane/fiberplane-models" }
+[patch.'ssh://git@github.com/fiberplane/fiberplane.git']
+fiberplane-models = { path = "../fiberplane/fiberplane-models" }
+fiberplane-provider-bindings = { path = "../fiberplane/fiberplane-provider-protocol/fiberplane-provider-bindings" }
