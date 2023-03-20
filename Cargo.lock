@@ -261,7 +261,7 @@ dependencies = [
 
 [[package]]
 name = "cloudwatch-provider"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "base64 0.13.1",
  "bytes",
@@ -477,7 +477,7 @@ dependencies = [
 
 [[package]]
 name = "elasticsearch-provider"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "elasticsearch-dsl",
  "fiberplane-pdk",
@@ -603,7 +603,7 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-pdk"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "fiberplane-models",
  "fiberplane-pdk-macros",
@@ -619,7 +619,7 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-pdk-macros"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "Inflector",
  "fiberplane-models",
@@ -1277,7 +1277,7 @@ dependencies = [
 
 [[package]]
 name = "loki-provider"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "fiberplane-pdk",
  "grafana-common",
@@ -1833,7 +1833,7 @@ checksum = "7b4b9743ed687d4b4bcedf9ff5eaa7398495ae14e61cba0a295704edbc7decde"
 
 [[package]]
 name = "sample-provider"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 dependencies = [
  "fiberplane-pdk",
  "serde",

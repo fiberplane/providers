@@ -6,6 +6,9 @@ use duct::cmd;
 use fiberplane_ci::utils::*;
 use fiberplane_ci::{commands::versions::*, TaskResult};
 
+/// Publishable crates in order of publication.
+const CRATE_DIRS: &[&str] = &["fiberplane-pdk-macros", "fiberplane-pdk"];
+
 #[derive(Parser)]
 pub struct PublishArgs {
     /// Publish all crates that can be published, instead of only changed ones.
@@ -43,48 +46,24 @@ pub async fn handle_publish_command(args: &PublishArgs) -> TaskResult {
 }
 
 async fn handle_publish_alphas(args: &PublishArgs) -> TaskResult {
-    let commits = get_commits(".")?;
-    let previous_commit = commits
-        .get(1)
-        .context("Could not determine previous commit")?;
-
     if args.all {
         eprintln!("{NOTE}Will publish alpha versions for all publishable crates.");
     } else {
-        eprintln!(
-            "{NOTE}Will publish alpha versions for all crates changed since {previous_commit}."
-        );
+        let commits = get_commits(".")?;
+        let previous_commit = commits
+            .get(1)
+            .context("Could not determine previous commit")?;
+
+        eprintln!("{NOTE}Will publish alpha versions if crates changed since {previous_commit}.");
+
+        if !CRATE_DIRS
+            .iter()
+            .any(|crate_dir| did_change(crate_dir, previous_commit).unwrap_or_default())
+        {
+            eprintln!("{SUCCESS}No crates need publishing.");
+            return Ok(());
+        }
     }
-
-    let all_crate_dirs = get_publishable_workspace_crate_dirs(".")?;
-    let crates_using_workspace_version = get_crates_using_workspace_version(".", &all_crate_dirs);
-    let changed_crate_dirs: Vec<&str> = all_crate_dirs
-        .iter()
-        .map(String::as_str)
-        .filter_map(|crate_dir| {
-            if args.all {
-                Some(Ok(crate_dir))
-            } else {
-                match did_change(crate_dir, previous_commit) {
-                    Ok(true) => Some(Ok(crate_dir)),
-                    Ok(false) => None,
-                    Err(err) => Some(Err(err)),
-                }
-            }
-        })
-        .collect::<Result<Vec<_>>>()?;
-
-    if changed_crate_dirs.is_empty() {
-        eprintln!("{SUCCESS}No crates need publishing.");
-        return Ok(());
-    }
-
-    let changed_crate_dirs = sort_by_dependencies(".", &changed_crate_dirs)?;
-    let changed_crates_using_workspace_version: Vec<&str> = changed_crate_dirs
-        .iter()
-        .cloned()
-        .filter(|crate_name| crates_using_workspace_version.contains(crate_name))
-        .collect();
 
     eprintln!("{WORKING}Updating necessary Cargo files...");
 
@@ -93,27 +72,22 @@ async fn handle_publish_alphas(args: &PublishArgs) -> TaskResult {
         .get_string("workspace.package.version")
         .context("Cannot determine workspace version")?;
 
-    if !changed_crates_using_workspace_version.is_empty() {
-        workspace_version = determine_next_workspace_alpha(
-            CRATES_IO_INDEX_URL,
-            &workspace_version,
-            &changed_crates_using_workspace_version,
-        )
-        .await?;
+    workspace_version =
+        determine_next_workspace_alpha(CRATES_IO_INDEX_URL, &workspace_version, &CRATE_DIRS)
+            .await?;
 
-        set_version(
-            "Cargo.toml",
-            &SetVersionArgs {
-                crate_name: None,
-                version: workspace_version.clone(),
-            },
-        )?;
+    set_version(
+        "Cargo.toml",
+        &SetVersionArgs {
+            crate_name: None,
+            version: workspace_version.clone(),
+        },
+    )?;
 
-        eprintln!(
-            " - Workspace => {version}.",
-            version = style(&workspace_version).bold()
-        );
-    }
+    eprintln!(
+        " - fiberplane-pdk => {version}.",
+        version = style(&workspace_version).bold()
+    );
 
     for crate_dir in changed_crate_dirs.iter().cloned() {
         let crate_name = get_crate_name_from_dir(crate_dir);
