@@ -127,6 +127,13 @@ impl SchemaField {
             _ => quote! {},
         };
 
+        let multiple = match &self {
+            Text(field) if field.multiple => quote! { .multiple() },
+            Label(field) if field.multiple => quote! { .multiple() },
+            Select(field) if field.multiple => quote! { .multiple() },
+            _ => quote! {},
+        };
+
         let multiline = match &self {
             Text(field) if field.multiline => quote! { .multiline() },
             _ => quote! {},
@@ -224,6 +231,7 @@ impl SchemaField {
                 #label
                 #max
                 #min
+                #multiple
                 #multiline
                 #options
                 #placeholder
