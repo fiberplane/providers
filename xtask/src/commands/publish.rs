@@ -1,5 +1,5 @@
 use crate::constants::*;
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Context};
 use clap::Parser;
 use console::style;
 use duct::cmd;
@@ -85,53 +85,15 @@ async fn handle_publish_alphas(args: &PublishArgs) -> TaskResult {
     )?;
 
     eprintln!(
-        " - fiberplane-pdk => {version}.",
+        " - Workspace => {version}.",
         version = style(&workspace_version).bold()
     );
 
-    for crate_dir in changed_crate_dirs.iter().cloned() {
-        let crate_name = get_crate_name_from_dir(crate_dir);
+    eprintln!("{CHECK}Cargo file patched. Starting publication...");
 
-        let version = if changed_crates_using_workspace_version.contains(&crate_name) {
-            workspace_version.clone()
-        } else {
-            let crate_cargo_path = format!("{crate_dir}/Cargo.toml");
-            let crate_cargo_toml = TomlNode::from_file(&crate_cargo_path)?;
-            let version = crate_cargo_toml
-                .get_string("package.version")
-                .context("Cannot determine package version")?;
-            let new_version = add_next_alpha_suffix(crate_name, &version).await?;
+    publish_crates(args)?;
 
-            set_version(
-                crate_cargo_path,
-                &SetVersionArgs {
-                    crate_name: Some(crate_name.to_owned()),
-                    version: new_version.clone(),
-                },
-            )?;
-
-            new_version
-        };
-
-        set_version(
-            "Cargo.toml",
-            &SetVersionArgs {
-                crate_name: Some(crate_name.to_owned()),
-                version: version.clone(),
-            },
-        )?;
-
-        eprintln!(
-            " - {crate_name} => {version}.",
-            version = style(&version).bold()
-        );
-    }
-
-    eprintln!("{CHECK}Cargo files patched. Starting publication...");
-
-    publish_crates(&changed_crate_dirs, args)?;
-
-    eprintln!("{SUCCESS}All changed crates published.");
+    eprintln!("{SUCCESS}All crates published.");
 
     Ok(())
 }
@@ -143,7 +105,7 @@ async fn handle_publish_betas(args: &PublishArgs) -> TaskResult {
         .get_string("workspace.package.version")
         .context("Cannot determine workspace version")?;
 
-    let mut changed_crate_dirs = Vec::new();
+    let mut unpublished_crate_dirs = Vec::new();
     let all_crate_dirs = get_publishable_workspace_crate_dirs(".")?;
     for crate_dir in all_crate_dirs.iter() {
         let cargo_toml_path = format!("{crate_dir}/Cargo.toml");
@@ -173,65 +135,37 @@ async fn handle_publish_betas(args: &PublishArgs) -> TaskResult {
             version = style(&version).bold()
         );
 
-        changed_crate_dirs.push(crate_dir.as_str());
+        unpublished_crate_dirs.push(crate_dir.as_str());
     }
 
-    if changed_crate_dirs.is_empty() {
+    if unpublished_crate_dirs.is_empty() {
         eprintln!("{SUCCESS}No crates need publishing.");
         return Ok(());
     }
 
     eprintln!("{CHECK}Unpublished crates detected. Starting publication...");
 
-    let changed_crate_dirs = sort_by_dependencies(".", &changed_crate_dirs)?;
-    publish_crates(&changed_crate_dirs, args)?;
+    publish_crates(args)?;
 
-    eprintln!("{SUCCESS}All changed crates published.");
+    eprintln!("{SUCCESS}All crates published.");
 
     Ok(())
 }
 
-/// Finds the first available alpha suffix for the crate and adds it to the
-/// version.
-///
-/// Typically, `version` should be a suffix-less version coming from the `main`
-/// branch, but if `main` is on a beta version, we may get odd version numbers
-/// such as `v1.0.0-beta.2-alpha.1`. This looks awful, but we will accept this
-/// because it would be even weirder to publish an alpha for a version that
-/// already has a beta out.
-async fn add_next_alpha_suffix(crate_name: &str, version: &str) -> Result<String> {
-    let previous_alpha_version =
-        get_previous_alpha_version(CRATES_IO_INDEX_URL, crate_name).await?;
-    Ok(match previous_alpha_version.as_ref() {
-        Some(alpha_version) if matches_base_version(alpha_version, version) => {
-            let alpha_count = get_suffix_count(alpha_version)?;
-            format!("{version}-alpha.{count}", count = alpha_count + 1)
-        }
-        _ => format!("{version}-alpha.1"),
-    })
-}
-
-fn publish_crates(crate_dirs: &[&str], args: &PublishArgs) -> TaskResult {
-    for crate_dir in crate_dirs {
+fn publish_crates(args: &PublishArgs) -> TaskResult {
+    for crate_dir in CRATE_DIRS {
         let mut cargo_args = vec!["publish", "--allow-dirty"];
         if args.dry_run {
             cargo_args.push("--dry-run");
         }
 
-        let output = cmd("cargo", &cargo_args)
-            .stderr_to_stdout()
-            .stdout_capture()
-            .dir(crate_dir)
-            .unchecked()
-            .run()?;
+        let output = cmd("cargo", &cargo_args).dir(crate_dir).unchecked().run()?;
 
         if output.status.code() != Some(0) {
             eprintln!(
-                "{WARN}cargo {args} failed with exit code {code:?}.\n\
-                Output:\n{output}",
+                "{WARN}cargo {args} failed with exit code {code:?}.",
                 args = cargo_args.join(" "),
                 code = output.status.code().unwrap_or(-1),
-                output = String::from_utf8(output.stdout)?
             );
             bail!("Cargo publication failed in {crate_dir}")
         }

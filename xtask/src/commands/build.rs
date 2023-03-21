@@ -42,21 +42,22 @@ pub(crate) fn handle_build_command(args: BuildArgs) -> TaskResult {
             .stderr_capture()
             .run()?;
 
-        let artifact = format!("artifacts/{provider}.wasm");
+        let artifact_path = format!("artifacts/{provider}.wasm");
+        let target_path = "target/wasm32-unknown-unknown";
 
         if args.debug {
-            let input = format!("target/wasm32-unknown-unknown/debug/{provider}_provider.wasm");
-            fs::copy(input, artifact)?;
+            let bundle_path = format!("{target_path}/debug/{provider}_provider.wasm");
+            fs::copy(bundle_path, artifact_path)?;
         } else {
             println!(
                 "{OPTIMIZE}Optimizing {} provider...",
                 style(&provider).cyan().bold()
             );
 
-            let input = format!("target/wasm32-unknown-unknown/release/{provider}_provider.wasm");
+            let bundle_path = format!("{target_path}/release/{provider}_provider.wasm");
             wasm_opt::OptimizationOptions::new_optimize_for_size_aggressively()
                 .set_converge()
-                .run(input, artifact)?;
+                .run(bundle_path, artifact_path)?;
         }
     }
 

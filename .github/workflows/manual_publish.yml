@@ -1,14 +1,20 @@
-name: Build
+name: Manual publish
 
 on:
-  release:
-    type: [published]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "What do we want to publish?"
+        required: true
+        options:
+        - alphas
+        - betas
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  manual-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -35,31 +41,11 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - name: Run tests
-        run: cargo test --verbose
-
-      - name: Compile providers
-        run: |
-          cargo xtask build all
-
-      - name: Attach providers to release
-        uses: meeDamian/github-release@2.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: >
-            artifacts/cloudwatch.wasm
-            artifacts/elasticsearch.wasm
-            artifacts/https.wasm
-            artifacts/loki.wasm
-            artifacts/prometheus.wasm
-            artifacts/sentry.wasm
-
       - name: Cargo login
         uses: actions-rs/cargo@v1
         with:
           command: login
           args: ${{ secrets.CRATES_TOKEN }}
 
-      - name: Publish beta crates
-        if: ${{ github.event_name == 'release' && contains(github.event.release.tag_name, '-beta.') }}
-        run: cargo xtask publish betas
+      - name: Publish crates
+        run: cargo xtask publish ${{ inputs.target }}
