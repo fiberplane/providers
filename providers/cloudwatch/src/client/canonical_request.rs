@@ -179,7 +179,7 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"#;
             ]
             .into(),
             body: None,
-            date: Some(Timestamp(datetime!(2015-08-30 12:36:00 UTC))),
+            date: Some(datetime!(2015-08-30 12:36:00 UTC).into()),
         };
 
         assert_eq!(actual_creq.to_string(), expected);

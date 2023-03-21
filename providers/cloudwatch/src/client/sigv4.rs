@@ -1,5 +1,7 @@
 //! Implemenatation of the version 4 signing protocol for AWS API
 
+use std::ops::Deref;
+
 use super::{canonical_request::request_state, CanonicalRequest};
 use bytes::Bytes;
 use fiberplane_pdk::prelude::Timestamp;
@@ -35,7 +37,7 @@ pub fn format_auth_header_value(
 }
 
 fn datestamp(date: &Timestamp) -> String {
-    date.0
+    date.deref()
         .to_offset(offset!(UTC))
         .format(format_description!("[year][month][day]"))
         .unwrap()
@@ -53,7 +55,7 @@ pub fn amzdate(date: &Timestamp) -> String {
         })
         .encode();
 
-    date.0
+    date.deref()
         .to_offset(offset!(UTC))
         .format(&Iso8601::<AMZCONF>)
         .unwrap()
@@ -143,7 +145,7 @@ mod tests {
 f536975d06c0309214f805bb90ccff089219ecd68b2577efef23edd43b7e1a59"#;
 
         let secret_access_key = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY".parse().unwrap();
-        let sign_time = Timestamp(datetime!(2015-08-30 12:36:00 UTC));
+        let sign_time = datetime!(2015-08-30 12:36:00 UTC).into();
 
         let key = signature_key(&secret_access_key, "us-east-1", &sign_time, "iam");
 
