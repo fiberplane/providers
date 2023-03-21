@@ -126,12 +126,10 @@ fn data_mapper(data: &Data) -> impl Iterator<Item = Result<ProviderEvent>> + '_ 
         let metadata = OtelMetadata::builder()
             .attributes(attributes.clone())
             .resource(BTreeMap::new())
-            .trace_id(None)
-            .span_id(None)
             .build();
         let event = ProviderEvent::builder()
-            .title(value.clone())
-            .time(timestamp.into())
+            .title(value)
+            .time(timestamp)
             .otel(metadata)
             .build();
 
