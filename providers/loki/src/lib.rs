@@ -59,6 +59,16 @@ struct Data {
     values: Vec<(String, String)>,
 }
 
+#[pdk_export]
+fn create_cells(query_type: String, _response: Blob) -> Result<Vec<Cell>> {
+    log(format!("Creating cells for query type: {query_type}"));
+
+    match query_type.as_str() {
+        EVENTS_QUERY_TYPE => create_log_cell(),
+        _ => Err(Error::UnsupportedRequest),
+    }
+}
+
 async fn fetch_logs(query: LokiQuery, config: Config) -> Result<Blob> {
     // Convert unix epoch in seconds to epoch in nanoseconds
     let from = (query.time_range.from.unix_timestamp_nanos()).to_string();
@@ -97,7 +107,7 @@ async fn fetch_logs(query: LokiQuery, config: Config) -> Result<Blob> {
     let log_lines = data
         .iter()
         .flat_map(data_mapper)
-        .collect::<Result<Vec<Event>>>()
+        .collect::<Result<Vec<ProviderEvent>>>()
         .map_err(|e| Error::Data {
             message: format!("Failed to parse data, got error: {e:?}"),
         })?;
@@ -105,7 +115,7 @@ async fn fetch_logs(query: LokiQuery, config: Config) -> Result<Blob> {
     Events(log_lines).to_blob()
 }
 
-fn data_mapper(data: &Data) -> impl Iterator<Item = Result<Event>> + '_ {
+fn data_mapper(data: &Data) -> impl Iterator<Item = Result<ProviderEvent>> + '_ {
     let attributes = &data.labels;
     data.values.iter().map(move |(timestamp, value)| {
         let timestamp = i128::from_str(timestamp)
@@ -119,7 +129,7 @@ fn data_mapper(data: &Data) -> impl Iterator<Item = Result<Event>> + '_ {
             .trace_id(None)
             .span_id(None)
             .build();
-        let event = Event::builder()
+        let event = ProviderEvent::builder()
             .title(value.clone())
             .time(timestamp.into())
             .otel(metadata)
@@ -151,4 +161,15 @@ async fn check_status(request: ProviderRequest) -> Result<Blob> {
         .built_at(BUILD_TIMESTAMP.to_owned())
         .build()
         .to_blob()
+}
+
+pub fn create_log_cell() -> Result<Vec<Cell>> {
+    let logs_cell = Cell::Log(
+        LogCell::builder()
+            .id("query-results".to_string())
+            .data_links(vec![format!("cell-data:{EVENTS_MIME_TYPE},self")])
+            .hide_similar_values(false)
+            .build(),
+    );
+    Ok(vec![logs_cell])
 }
