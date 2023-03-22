@@ -38,5 +38,6 @@ vergen = { version = "7.4.2", default-features = false, features = [
 #fp-bindgen = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
 #fp-bindgen-support = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
 
-# [patch.'ssh://git@github.com/fiberplane/fiberplane.git']
+[patch.'ssh://git@github.com/fiberplane/fiberplane.git']
 # fiberplane-models = { path = "../fiberplane/fiberplane-models" }
+# fiberplane-provider-bindings = { path = "../fiberplane/fiberplane-provider-protocol/fiberplane-provider-bindings" }

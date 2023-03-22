@@ -1,5 +1,5 @@
-use crate::field_attrs::FieldAttrs;
 use crate::schema_field::SchemaField;
+use crate::{field_attrs::FieldAttrs, schema_field::ArraySchema};
 use fiberplane_models::providers::*;
 use proc_macro::TokenStream;
 use proc_macro_error::abort;
@@ -112,6 +112,13 @@ fn determine_field_type(field: &Field) -> SchemaField {
                 SchemaField::Text(field)
             }
         }
+        (struct_name, true) => SchemaField::Array(ArraySchema {
+            element_struct_type_name: struct_name.to_string(),
+            name: name.clone(),
+            label: String::new(),
+            minimum_length: 0,
+            maximum_length: attrs.max.map(|val| val.max(0).try_into().unwrap()),
+        }),
         _ => abort!(field.ty, "unsupported type in schema"),
     };
 
