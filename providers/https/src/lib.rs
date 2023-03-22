@@ -176,6 +176,53 @@ async fn check_status(config: Config) -> Result<Blob> {
 }
 
 async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> {
+    // HACK: This KeyValueRow structure is a stop-gap measure until we
+    // have ArrayField support in the query data, so we could
+    // directly have Vec of KeyValueRow in the provider request QuerySchema.
+    /// Row of key-value pair with front-end-relevant metadata.
+    /// The metadata needs to stay attached to allow for proper
+    /// synchronization of UI state using only the queryData of
+    /// the provider cell
+    #[derive(Default)]
+    struct KeyValueRow {
+        /// UUID used for React DOM refreshes.
+        /// Safe to ignore here.
+        uuid: String,
+        /// True if the Key-Value pair has been enabled (checked) on UI
+        enabled: bool,
+        /// Key (a header key, or a query param name)
+        key: String,
+        /// Value (a header value, or a query param value)
+        value: String,
+    }
+
+    /// A Row is expected to be serialized as semi-colon separated csv:
+    /// `UUID;BOOL;KEY;VALUE`
+    /// We allow 0/1 or true/false for the bool, but 0/1 is more efficient really
+    impl std::str::FromStr for KeyValueRow {
+        type Err = Error;
+
+        fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+            let mut res = KeyValueRow::default();
+            for (i, val) in s.split(';').enumerate() {
+                match i {
+                    0 => res.uuid = val.into(),
+                    1 => {
+                        if !["1", "0", "true", "false"].contains(&val.to_ascii_lowercase().as_ref())
+                        {
+                            return Err(Error::UnsupportedRequest);
+                        }
+                        res.enabled = val == "1" || &val.to_ascii_lowercase() == "true";
+                    }
+                    2 => res.key = val.into(),
+                    3 => res.value = val.into(),
+                    _ => return Err(Error::UnsupportedRequest),
+                }
+            }
+            Ok(res)
+        }
+    }
+
     if request.query_data.mime_type != FORM_ENCODED_MIME_TYPE {
         return Err(Error::UnsupportedRequest);
     }
@@ -241,26 +288,22 @@ async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> 
                     headers = Some(HashMap::new())
                 }
                 for line in value.as_ref().lines() {
-                    if let Some((k, v)) = line.split_once('=') {
-                        // HACK - to filter headers that were disabled in the UI
-                        if !k.starts_with("__$FPDISABLED__") {
-                            headers
-                                .as_mut()
-                                .map(|h| h.insert(k.to_string(), v.to_string()));
-                        }
+                    let row: KeyValueRow = line.parse()?;
+                    if row.enabled {
+                        headers.as_mut().map(|h| h.insert(row.key, row.value));
                     }
                 }
             }
             QUERY_PARAM_NAME => {
                 let mut serializer = form_urlencoded::Serializer::new(String::new());
-                serializer.extend_pairs(
-                    value
-                        .as_ref()
-                        .lines()
-                        // HACK - filter query params that were disabled in the UI
-                        .filter(|line| !line.starts_with("__$FPDISABLED__"))
-                        .filter_map(|line| line.split_once('=')),
-                );
+                serializer.extend_pairs(value.as_ref().lines().filter_map(|line| {
+                    let row: KeyValueRow = line.parse().ok()?;
+                    if row.enabled {
+                        Some((row.key, row.value))
+                    } else {
+                        None
+                    }
+                }));
                 query = serializer.finish()
             }
             _ => {
