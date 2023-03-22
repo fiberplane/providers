@@ -1,5 +1,5 @@
 error[E0599]: no function or associated item named `schema` found for struct `RowItem` in the current scope
-  --> tests/schema/array_field.rs:14:23
+  --> tests/schema/fail/array_field.rs:14:23
    |
 9  | pub struct RowItem {
    | ------------------ function or associated item `schema` not found for this struct

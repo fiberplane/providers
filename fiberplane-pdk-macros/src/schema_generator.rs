@@ -5,8 +5,7 @@ use proc_macro::TokenStream;
 use proc_macro_error::abort;
 use quote::quote;
 use syn::{
-    parse_macro_input, Attribute, Field, GenericArgument, ItemStruct, PathArguments, PathSegment,
-    Type,
+    parse_macro_input, Field, GenericArgument, ItemStruct, PathArguments, PathSegment, Type,
 };
 
 /// Generates a schema from the given struct.
@@ -16,22 +15,13 @@ pub fn generate_schema(field_enum: &str, struct_item: TokenStream) -> TokenStrea
         .fields
         .iter()
         .map(|field: &Field| {
-            field_as_query_field_token_stream(field, field_enum, &field.attrs, &schema_struct.attrs)
+            let schema_field = determine_field_type(field);
+            schema_field.to_token_stream(field_enum, &field.attrs, &schema_struct.attrs)
         })
         .collect();
 
     let ts = quote! { vec![#(#fields),*] };
     ts.into()
-}
-
-fn field_as_query_field_token_stream(
-    field: &Field,
-    field_enum: &str,
-    field_attrs: &[Attribute],
-    struct_attrs: &[Attribute],
-) -> proc_macro2::TokenStream {
-    let schema_field = determine_field_type(field);
-    schema_field.to_token_stream(field_enum, field_attrs, struct_attrs)
 }
 
 fn determine_field_type(field: &Field) -> SchemaField {

@@ -115,13 +115,13 @@ impl SchemaField {
             Array(ArraySchema {
                 maximum_length: Some(maximum_length),
                 ..
-            }) => quote! { .with_maximum_length(Some(#maximum_length)) },
+            }) => quote! { .with_maximum_length(#maximum_length) },
             _ => quote! {},
         };
 
         let min = match &self {
             Integer(IntegerField { min: Some(min), .. }) => quote! { .with_min(#min) },
-            Array(ArraySchema { minimum_length, .. }) => {
+            Array(ArraySchema { minimum_length, .. }) if *minimum_length != 0 => {
                 quote! { .with_minimum_length(#minimum_length) }
             }
             _ => quote! {},

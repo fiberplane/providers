@@ -20,16 +20,7 @@ pub fn main() {
     assert_eq!(
         schema,
         vec![QueryField::from(
-            TextField::builder()
-                .name("list".to_string())
-                .multiple(true)
-                .label(String::new())
-                .multiline(false)
-                .placeholder(String::new())
-                .prerequisites(vec![])
-                .required(true)
-                .supports_suggestions(false)
-                .build()
+            TextField::new().with_name("list").multiple().required()
         )]
     );
 
