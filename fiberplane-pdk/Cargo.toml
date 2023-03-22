@@ -22,4 +22,6 @@ rmpv = { workspace = true }
 serde = { workspace = true }
 serde_html_form = "0.2"
 serde_json = { workspace = true }
+
+[dev-dependencies]
 time = { workspace = true }

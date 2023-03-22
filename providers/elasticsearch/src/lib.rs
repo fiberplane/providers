@@ -99,10 +99,7 @@ async fn fetch_logs(query: ElasticQuery, config: ElasticConfig) -> Result<Blob> 
     // TODO should we determine timestamp field name from API?
     let query_string = format!(
         "{} AND {}:[{} TO {}]",
-        query.query,
-        timestamp_field_names[0],
-        timestamp_to_rfc3339(query.time_range.from)?,
-        timestamp_to_rfc3339(query.time_range.to)?
+        query.query, timestamp_field_names[0], query.time_range.from, query.time_range.to
     );
 
     let body = SearchRequestBody {
@@ -297,17 +294,6 @@ async fn check_status(request: ProviderRequest) -> Result<Blob> {
         .built_at(BUILD_TIMESTAMP.to_owned())
         .build()
         .to_blob()
-}
-
-fn timestamp_to_rfc3339(timestamp: OffsetDateTime) -> Result<String> {
-    timestamp
-        .format(&Rfc3339)
-        .map_err(|err| Error::ValidationError {
-            errors: vec![ValidationError::builder()
-                .field_name("time_range".to_owned())
-                .message(format!("Invalid timestamp in range: {err}"))
-                .build()],
-        })
 }
 
 pub fn create_log_cell() -> Result<Vec<Cell>> {
