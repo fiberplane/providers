@@ -33,6 +33,7 @@ jobs:
         with:
           toolchain: stable
           override: true
+          target: wasm32-unknown-unknown
           components: rustfmt, clippy
 
       - name: Run tests
