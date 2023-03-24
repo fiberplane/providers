@@ -34,7 +34,7 @@ mod tests {
             },
         };
         let there_and_back: TargetType =
-            serde_html_form::from_str(&serde_html_form::to_string(&initial).unwrap()).unwrap();
+            serde_qs::from_str(&serde_qs::to_string(&initial).unwrap()).unwrap();
         assert_eq!(there_and_back, initial)
     }
 
@@ -42,7 +42,7 @@ mod tests {
     fn deserialize_from_url() {
         // URL encoding of "2023-02-08T09:16:27.794Z 2023-02-08T09:31:27.794Z"
         let input = "range=2023-02-08T09%3A16%3A27.794Z%202023-02-08T09%3A31%3A27.794Z";
-        let target: TargetType = serde_html_form::from_str(input).unwrap();
+        let target: TargetType = serde_qs::from_str(input).unwrap();
         assert_eq!(
             target,
             TargetType {
@@ -58,7 +58,7 @@ mod tests {
     fn deserialize_from_bytes() {
         // URL encoding of "2023-02-08T09:16:27.794Z 2023-02-08T09:31:27.794Z"
         let input = b"range=2023-02-08T09%3A16%3A27.794Z%202023-02-08T09%3A31%3A27.794Z";
-        let target: TargetType = serde_html_form::from_bytes(input).unwrap();
+        let target: TargetType = serde_qs::from_bytes(input).unwrap();
         assert_eq!(
             target,
             TargetType {
