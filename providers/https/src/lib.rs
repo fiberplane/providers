@@ -191,6 +191,12 @@ async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> 
         /// True if the Key-Value pair has been enabled (checked) on UI
         enabled: bool,
         /// Key (a header key, or a query param name)
+        ///
+        /// NOTE: Semi-colons aren't allowed in the field, this would break
+        /// parsing. As the keys here are either header keys or query parameter
+        /// keys, it is a safe assumption to make to simplify the code for the
+        /// time being until ArrayField are properly supported. This compromise
+        /// is one of the reason the provider is still only Beta in support.
         key: String,
         /// Value (a header value, or a query param value)
         value: String,
@@ -204,7 +210,7 @@ async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> 
 
         fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
             let mut res = KeyValueRow::default();
-            for (i, val) in s.split(';').enumerate() {
+            for (i, val) in s.splitn(4, ';').enumerate() {
                 match i {
                     0 => res.uuid = val.into(),
                     1 => {
@@ -216,7 +222,7 @@ async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> 
                     }
                     2 => res.key = val.into(),
                     3 => res.value = val.into(),
-                    _ => return Err(Error::UnsupportedRequest),
+                    _ => unreachable!("The iterator comes from a splitn(4, ...)"),
                 }
             }
             Ok(res)
