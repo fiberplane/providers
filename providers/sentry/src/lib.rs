@@ -11,10 +11,7 @@ use fiberplane_models::{
 use fiberplane_pdk::prelude::*;
 use percent_encode::encode_uri_component;
 use sentry::*;
-use std::{
-    collections::{BTreeMap, HashMap},
-    fmt::Write,
-};
+use std::{collections::BTreeMap, fmt::Write};
 
 const OVERVIEW_QUERY_TYPE: &str = "x-issues-overview";
 
@@ -82,19 +79,11 @@ async fn query_issues_overview(query_data: Blob, config: SentryConfig) -> Result
         encode_uri_component(&config.project_slug),
         encode_uri_component(&query)
     );
-    let headers = HashMap::from([(
+
+    let response = make_http_request(HttpRequest::get(url).with_headers([(
         "Authorization".to_owned(),
         format!("Bearer {}", config.token),
-    )]);
-
-    let response = make_http_request(
-        HttpRequest::builder()
-            .body(None)
-            .headers(Some(headers))
-            .method(HttpRequestMethod::Get)
-            .url(url)
-            .build(),
-    )
+    )]))
     .await?;
 
     let issues =

@@ -5,6 +5,8 @@ pub mod cloudwatch_logs;
 pub mod paginate;
 pub mod resource_groups_tagging;
 
+use std::ops::Deref;
+
 use fiberplane_pdk::prelude::Timestamp as FpTimestamp;
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
@@ -53,14 +55,16 @@ pub struct Timestamp(f64);
 
 impl From<Timestamp> for FpTimestamp {
     fn from(ts: Timestamp) -> Self {
-        Self(OffsetDateTime::from_unix_timestamp(ts.0.round() as i64).unwrap())
+        OffsetDateTime::from_unix_timestamp(ts.0.round() as i64)
+            .unwrap()
+            .into()
     }
 }
 
 impl From<FpTimestamp> for Timestamp {
     fn from(ts: FpTimestamp) -> Self {
         // Lossy conversion
-        Self(ts.0.unix_timestamp() as f64)
+        Self(ts.deref().unix_timestamp() as f64)
     }
 }
 
@@ -70,13 +74,13 @@ pub struct IntTimestamp(i64);
 
 impl From<IntTimestamp> for FpTimestamp {
     fn from(ts: IntTimestamp) -> Self {
-        Self(OffsetDateTime::from_unix_timestamp(ts.0).unwrap())
+        OffsetDateTime::from_unix_timestamp(ts.0).unwrap().into()
     }
 }
 
 impl From<FpTimestamp> for IntTimestamp {
     fn from(ts: FpTimestamp) -> Self {
-        Self(ts.0.unix_timestamp())
+        Self(ts.deref().unix_timestamp())
     }
 }
 

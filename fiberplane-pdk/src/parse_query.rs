@@ -48,8 +48,8 @@ mod tests {
             ShowcaseQueryData {
                 query: "I'm a pretty query!!".to_string(),
                 time_range: DateTimeRange {
-                    from: datetime!(2023-02-08 09:16:27.794 +00:00),
-                    to: datetime!(2023-02-08 09:31:27.794 +00:00)
+                    from: datetime!(2023-02-08 09:16:27.794 +00:00).into(),
+                    to: datetime!(2023-02-08 09:31:27.794 +00:00).into()
                 },
                 live: false,
                 tags: "Test".to_string()
@@ -92,8 +92,8 @@ mod tests {
             ArrayQueryData {
                 key: "Global key".to_string(),
                 time_range: DateTimeRange {
-                    from: datetime!(2023-02-08 09:16:27.794 +00:00),
-                    to: datetime!(2023-02-08 09:31:27.794 +00:00)
+                    from: datetime!(2023-02-08 09:16:27.794 +00:00).into(),
+                    to: datetime!(2023-02-08 09:31:27.794 +00:00).into()
                 },
                 values: vec![
                     RowQueryData {

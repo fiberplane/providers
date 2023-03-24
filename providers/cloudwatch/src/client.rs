@@ -70,32 +70,34 @@ impl ClientCommon {
         D: DeserializeOwned,
     {
         let canonical = request.into();
-        let request = canonical.prepare(&self.host, &now());
+        let canonical = canonical.prepare(&self.host, &now());
 
         // Converting a ready_to_sign Canonical request into a signed, bindings::HttpRequest payload
-        let method = match &request.method {
+        let method = match &canonical.method {
             &Method::GET => Ok(HttpRequestMethod::Get),
             &Method::POST => Ok(HttpRequestMethod::Post),
             unknown => Err(ClientError::InvalidRequest(format!(
                 "Method {unknown} is unsupported"
             ))),
         }?;
-        let headers = self.format_headers(&request, extra_unsigned_headers);
+        let headers = self.format_headers(&canonical, extra_unsigned_headers);
 
-        let uri: &str = request.uri.as_ref();
-        let querystring = request.querystring();
+        let uri: &str = canonical.uri.as_ref();
+        let querystring = canonical.querystring();
         let url = if querystring.is_empty() {
             format!("{}{}", self.endpoint, uri)
         } else {
             format!("{}{}?{}", self.endpoint, uri, querystring)
         };
 
-        let request = HttpRequest::builder()
-            .url(url)
-            .method(method)
-            .headers(Some(headers.into_iter().collect()))
-            .body(request.body.clone())
-            .build();
+        let request = {
+            let mut request = HttpRequest::default();
+            request.method = method;
+            request.url = url;
+            request.headers = Some(headers.clone());
+            request.body = canonical.body;
+            request
+        };
 
         log(format!("CloudWatch: Sending request {request:?}"));
 

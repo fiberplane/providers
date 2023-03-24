@@ -1,8 +1,9 @@
 use inflector::Inflector;
 use std::convert::TryFrom;
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub enum Casing {
+    #[default]
     Original,
     CamelCase,
     PascalCase,
@@ -19,12 +20,6 @@ impl Casing {
             Self::SnakeCase => string.to_snake_case(),
             Self::ScreamingSnakeCase => string.to_screaming_snake_case(),
         }
-    }
-}
-
-impl Default for Casing {
-    fn default() -> Self {
-        Self::Original
     }
 }
 

@@ -7,8 +7,8 @@ use elasticsearch_dsl::{Hit, SearchResponse};
 use fiberplane_pdk::prelude::*;
 use fiberplane_pdk::serde_json::{self, Map, Value};
 use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
-use std::{cmp::Ordering, collections::HashMap};
 use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 const PAGE_SIZE: u32 = 30;
@@ -90,7 +90,7 @@ async fn fetch_logs(query: ElasticQuery, config: ElasticConfig) -> Result<Blob> 
         path_segments.push("_search");
     }
 
-    let mut headers = HashMap::from([("Content-Type".to_owned(), "application/json".to_owned())]);
+    let mut headers = BTreeMap::from([("Content-Type".to_owned(), "application/json".to_owned())]);
     if let Some(api_key) = config.api_key {
         headers.insert("Authorization".to_owned(), format!("ApiKey {api_key}"));
     }
@@ -99,10 +99,7 @@ async fn fetch_logs(query: ElasticQuery, config: ElasticConfig) -> Result<Blob> 
     // TODO should we determine timestamp field name from API?
     let query_string = format!(
         "{} AND {}:[{} TO {}]",
-        query.query,
-        timestamp_field_names[0],
-        timestamp_to_rfc3339(query.time_range.from)?,
-        timestamp_to_rfc3339(query.time_range.to)?
+        query.query, timestamp_field_names[0], query.time_range.from, query.time_range.to
     );
 
     let body = SearchRequestBody {
@@ -110,18 +107,10 @@ async fn fetch_logs(query: ElasticQuery, config: ElasticConfig) -> Result<Blob> 
     };
     url.set_query(Some(&format!("q={}", &query_string)));
 
-    let request = HttpRequest::builder()
-        .body(Some(
-            serde_json::to_vec(&body)
-                .map_err(|err| Error::Data {
-                    message: format!("Error serializing query: {err:?}"),
-                })?
-                .into(),
-        ))
-        .headers(Some(headers))
-        .method(HttpRequestMethod::Post)
-        .url(url.to_string())
-        .build();
+    let body = serde_json::to_vec(&body).map_err(|err| Error::Data {
+        message: format!("Error serializing query: {err:?}"),
+    })?;
+    let request = HttpRequest::post(url, body).with_headers(headers);
 
     // Parse response
     let response = make_http_request(request).await?;
@@ -245,16 +234,17 @@ fn parse_hit(
                 && !RESOURCE_FIELD_EXCEPTIONS.contains(&key.as_str())
         });
 
-    let metadata = OtelMetadata::builder()
+    let mut otel = OtelMetadata::builder()
         .attributes(attributes)
         .resource(resource)
-        .trace_id(trace_id)
-        .span_id(span_id)
         .build();
+    otel.trace_id = trace_id;
+    otel.span_id = span_id;
+
     let event = ProviderEvent::builder()
         .title(title)
-        .time(timestamp.into())
-        .otel(metadata)
+        .time(timestamp)
+        .otel(otel)
         .build();
 
     Some(event)
@@ -291,14 +281,8 @@ async fn check_status(request: ProviderRequest) -> Result<Blob> {
         path_segments.push("_xpack");
     }
 
-    let headers = HashMap::from([("Content-Type".to_owned(), "application/json".to_owned())]);
-
-    let request = HttpRequest::builder()
-        .body(None)
-        .headers(Some(headers))
-        .method(HttpRequestMethod::Get)
-        .url(url.to_string())
-        .build();
+    let request = HttpRequest::get(url)
+        .with_headers([("Content-Type".to_owned(), "application/json".to_owned())]);
 
     // At this point we don't care to validate the info Loki sends back.
     // We just care it responded with 200 OK.
@@ -310,17 +294,6 @@ async fn check_status(request: ProviderRequest) -> Result<Blob> {
         .built_at(BUILD_TIMESTAMP.to_owned())
         .build()
         .to_blob()
-}
-
-fn timestamp_to_rfc3339(timestamp: OffsetDateTime) -> Result<String> {
-    timestamp
-        .format(&Rfc3339)
-        .map_err(|err| Error::ValidationError {
-            errors: vec![ValidationError::builder()
-                .field_name("time_range".to_owned())
-                .message(format!("Invalid timestamp in range: {err}"))
-                .build()],
-        })
 }
 
 pub fn create_log_cell() -> Result<Vec<Cell>> {

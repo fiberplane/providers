@@ -1,15 +1,16 @@
 mod deserialize;
 mod serialize;
-use time::OffsetDateTime;
+
+use fiberplane_provider_bindings::Timestamp;
 
 /// Type to use for query data fields of type "date_time_range".
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DateTimeRange {
     /// Start time of the range, inclusive.
-    pub from: OffsetDateTime,
+    pub from: Timestamp,
 
     /// End time of the range, exclusive.
-    pub to: OffsetDateTime,
+    pub to: Timestamp,
 }
 
 #[cfg(test)]
@@ -28,8 +29,8 @@ mod tests {
     fn back_and_forth_url() {
         let initial = TargetType {
             range: DateTimeRange {
-                from: datetime!(2023-02-08 09:16:27.794 +00:00),
-                to: datetime!(2023-02-08 09:31:27.794 +00:00),
+                from: datetime!(2023-02-08 09:16:27.794 +00:00).into(),
+                to: datetime!(2023-02-08 09:31:27.794 +00:00).into(),
             },
         };
         let there_and_back: TargetType =
@@ -46,8 +47,8 @@ mod tests {
             target,
             TargetType {
                 range: DateTimeRange {
-                    from: datetime!(2023-02-08 09:16:27.794 +00:00),
-                    to: datetime!(2023-02-08 09:31:27.794 +00:00)
+                    from: datetime!(2023-02-08 09:16:27.794 +00:00).into(),
+                    to: datetime!(2023-02-08 09:31:27.794 +00:00).into()
                 }
             }
         )
@@ -62,8 +63,8 @@ mod tests {
             target,
             TargetType {
                 range: DateTimeRange {
-                    from: datetime!(2023-02-08 09:16:27.794 +00:00),
-                    to: datetime!(2023-02-08 09:31:27.794 +00:00)
+                    from: datetime!(2023-02-08 09:16:27.794 +00:00).into(),
+                    to: datetime!(2023-02-08 09:31:27.794 +00:00).into()
                 }
             }
         )

@@ -2,10 +2,10 @@ mod config;
 
 pub use config::Config;
 use fiberplane_provider_bindings::{
-    log, make_http_request, Blob, Error, HttpRequest, HttpRequestError, HttpRequestMethod,
+    log, make_http_request, Blob, Error, HttpRequest, HttpRequestError,
 };
 use serde::{de::DeserializeOwned, Deserialize};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use url::Url;
 
 /// Response to the /api/datasources endpoint
@@ -59,7 +59,7 @@ where
 async fn send_query<T>(
     url: &Url,
     path_and_query: &str,
-    headers: Option<HashMap<String, String>>,
+    headers: Option<BTreeMap<String, String>>,
     body: Option<Blob>,
 ) -> Result<T, Error>
 where
@@ -73,21 +73,12 @@ where
         .to_string();
 
     let request = if let Some(blob) = body {
-        let mut headers = headers.unwrap_or_default();
-        headers.insert("Content-Type".to_string(), blob.mime_type);
-        HttpRequest::builder()
-            .url(url)
-            .headers(Some(headers))
-            .method(HttpRequestMethod::Post)
-            .body(Some(blob.data))
-            .build()
+        HttpRequest::post(url, blob.data)
+            .with_headers([("Content-Type".to_owned(), blob.mime_type)])
+    } else if let Some(headers) = headers {
+        HttpRequest::get(url).with_headers(headers)
     } else {
-        HttpRequest::builder()
-            .url(url)
-            .headers(headers)
-            .method(HttpRequestMethod::Get)
-            .body(None)
-            .build()
+        HttpRequest::get(url)
     };
 
     log(format!(
@@ -126,14 +117,12 @@ async fn get_grafana_datasource_proxy_url(
         .map_err(|e| Error::Config {
             message: format!("Invalid URL: {e:?}"),
         })?;
-    let response = make_http_request(
-        HttpRequest::builder()
-            .body(None)
-            .headers(config.to_headers())
-            .method(HttpRequestMethod::Get)
-            .url(url.to_string())
-            .build(),
-    )
+    let request = HttpRequest::get(url);
+    let response = make_http_request(if let Some(headers) = config.to_headers() {
+        request.with_headers(headers)
+    } else {
+        request
+    })
     .await?;
     let data_sources: Vec<Datasource> =
         serde_json::from_slice(&response.body).map_err(|e| Error::Deserialization {
