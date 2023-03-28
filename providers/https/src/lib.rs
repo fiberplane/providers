@@ -148,12 +148,9 @@ pub struct QueryParam {
 
 async fn handle_query(request: HttpProviderQuery, config: Config) -> Result<Blob> {
     let mut path = String::new();
-    let mut url = Err(Error::Invocation {
-        message: "no URL given".to_string(),
-    });
     let mut headers: BTreeMap<String, String> = BTreeMap::new();
 
-    if let Some(ref api) = config.api {
+    let url = if let Some(ref api) = config.api {
         if request.path.parse::<Url>().is_ok() {
             return Err(Error::ValidationError {
                 errors: vec![ValidationError::builder()
@@ -162,21 +159,21 @@ async fn handle_query(request: HttpProviderQuery, config: Config) -> Result<Blob
                     .build()],
             });
         }
-        url = Ok(api.base_url.clone());
         path = request.path.clone();
         if let Some(api_headers) = api.to_headers() {
             headers = api_headers;
         };
+        Ok(api.base_url.clone())
     } else if let Ok(full_url) = request.path.parse::<Url>() {
-        url = Ok(full_url);
+        Ok(full_url)
     } else {
-        return Err(Error::ValidationError {
+        Err(Error::ValidationError {
             errors: vec![ValidationError::builder()
                 .field_name(PATH_PARAM_NAME.to_string())
                 .message(format!("invalid url: {:?}", request.path))
                 .build()],
-        });
-    }
+        })
+    }?;
 
     let method = match request.method.as_str().to_uppercase().as_str() {
         "GET" => HttpRequestMethod::Get,
@@ -203,7 +200,6 @@ async fn handle_query(request: HttpProviderQuery, config: Config) -> Result<Blob
     request.extra_headers.iter().for_each(|header| {
         headers.insert(header.key.clone(), header.value.clone());
     });
-    let url = url?;
 
     if !query.is_empty() {
         path = format!("{path}?{query}");
