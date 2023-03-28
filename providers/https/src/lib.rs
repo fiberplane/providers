@@ -1,4 +1,5 @@
 use fiberplane_pdk::prelude::*;
+use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::env;
@@ -46,64 +47,15 @@ fn get_config_schema() -> ConfigSchema {
     ]
 }
 
-#[pdk_export]
-async fn get_supported_query_types(config: ProviderConfig) -> Vec<SupportedQueryType> {
-    let config = serde_json::from_value::<Config>(config);
-    let path_label = match config {
-        Ok(config) if config.api.is_some() => "Path to query in the API, starting with /",
-        _ => "Address to query, starting with https://",
-    };
-
-    vec![
-        SupportedQueryType::new(PERFORM_QUERY_TYPE)
-            .with_schema(vec![
-                // TODO: Wait for Studio to implement the select field (FP-2590),
-                // then use a QueryField::Select to implement the type of query
-                TextField::new()
-                    .with_name(HTTP_METHOD_PARAM_NAME)
-                    .with_label("Type of query")
-                    .required()
-                    .into(),
-                TextField::new()
-                    .with_name(PATH_PARAM_NAME)
-                    .with_label(path_label)
-                    .required()
-                    .into(),
-                TextField::new()
-                    .with_name(QUERY_PARAM_NAME)
-                    .with_label("Query parameters. One pair key=value per line, like 'q=fiberplane'")
-                    .multiline()
-                    .into(),
-                TextField::new()
-                    .with_name(EXTRA_HEADERS_PARAM_NAME)
-                    .with_label("Extra headers to pass. One pair key=value per line, like 'Accept=application/json'")
-                    .multiline()
-                    .into(),
-                // TODO: Wait for Studio to implement the checkbox field (FP-2593)
-                // to add a FORCE_JSON_PARAM_NAME field that is just a
-                // checkbox that adds an 'Accept: application/json' header
-            ])
-            .supporting_mime_types(&[CELLS_MIME_TYPE]),
-        SupportedQueryType::new(STATUS_QUERY_TYPE).supporting_mime_types(&[STATUS_MIME_TYPE]),
-    ]
-}
-
-#[pdk_export]
-async fn invoke2(request: ProviderRequest) -> Result<Blob> {
-    log(format!(
-        "https provider (commit: {}, built at: {}) invoked for query type \"{}\" and query data \"{:?}\" with config \"{:?}\"",
-        COMMIT_HASH, BUILD_TIMESTAMP, request.query_type, request.query_data, request.config
-    ));
-
-    let config: Config =
-        serde_json::from_value(request.config.clone()).map_err(|err| Error::Config {
-            message: format!("Error parsing config: {err:?}"),
-        })?;
-
-    match request.query_type.as_str() {
-        PERFORM_QUERY_TYPE => handle_query(config, request).await,
-        STATUS_QUERY_TYPE => check_status(config).await,
-        _ => Err(Error::UnsupportedRequest),
+pdk_query_types! {
+    PERFORM_QUERY_TYPE => {
+        label: "Perform HTTP query",
+        handler: handle_query(HttpProviderQuery, Config).await,
+        supported_mime_types: [CELLS_MIME_TYPE]
+    },
+    STATUS_MIME_TYPE => {
+        handler: check_status(ProviderRequest).await,
+        supported_mime_types: [STATUS_MIME_TYPE]
     }
 }
 
@@ -145,7 +97,13 @@ async fn send_query(
     make_http_request(request).await.try_into()
 }
 
-async fn check_status(config: Config) -> Result<Blob> {
+async fn check_status(request: ProviderRequest) -> Result<Blob> {
+    log(format!(
+        "https provider (commit: {}, built at: {}) invoked for query type \"{}\" and query data \"{:?}\" with config \"{:?}\"",
+        COMMIT_HASH, BUILD_TIMESTAMP, request.query_type, request.query_data, request.config
+    ));
+
+    let config: Config = Config::parse(request.config.clone())?;
     match config.api {
         Some(api) if api.health_check_path.is_some() => {
             let info = send_query(
@@ -168,105 +126,86 @@ async fn check_status(config: Config) -> Result<Blob> {
     }
 }
 
-async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> {
-    if request.query_data.mime_type != FORM_ENCODED_MIME_TYPE {
-        return Err(Error::UnsupportedRequest);
-    }
-    let mut path = String::new();
-    let mut query = String::new();
-    let mut url = Err(Error::Invocation {
-        message: "no URL given".to_string(),
-    });
-    let mut headers: Option<BTreeMap<String, String>> = None;
-    let mut method = HttpRequestMethod::Get;
-    for (key, value) in form_urlencoded::parse(&request.query_data.data) {
-        match key.as_ref() {
-            HTTP_METHOD_PARAM_NAME => match value.as_ref().to_uppercase().as_str() {
-                "GET" => method = HttpRequestMethod::Get,
-                unsupported => {
-                    return Err(Error::ValidationError {
-                        errors: vec![ValidationError::builder()
-                            .field_name(HTTP_METHOD_PARAM_NAME.to_string())
-                            .message(format!(
-                                "{unsupported} is not a supported HTTPS method with this provider."
-                            ))
-                            .build()],
-                    })
-                }
-            },
-            PATH_PARAM_NAME => {
-                if let Some(ref api) = config.api {
-                    if value.parse::<Url>().is_ok() {
-                        return Err(Error::ValidationError {
-                            errors: vec![ValidationError::builder()
-                                .field_name(PATH_PARAM_NAME.to_string())
-                                .message(
-                                    "a provider with a baseUrl cannot query arbitrary URLs"
-                                        .to_string(),
-                                )
-                                .build()],
-                        });
-                    }
-                    url = Ok(api.base_url.clone());
-                    path = value.to_string();
-                    if let Some(api_headers) = api.to_headers() {
-                        if let Some(h) = headers.as_mut() {
-                            for (k, v) in api_headers {
-                                h.insert(k, v);
-                            }
-                        } else {
-                            headers = Some(api_headers)
-                        }
-                    };
-                } else if let Ok(full_url) = value.parse::<Url>() {
-                    url = Ok(full_url);
-                } else {
-                    return Err(Error::ValidationError {
-                        errors: vec![ValidationError::builder()
-                            .field_name(PATH_PARAM_NAME.to_string())
-                            .message(format!("invalid url: {value:?}"))
-                            .build()],
-                    });
-                }
-            }
-            EXTRA_HEADERS_PARAM_NAME => {
-                if headers.is_none() {
-                    headers = Some(BTreeMap::new())
-                }
-                for line in value.as_ref().lines() {
-                    if let Some((k, v)) = line.split_once('=') {
-                        headers
-                            .as_mut()
-                            .map(|h| h.insert(k.to_string(), v.to_string()));
-                    }
-                }
-            }
-            QUERY_PARAM_NAME => {
-                let mut serializer = form_urlencoded::Serializer::new(String::new());
-                serializer.extend_pairs(
-                    value
-                        .as_ref()
-                        .lines()
-                        .filter_map(|line| line.split_once('=')),
-                );
-                query = serializer.finish()
-            }
-            _ => {
-                log(format!(
-                    "https provider received an unknown query parameter: {}",
-                    key.as_ref()
-                ));
-            }
-        }
-    }
+#[derive(QuerySchema, Deserialize)]
+pub struct HttpProviderQuery {
+    pub method: String,
+    pub path: String,
+    pub extra_headers: Vec<Header>,
+    pub query_params: Vec<QueryParam>,
+}
 
-    let url = url?;
+#[derive(QuerySchema, Deserialize)]
+pub struct Header {
+    pub key: String,
+    pub value: String,
+}
+
+#[derive(QuerySchema, Deserialize)]
+pub struct QueryParam {
+    pub key: String,
+    pub value: String,
+}
+
+async fn handle_query(request: HttpProviderQuery, config: Config) -> Result<Blob> {
+    let mut path = String::new();
+    let mut headers: BTreeMap<String, String> = BTreeMap::new();
+
+    let url = if let Some(ref api) = config.api {
+        if request.path.parse::<Url>().is_ok() {
+            return Err(Error::ValidationError {
+                errors: vec![ValidationError::builder()
+                    .field_name(PATH_PARAM_NAME.to_string())
+                    .message("a provider with a baseUrl cannot query arbitrary URLs".to_string())
+                    .build()],
+            });
+        }
+        path = request.path.clone();
+        if let Some(api_headers) = api.to_headers() {
+            headers = api_headers;
+        };
+        Ok(api.base_url.clone())
+    } else if let Ok(full_url) = request.path.parse::<Url>() {
+        Ok(full_url)
+    } else {
+        Err(Error::ValidationError {
+            errors: vec![ValidationError::builder()
+                .field_name(PATH_PARAM_NAME.to_string())
+                .message(format!("invalid url: {:?}", request.path))
+                .build()],
+        })
+    }?;
+
+    let method = match request.method.as_str().to_uppercase().as_str() {
+        "GET" => HttpRequestMethod::Get,
+        unsupported => {
+            return Err(Error::ValidationError {
+                errors: vec![ValidationError::builder()
+                    .field_name(HTTP_METHOD_PARAM_NAME.to_string())
+                    .message(format!(
+                        "{unsupported} is not a supported HTTPS method with this provider."
+                    ))
+                    .build()],
+            })
+        }
+    };
+    let mut serializer = form_urlencoded::Serializer::new(String::new());
+    serializer.extend_pairs(
+        request
+            .query_params
+            .iter()
+            .map(|param| (param.key.to_string(), param.value.to_string())),
+    );
+    let query = serializer.finish();
+
+    request.extra_headers.iter().for_each(|header| {
+        headers.insert(header.key.clone(), header.value.clone());
+    });
 
     if !query.is_empty() {
         path = format!("{path}?{query}");
     }
 
-    send_query(&url, &path, method, headers, None)
+    send_query(&url, &path, method, Some(headers), None)
         .await
         .and_then(|resp| resp.try_into_blob(config.show_headers))
 }

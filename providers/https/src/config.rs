@@ -15,6 +15,16 @@ pub struct Config {
     pub show_headers: bool,
 }
 
+impl Config {
+    pub fn parse(
+        blob: fiberplane_pdk::providers::ProviderConfig,
+    ) -> fiberplane_pdk::prelude::Result<Self> {
+        serde_json::from_value(blob).map_err(|err| fiberplane_pdk::providers::Error::Config {
+            message: format!("Error parsing config: {err:?}"),
+        })
+    }
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 /// The description of an API to hit.
