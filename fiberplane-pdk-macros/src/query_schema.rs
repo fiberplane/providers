@@ -17,6 +17,8 @@ pub fn derive_query_schema(input: TokenStream) -> TokenStream {
             }
 
             pub fn schema() -> fiberplane_pdk::providers::QuerySchema {
+                use fiberplane_pdk::providers::*;
+
                 #schema
             }
         }

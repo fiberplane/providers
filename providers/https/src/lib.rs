@@ -1,7 +1,8 @@
 use fiberplane_pdk::prelude::*;
 use serde::Deserialize;
+use std::collections::BTreeMap;
 use std::convert::TryInto;
-use std::{collections::HashMap, env};
+use std::env;
 use url::Url;
 
 mod config;
@@ -70,7 +71,7 @@ async fn send_query(
     url: &Url,
     path_and_query: &str,
     method: HttpRequestMethod,
-    headers: Option<HashMap<String, String>>,
+    headers: Option<BTreeMap<String, String>>,
     body: Option<Blob>,
 ) -> Result<HttpsProviderResponse> {
     let url = url
@@ -82,19 +83,16 @@ async fn send_query(
 
     let mut headers = headers.unwrap_or_default();
     if let Some(ref blob) = body {
-        headers.insert("Content-Type".to_string(), blob.mime_type.clone());
+        headers.insert("Content-Type".to_owned(), blob.mime_type.clone());
     };
 
-    let request = HttpRequest::builder()
-        .url(url)
-        .headers(Some(headers))
-        .method(method)
-        .body(body.map(|blob| blob.data))
-        .build();
-    log(format!(
-        "Sending {:?} request to {}",
-        request.method, request.url
-    ));
+    log(format!("Sending {method:?} request to {url}"));
+
+    let mut request = HttpRequest::default();
+    request.url = url.clone();
+    request.method = method;
+    request.headers = Some(headers);
+    request.body = body.map(|blob| blob.data);
 
     make_http_request(request).await.try_into()
 }
@@ -153,7 +151,7 @@ async fn handle_query(request: HttpProviderQuery, config: Config) -> Result<Blob
     let mut url = Err(Error::Invocation {
         message: "no URL given".to_string(),
     });
-    let mut headers: HashMap<String, String> = HashMap::new();
+    let mut headers: BTreeMap<String, String> = BTreeMap::new();
 
     if let Some(ref api) = config.api {
         if request.path.parse::<Url>().is_ok() {

@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use url::Url;
 
 #[derive(Deserialize)]
@@ -40,13 +40,13 @@ pub struct Api {
 
 impl Api {
     /// Convert the configuration to associated headers
-    pub fn to_headers(&self) -> Option<HashMap<String, String>> {
+    pub fn to_headers(&self) -> Option<BTreeMap<String, String>> {
         match &self.auth {
-            Some(Auth::Basic { username, password }) => Some(HashMap::from([(
+            Some(Auth::Basic { username, password }) => Some(BTreeMap::from([(
                 "Authorization".to_string(),
                 format!("Basic {}", base64::encode(format!("{username}:{password}"))),
             )])),
-            Some(Auth::Bearer { token }) => Some(HashMap::from([(
+            Some(Auth::Bearer { token }) => Some(BTreeMap::from([(
                 "Authorization".to_string(),
                 format!("Bearer {token}"),
             )])),

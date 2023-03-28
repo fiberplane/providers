@@ -51,14 +51,8 @@ fn try_into_blob(id: String) -> Result<Blob, Error> {
         TextCell::builder()
             .id("query-id".to_string())
             .formatting(vec![
-                AnnotationWithOffset::builder()
-                    .offset(link_start)
-                    .annotation(Annotation::StartLink { url })
-                    .build(),
-                AnnotationWithOffset::builder()
-                    .offset(length)
-                    .annotation(Annotation::EndLink)
-                    .build(),
+                AnnotationWithOffset::new(link_start, Annotation::StartLink { url }),
+                AnnotationWithOffset::new(length, Annotation::EndLink),
             ])
             .content(content)
             .read_only(true)
