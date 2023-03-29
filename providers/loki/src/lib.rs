@@ -1,3 +1,7 @@
+mod panic;
+#[cfg(test)]
+mod tests;
+
 use fiberplane_pdk::prelude::*;
 use fiberplane_pdk::serde_json::{self, Value};
 use grafana_common::{query_direct_and_proxied, Config};
@@ -5,9 +9,6 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use time::OffsetDateTime;
-
-#[cfg(test)]
-mod tests;
 
 const PAGE_SIZE: &str = "30";
 
@@ -70,6 +71,7 @@ fn create_cells(query_type: String, _response: Blob) -> Result<Vec<Cell>> {
 }
 
 async fn fetch_logs(query: LokiQuery, config: Config) -> Result<Blob> {
+    panic::init_panic_hook();
     // Convert unix epoch in seconds to epoch in nanoseconds
     let from = (query.time_range.from.unix_timestamp_nanos()).to_string();
     let to = (query.time_range.to.unix_timestamp_nanos()).to_string();
@@ -138,6 +140,7 @@ fn data_mapper(data: &Data) -> impl Iterator<Item = Result<ProviderEvent>> + '_ 
 }
 
 async fn check_status(request: ProviderRequest) -> Result<Blob> {
+    panic::init_panic_hook();
     let config = serde_json::from_value(request.config)?;
 
     // Send a fake query to check the status

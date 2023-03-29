@@ -1,4 +1,5 @@
 mod config;
+mod panic;
 #[cfg(test)]
 mod tests;
 
@@ -65,6 +66,7 @@ fn create_cells(query_type: String, _response: Blob) -> Result<Vec<Cell>> {
 }
 
 async fn fetch_logs(query: ElasticQuery, config: ElasticConfig) -> Result<Blob> {
+    panic::init_panic_hook();
     let mut url = config.parse_url()?;
 
     // Look for the timestamp and body first in the configured fields and then
@@ -270,6 +272,7 @@ fn flatten_nested_value(output: &mut BTreeMap<String, Value>, key: String, value
 }
 
 async fn check_status(request: ProviderRequest) -> Result<Blob> {
+    panic::init_panic_hook();
     let config = ElasticConfig::parse(request.config)?;
     let mut url = config.parse_url()?;
 

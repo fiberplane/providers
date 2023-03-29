@@ -6,6 +6,7 @@ use url::Url;
 
 mod config;
 mod constants;
+mod panic;
 mod provider_response;
 
 use config::*;
@@ -90,6 +91,7 @@ async fn get_supported_query_types(config: ProviderConfig) -> Vec<SupportedQuery
 
 #[pdk_export]
 async fn invoke2(request: ProviderRequest) -> Result<Blob> {
+    panic::init_panic_hook();
     log(format!(
         "https provider (commit: {}, built at: {}) invoked for query type \"{}\" and query data \"{:?}\" with config \"{:?}\"",
         COMMIT_HASH, BUILD_TIMESTAMP, request.query_type, request.query_data, request.config
