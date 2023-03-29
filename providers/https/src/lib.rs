@@ -1,6 +1,7 @@
 use fiberplane_pdk::prelude::*;
+use std::collections::BTreeMap;
 use std::convert::TryInto;
-use std::{collections::HashMap, env};
+use std::env;
 use url::Url;
 
 mod config;
@@ -123,7 +124,7 @@ async fn send_query(
     url: &Url,
     path_and_query: &str,
     method: HttpRequestMethod,
-    headers: Option<HashMap<String, String>>,
+    headers: Option<BTreeMap<String, String>>,
     body: Option<Blob>,
 ) -> Result<HttpsProviderResponse> {
     let url = url
@@ -135,19 +136,16 @@ async fn send_query(
 
     let mut headers = headers.unwrap_or_default();
     if let Some(ref blob) = body {
-        headers.insert("Content-Type".to_string(), blob.mime_type.clone());
+        headers.insert("Content-Type".to_owned(), blob.mime_type.clone());
     };
 
-    let request = HttpRequest::builder()
-        .url(url)
-        .headers(Some(headers))
-        .method(method)
-        .body(body.map(|blob| blob.data))
-        .build();
-    log(format!(
-        "Sending {:?} request to {}",
-        request.method, request.url
-    ));
+    log(format!("Sending {method:?} request to {url}"));
+
+    let mut request = HttpRequest::default();
+    request.url = url.clone();
+    request.method = method;
+    request.headers = Some(headers);
+    request.body = body.map(|blob| blob.data);
 
     make_http_request(request).await.try_into()
 }
@@ -237,7 +235,7 @@ async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> 
     let mut url = Err(Error::Invocation {
         message: "no URL given".to_string(),
     });
-    let mut headers: Option<HashMap<String, String>> = None;
+    let mut headers: Option<BTreeMap<String, String>> = None;
     let mut method = HttpRequestMethod::Get;
     for (key, value) in form_urlencoded::parse(&request.query_data.data) {
         match key.as_ref() {
@@ -291,7 +289,7 @@ async fn handle_query(config: Config, request: ProviderRequest) -> Result<Blob> 
             }
             EXTRA_HEADERS_PARAM_NAME => {
                 if headers.is_none() {
-                    headers = Some(HashMap::new())
+                    headers = Some(BTreeMap::new())
                 }
                 for line in value.as_ref().lines() {
                     let row: KeyValueRow = line.parse()?;

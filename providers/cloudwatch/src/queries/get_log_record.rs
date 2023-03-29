@@ -48,8 +48,7 @@ pub fn convert_log_entry_to_event(res: HashMap<String, String>) -> Result<Provid
             }
         })
         .unwrap_or_else(OffsetDateTime::now_utc);
-    let description = res.get(LOG_KEY.0).map(ToString::to_string);
-    let title = String::new();
+
     let labels: BTreeMap<String, String> = res
         .iter()
         .filter_map(|(k, v)| {
@@ -71,44 +70,48 @@ pub fn convert_log_entry_to_event(res: HashMap<String, String>) -> Result<Provid
             }
         })
         .collect();
-    let resource = match res.get(LOG_KEY.0) {
-        Some(val) => [(LOG_KEY.0.to_string(), val.to_string().into())].into(),
-        None => Default::default(),
+
+    let otel = {
+        let resource = match res.get(LOG_KEY.0) {
+            Some(val) => [(LOG_KEY.0.to_string(), val.to_string().into())].into(),
+            None => Default::default(),
+        };
+        let attributes = labels
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string().into()))
+            .collect();
+
+        let mut otel = OtelMetadata::builder()
+            .resource(resource)
+            .attributes(attributes)
+            .build();
+        otel.trace_id = res.get(TRACE_KEY.0).map(|t_id| {
+            OtelTraceId::new(
+                t_id.as_bytes()[0..16]
+                    .try_into()
+                    .expect("OtelSpanId wraps a [u8; 16]"),
+            )
+        });
+        otel.span_id = res.get(SPAN_KEY.0).map(|s_id| {
+            OtelSpanId::new(
+                s_id.as_bytes()[0..8]
+                    .try_into()
+                    .expect("OtelSpanId wraps a [u8; 8]"),
+            )
+        });
+        otel
     };
-    let trace_id = res.get(TRACE_KEY.0).map(|t_id| {
-        OtelTraceId::new(
-            t_id.as_bytes()[0..16]
-                .try_into()
-                .expect("OtelSpanId wraps a [u8; 16]"),
-        )
-    });
-    let span_id = res.get(SPAN_KEY.0).map(|s_id| {
-        OtelSpanId::new(
-            s_id.as_bytes()[0..8]
-                .try_into()
-                .expect("OtelSpanId wraps a [u8; 8]"),
-        )
-    });
-    let otel = OtelMetadata::builder()
-        .resource(resource)
-        .trace_id(trace_id)
-        .span_id(span_id)
-        .attributes(
-            labels
-                .iter()
-                .map(|(k, v)| (k.to_string(), v.to_string().into()))
-                .collect(),
-        )
-        .build();
-    Ok(ProviderEvent::builder()
-        .time(time.into())
-        .end_time(None)
-        .otel(otel)
-        .title(title)
-        .description(description)
-        .severity(None)
+
+    let mut event = ProviderEvent::builder()
+        .time(time)
+        .title(String::new())
         .labels(labels)
-        .build())
+        .otel(otel)
+        .build();
+
+    event.description = res.get(LOG_KEY.0).map(ToString::to_string);
+
+    Ok(event)
 }
 
 fn try_into_blob(res: HashMap<String, String>) -> Result<Blob, Error> {

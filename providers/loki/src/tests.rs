@@ -67,18 +67,12 @@ fn test_data_mapper() {
     let metadata = OtelMetadata::builder()
         .attributes(data[0].labels.clone())
         .resource(BTreeMap::new())
-        .trace_id(None)
-        .span_id(None)
         .build();
     assert_eq!(mapped.len(), 2);
     assert_eq!(
         mapped[0],
         ProviderEvent::builder()
-            .time(
-                OffsetDateTime::from_unix_timestamp_nanos(1_569_266_497_240_578_000)
-                    .unwrap()
-                    .into()
-            )
+            .time(OffsetDateTime::from_unix_timestamp_nanos(1_569_266_497_240_578_000).unwrap())
             .title("foo".to_owned())
             .otel(metadata.clone())
             .build()
@@ -86,11 +80,7 @@ fn test_data_mapper() {
     assert_eq!(
         mapped[1],
         ProviderEvent::builder()
-            .time(
-                OffsetDateTime::from_unix_timestamp_nanos(1_569_266_492_548_155_000)
-                    .unwrap()
-                    .into()
-            )
+            .time(OffsetDateTime::from_unix_timestamp_nanos(1_569_266_492_548_155_000).unwrap())
             .title("bar".to_owned())
             .otel(metadata.clone())
             .build()

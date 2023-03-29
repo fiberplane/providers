@@ -1,14 +1,14 @@
 use fiberplane_pdk::bindings::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::constants::CELLS_MSGPACK_MIME_TYPE;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct HttpsProviderResponse {
     pub(crate) status: String,
-    pub(crate) headers: Option<HashMap<String, String>>,
+    pub(crate) headers: Option<BTreeMap<String, String>>,
     pub(crate) payload: Vec<u8>,
 }
 
