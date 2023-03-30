@@ -1,4 +1,4 @@
-use super::{constants::*, panic, prometheus::*};
+use super::{constants::*, prometheus::*};
 use fiberplane_pdk::prelude::*;
 use grafana_common::{query_direct_and_proxied, Config};
 
@@ -53,7 +53,6 @@ const PROM_QL_FUNCTIONS: &[&str] = &[
 ];
 
 pub async fn query_suggestions(query: AutoSuggestRequest, config: Config) -> Result<Blob> {
-    panic::init_panic_hook();
     let (identifier, from) = extract_identifier(&query.query);
 
     let response: PrometheusMetadataResponse =

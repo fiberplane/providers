@@ -1,4 +1,3 @@
-mod panic;
 use fiberplane_pdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -161,7 +160,6 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
 /// the provider doesn't support health checks, and the provider is assumed to
 /// be always available.
 fn check_status() -> Result<Blob> {
-    panic::init_panic_hook();
     ProviderStatus::builder()
         .status(Ok(()))
         .version(COMMIT_HASH.to_owned())
@@ -178,7 +176,6 @@ fn check_status() -> Result<Blob> {
 /// entirely. But for this provider, we still need to implement it to support
 /// the custom data showcase.
 fn query_cells_showcase(query_data: ShowcaseQueryData, config: SampleConfig) -> Result<Blob> {
-    panic::init_panic_hook();
     let response = query_custom_data_showcase(query_data, config)?;
     let cells = create_cells(CELLS_SHOWCASE_QUERY_TYPE.to_owned(), response)?;
 
@@ -191,6 +188,5 @@ fn query_cells_showcase(query_data: ShowcaseQueryData, config: SampleConfig) -> 
 /// either generate a custom response, or to directly generate notebook cells
 /// using the `CELLS_MIME_TYPE` format (see the cells showcase).
 fn query_custom_data_showcase(query_data: ShowcaseQueryData, config: SampleConfig) -> Result<Blob> {
-    panic::init_panic_hook();
     ShowcaseCustomData { config, query_data }.to_blob()
 }

@@ -1,4 +1,4 @@
-use super::{constants::*, panic, prometheus::*};
+use super::{constants::*, prometheus::*};
 use fiberplane_pdk::prelude::*;
 use grafana_common::{query_direct_and_proxied, Config};
 use serde::Deserialize;
@@ -96,7 +96,6 @@ fn validate_or_parse_message(query: &str, message: &str) -> Error {
 }
 
 pub(crate) async fn query_series(query: TimeseriesQuery, config: Config) -> Result<Blob> {
-    panic::init_panic_hook();
     validate_query(&query)?;
 
     let from = to_float(query.time_range.from);

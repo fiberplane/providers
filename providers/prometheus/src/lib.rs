@@ -1,6 +1,5 @@
 mod auto_suggest;
 mod constants;
-mod panic;
 mod prometheus;
 mod timeseries;
 
@@ -40,7 +39,6 @@ fn create_cells(query_type: String, _response: Blob) -> Result<Vec<Cell>> {
 }
 
 async fn check_status(request: ProviderRequest) -> Result<Blob> {
-    panic::init_panic_hook();
     let config = Config::parse(request.config)?;
 
     // Send a fake query to the query endpoint to check if we can connect to the Prometheus
