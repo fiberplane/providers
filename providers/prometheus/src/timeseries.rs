@@ -4,7 +4,7 @@ use grafana_common::{query_direct_and_proxied, Config};
 use serde::Deserialize;
 use serde_json::Result as SerdeResult;
 use std::time::SystemTime;
-use time::{ext::NumericalDuration, format_description::well_known::Rfc3339, OffsetDateTime};
+use time::ext::NumericalDuration;
 
 #[derive(Deserialize, QuerySchema)]
 pub(crate) struct TimeseriesQuery {
@@ -198,15 +198,13 @@ fn step_for_range(from: f64, to: f64) -> StepSize {
     }
 }
 
-fn to_float(timestamp: OffsetDateTime) -> f64 {
+fn to_float(timestamp: Timestamp) -> f64 {
     timestamp.unix_timestamp_nanos() as f64 / 1_000_000_000.0
 }
 
 fn to_iso_date(timestamp: f64) -> String {
     let time = SystemTime::UNIX_EPOCH + timestamp.seconds();
-    OffsetDateTime::from(time)
-        .format(&Rfc3339)
-        .expect("Error formatting timestamp as RFC3339 timestamp")
+    Timestamp::from(time).to_string()
 }
 
 fn validate_query(query: &TimeseriesQuery) -> Result<()> {

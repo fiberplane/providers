@@ -20,6 +20,8 @@ fp-bindgen = { workspace = true }
 rmp-serde = "1"
 rmpv = { workspace = true }
 serde = { workspace = true }
-serde_html_form = "0.2"
+serde_qs = "0.12.0"
 serde_json = { workspace = true }
+
+[dev-dependencies]
 time = { workspace = true }

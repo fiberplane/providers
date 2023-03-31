@@ -2,7 +2,7 @@ use super::*;
 use elasticsearch_dsl::{Hit, HitsMetadata, SearchResponse, TotalHits, TotalHitsRelation};
 use fiberplane_pdk::bindings::common::mem::FatPtr;
 use fiberplane_pdk::serde_json::{self, json};
-use time::{format_description::well_known::Rfc3339, OffsetDateTime};
+use time::OffsetDateTime;
 
 #[no_mangle]
 unsafe fn __fp_gen_log(_: FatPtr) {}
@@ -47,8 +47,8 @@ fn extracts_timestamp_and_body_from_fields() {
     .unwrap();
     let record = parse_hit(hit, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
     assert_eq!(
-        record.time.0,
-        OffsetDateTime::parse("2020-01-01T00:00:00Z", &Rfc3339).unwrap()
+        record.time,
+        Timestamp::parse("2020-01-01T00:00:00Z").unwrap()
     );
     assert_eq!(record.title, "test");
 
@@ -67,8 +67,8 @@ fn extracts_timestamp_and_body_from_fields() {
     .unwrap();
     let record = parse_hit(hit, TIMESTAMP_FIELDS, &["body", "fields.my_body"]).unwrap();
     assert_eq!(
-        record.time.0,
-        OffsetDateTime::parse("2020-01-01T00:00:00Z", &Rfc3339).unwrap()
+        record.time,
+        Timestamp::parse("2020-01-01T00:00:00Z").unwrap()
     );
     assert_eq!(record.title, "test");
 }
@@ -87,7 +87,7 @@ fn uses_default_values_if_timestamp_or_body_extraction_fails() {
     }))
     .unwrap();
     let record = parse_hit(hit, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
-    assert_eq!(record.time.0, OffsetDateTime::UNIX_EPOCH);
+    assert_eq!(record.time, OffsetDateTime::UNIX_EPOCH.into());
     assert_eq!(record.title, "");
 }
 
@@ -105,8 +105,10 @@ fn timestamp_deserializes_from_unix_epoch() {
     let record = parse_hit(document, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
 
     assert_eq!(
-        record.time.0,
-        OffsetDateTime::from_unix_timestamp(1640010678i64).unwrap()
+        record.time,
+        OffsetDateTime::from_unix_timestamp(1640010678i64)
+            .unwrap()
+            .into()
     );
 }
 
@@ -124,8 +126,8 @@ fn timestamp_deserializes_from_rfc3339() {
     let record = parse_hit(document, TIMESTAMP_FIELDS, BODY_FIELDS).unwrap();
 
     assert_eq!(
-        record.time.0,
-        OffsetDateTime::parse("2021-12-20T15:59:32.739Z", &Rfc3339).unwrap()
+        record.time,
+        Timestamp::parse("2021-12-20T15:59:32.739Z").unwrap()
     );
 }
 

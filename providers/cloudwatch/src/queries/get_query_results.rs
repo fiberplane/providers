@@ -187,6 +187,7 @@ impl LogLines {
                 }
             })
             .collect();
+
         let time = kv
             .get(TS_KEY.0)
             .and_then(|x| {
@@ -207,11 +208,12 @@ impl LogLines {
                 }
             })
             .unwrap_or_else(OffsetDateTime::now_utc);
-        let description = kv.get(BODY_KEY.0).map(ToString::to_string);
+
         let title = kv
             .get(PTR_KEY.0)
             .map(ToString::to_string)
             .unwrap_or_default();
+
         let labels: BTreeMap<String, String> = kv
             .iter()
             .filter(|(k, _)| *k != TS_KEY.0)
@@ -247,44 +249,48 @@ impl LogLines {
             })
             .into_iter()
             .collect();
-        let resource = match kv.get(LOG_KEY.0) {
-            Some(val) => [(LOG_KEY.0.to_string(), val.to_string().into())].into(),
-            None => Default::default(),
+
+        let otel = {
+            let resource = match kv.get(LOG_KEY.0) {
+                Some(val) => [(LOG_KEY.0.to_string(), val.to_string().into())].into(),
+                None => Default::default(),
+            };
+            let attributes = labels
+                .iter()
+                .map(|(k, v)| (k.to_string(), v.to_string().into()))
+                .collect();
+
+            let mut otel = OtelMetadata::builder()
+                .resource(resource)
+                .attributes(attributes)
+                .build();
+            otel.trace_id = kv.get(TRACE_KEY.0).map(|t_id| {
+                OtelTraceId::new(
+                    t_id.as_bytes()[0..16]
+                        .try_into()
+                        .expect("OtelSpanId wraps a [u8; 16]"),
+                )
+            });
+            otel.span_id = kv.get(SPAN_KEY.0).map(|s_id| {
+                OtelSpanId::new(
+                    s_id.as_bytes()[0..8]
+                        .try_into()
+                        .expect("OtelSpanId wraps a [u8; 8]"),
+                )
+            });
+            otel
         };
-        let trace_id = kv.get(TRACE_KEY.0).map(|t_id| {
-            OtelTraceId::new(
-                t_id.as_bytes()[0..16]
-                    .try_into()
-                    .expect("OtelSpanId wraps a [u8; 16]"),
-            )
-        });
-        let span_id = kv.get(SPAN_KEY.0).map(|s_id| {
-            OtelSpanId::new(
-                s_id.as_bytes()[0..8]
-                    .try_into()
-                    .expect("OtelSpanId wraps a [u8; 8]"),
-            )
-        });
-        let otel = OtelMetadata::builder()
-            .resource(resource)
-            .trace_id(trace_id)
-            .span_id(span_id)
-            .attributes(
-                labels
-                    .iter()
-                    .map(|(k, v)| (k.to_string(), v.to_string().into()))
-                    .collect(),
-            )
-            .build();
-        ProviderEvent::builder()
-            .time(time.into())
-            .end_time(None)
+
+        let mut event = ProviderEvent::builder()
+            .time(time)
             .otel(otel)
             .title(title)
-            .description(description)
-            .severity(None)
             .labels(labels)
-            .build()
+            .build();
+
+        event.description = kv.get(BODY_KEY.0).map(ToString::to_string);
+
+        event
     }
 }
 
