@@ -1,26 +1,31 @@
 mod commands;
 mod constants;
-mod errors;
 
-use clap::Command;
-use commands::{build_command, build_providers};
+use clap::Parser;
+use commands::*;
 use console::style;
 use constants::ERROR;
-use errors::TaskError;
+use fiberplane_ci::TaskResult;
 
-fn main() {
-    if let Err(err) = handle_cli() {
+#[derive(Parser)]
+struct Args {
+    #[clap(subcommand)]
+    command: Command,
+}
+
+#[tokio::main]
+async fn main() {
+    if let Err(err) = handle_cli().await {
         println!("{ERROR}{}", style(format!("Error: {err}")).red());
+        std::process::exit(1);
     }
 }
 
-fn handle_cli() -> anyhow::Result<()> {
-    let matches = Command::new("xtask")
-        .subcommand(build_command())
-        .get_matches();
-
-    match matches.subcommand() {
-        Some(("build", arguments)) => build_providers(arguments),
-        _ => Err(TaskError::UnknownCommand.into()),
+async fn handle_cli() -> TaskResult {
+    let args = Args::parse();
+    match args.command {
+        Command::Build(args) => handle_build_command(args),
+        Command::Publish(args) => handle_publish_command(&args).await,
+        Command::Version(args) => handle_version_command(&args),
     }
 }

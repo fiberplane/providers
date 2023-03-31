@@ -36,13 +36,19 @@ jobs:
           components: rustfmt, clippy
 
       - name: Check format
+        # Skip formatting on main, since it's not critical and should've already
+        # been checked before merging
+        if: ${{ github.ref != 'refs/heads/main' }}
         run: cargo fmt -- --check
 
       - name: Lint code
+        # Skip linting on main, since it's not critical and should've already
+        # been checked before merging
+        if: ${{ github.ref != 'refs/heads/main' }}
         uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features
+          args: --all-features --workspace
 
       - name: Run tests
         run: cargo test --verbose
@@ -73,16 +79,14 @@ jobs:
           toolchain: stable
           override: true
           target: wasm32-unknown-unknown
-          components: rustfmt, clippy
 
       - name: Compile providers
         run: |
-          mkdir -p artifacts
-          ./scripts/create_provider_artifact.py -d artifacts all
+          cargo xtask build all
 
       - name: Save providers
+        if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/upload-artifact@v3
         with:
           name: fiberplane-providers
           path: artifacts/*.wasm
-          retention-days: 7
