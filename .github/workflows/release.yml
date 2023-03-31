@@ -61,6 +61,5 @@ jobs:
           command: login
           args: ${{ secrets.CRATES_TOKEN }}
 
-      - name: Publish beta crates
-        if: ${{ github.event_name == 'release' && contains(github.event.release.tag_name, '-beta.') }}
-        run: cargo xtask publish betas
+      - name: Publish crates
+        run: cargo xtask publish

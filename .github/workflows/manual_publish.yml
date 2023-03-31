@@ -1,14 +1,7 @@
 name: Manual publish
 
 on:
-  workflow_dispatch:
-    inputs:
-      target:
-        description: "What do we want to publish?"
-        required: true
-        options:
-        - alphas
-        - betas
+  workflow_dispatch: {}
 
 env:
   CARGO_TERM_COLOR: always
@@ -48,4 +41,4 @@ jobs:
           args: ${{ secrets.CRATES_TOKEN }}
 
       - name: Publish crates
-        run: cargo xtask publish ${{ inputs.target }}
+        run: cargo xtask publish

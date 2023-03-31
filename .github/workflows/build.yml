@@ -59,20 +59,8 @@ jobs:
           cargo xtask build all
 
       - name: Save providers
-        if: ${{ github.event_name != 'release' }}
+        if: ${{ github.ref == 'refs/heads/main' }}
         uses: actions/upload-artifact@v3
         with:
           name: fiberplane-providers
           path: artifacts/*.wasm
-          retention-days: 7
-
-      - name: Cargo login
-        if: ${{ github.ref == 'refs/heads/main' }}
-        uses: actions-rs/cargo@v1
-        with:
-          command: login
-          args: ${{ secrets.CRATES_TOKEN }}
-
-      - name: Publish alpha crates
-        if: ${{ github.ref == 'refs/heads/main' }}
-        run: cargo xtask publish alphas
