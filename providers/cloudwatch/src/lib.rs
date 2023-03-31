@@ -10,7 +10,6 @@
 mod client;
 mod config;
 mod constants;
-mod panic;
 mod queries;
 mod types;
 pub mod utils;
@@ -27,7 +26,7 @@ static BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
 
 #[pdk_export]
 async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQueryType> {
-    panic::init_panic_hook();
+    init_panic_hook();
     vec![
         SupportedQueryType::new(GRAPH_METRIC_QUERY_TYPE).with_label("AWS: graph metrics")
             .with_schema( vec![
@@ -88,7 +87,7 @@ async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQuer
                 TextField::new()
                     .with_name(QUERY_PARAM_NAME)
                     .with_label("Query for logs")
-                    .with_placeholder(&format!("fields {}, {} | sort {} desc | limit 20", TS_KEY.0, BODY_KEY.0, TS_KEY.0))
+                    .with_placeholder(format!("fields {}, {} | sort {} desc | limit 20", TS_KEY.0, BODY_KEY.0, TS_KEY.0))
                     .required()
                     .with_suggestions()
                 .into(),
@@ -144,7 +143,7 @@ async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQuer
 
 #[pdk_export]
 async fn invoke2(request: ProviderRequest) -> Result<Blob> {
-    panic::init_panic_hook();
+    init_panic_hook();
 
     log(format!(
         "CloudWatch: (commit: {COMMIT_HASH}, built at: {BUILD_TIMESTAMP}) invoked for query type \"{}\" and query data \"{:?}\"",
@@ -174,7 +173,7 @@ async fn invoke2(request: ProviderRequest) -> Result<Blob> {
 
 #[pdk_export]
 fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
-    panic::init_panic_hook();
+    init_panic_hook();
 
     match query_type.as_str() {
         STATUS_QUERY_TYPE => Ok(Vec::new()),
@@ -188,7 +187,7 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
 
 #[pdk_export]
 fn extract_data(response: Blob, mime_type: String, query: Option<String>) -> Result<Blob> {
-    panic::init_panic_hook();
+    init_panic_hook();
 
     if response.mime_type.starts_with(QUERY_RESULTS_MIME_TYPE) {
         return get_query_results::extract_data_handler(response, mime_type, query);

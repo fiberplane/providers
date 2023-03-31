@@ -84,6 +84,7 @@ pub fn define_query_types(input: TokenStream) -> TokenStream {
         #[pdk_export]
         async fn get_supported_query_types(_config: fiberplane_pdk::providers::ProviderConfig)
             -> Vec<fiberplane_pdk::providers::SupportedQueryType> {
+            fiberplane_pdk::prelude::init_panic_hook();
             vec![
                 #(#supported_query_types),*
             ]
@@ -92,6 +93,7 @@ pub fn define_query_types(input: TokenStream) -> TokenStream {
         #[pdk_export]
         async fn invoke2(request: fiberplane_pdk::providers::ProviderRequest)
             -> fiberplane_pdk::prelude::Result<fiberplane_pdk::bindings::Blob> {
+            fiberplane_pdk::prelude::init_panic_hook();
             match request.query_type.as_str() {
                 #(#handlers),*,
                 _ => Err(Error::UnsupportedRequest)

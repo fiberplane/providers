@@ -28,6 +28,9 @@ changes if the major version hasn't changed.
 - Use less confusing placeholders for the configuration schema of the Cloudwatch
   provider.
 - Rename Event in the providers module to ProviderEvent (#28)
+- Providers set up their own panic handlers to provide better information in
+  case of panics (instead of letting WASM runtime default panic handling
+  setup) (#35)
 
 ### Fixed
 
