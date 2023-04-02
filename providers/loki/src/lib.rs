@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use fiberplane_pdk::prelude::*;
 use fiberplane_pdk::serde_json::{self, Value};
 use grafana_common::{query_direct_and_proxied, Config};
@@ -5,9 +8,6 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use time::OffsetDateTime;
-
-#[cfg(test)]
-mod tests;
 
 const PAGE_SIZE: &str = "30";
 

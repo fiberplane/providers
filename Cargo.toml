@@ -6,7 +6,7 @@ exclude = ["providers/.cargo"]
 authors = ["Fiberplane <info@fiberplane.com>"]
 edition = "2021"
 rust-version = "1.65"
-version = "1.0.0-beta.1"
+version = "1.0.0-beta.2"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/fiberplane/providers"
 
@@ -43,5 +43,5 @@ fiberplane-provider-bindings = { git = "ssh://git@github.com/fiberplane/fiberpla
 #fp-bindgen-support = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
 
 [patch.'ssh://git@github.com/fiberplane/fiberplane.git']
-# fiberplane-models = { path = "../fiberplane/fiberplane-models" }
-# fiberplane-provider-bindings = { path = "../fiberplane/fiberplane-provider-protocol/fiberplane-provider-bindings" }
+#fiberplane-models = { path = "../fiberplane/fiberplane-models" }
+#fiberplane-provider-bindings = { path = "../fiberplane/fiberplane-provider-protocol/fiberplane-provider-bindings" }

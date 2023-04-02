@@ -4,11 +4,14 @@ authors = { workspace = true }
 edition = { workspace = true }
 rust-version = { workspace = true }
 version = "0.1.0"
+publish = false
 
 [dependencies]
 anyhow = "1"
-clap = "4"
+clap = { version = "4", features = ["derive"] }
 console = "0.15"
 duct = "0.13"
+fiberplane-ci = { git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "main" }
 thiserror = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 wasm-opt = "0.111"

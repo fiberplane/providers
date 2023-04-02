@@ -51,6 +51,7 @@ async fn get_supported_query_types(_config: ProviderConfig) -> Vec<SupportedQuer
 
 #[pdk_export]
 async fn invoke2(request: ProviderRequest) -> Result<Blob> {
+    init_panic_hook();
     log(format!(
         "Sentry provider (commit: {}, built at: {}) invoked for query type \"{}\" and query data \"{:?}\"",
         COMMIT_HASH, BUILD_TIMESTAMP, request.query_type, request.query_data

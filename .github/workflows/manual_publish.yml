@@ -1,14 +1,13 @@
-name: Build
+name: Manual publish
 
 on:
-  release:
-    type: [published]
+  workflow_dispatch: {}
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  manual-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -33,27 +32,7 @@ jobs:
         with:
           toolchain: stable
           override: true
-          target: wasm32-unknown-unknown
           components: rustfmt, clippy
-
-      - name: Run tests
-        run: cargo test --verbose
-
-      - name: Compile providers
-        run: |
-          cargo xtask build all
-
-      - name: Attach providers to release
-        uses: meeDamian/github-release@2.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: >
-            artifacts/cloudwatch.wasm
-            artifacts/elasticsearch.wasm
-            artifacts/https.wasm
-            artifacts/loki.wasm
-            artifacts/prometheus.wasm
-            artifacts/sentry.wasm
 
       - name: Cargo login
         uses: actions-rs/cargo@v1
