@@ -134,7 +134,7 @@ checksum = "a4a4ddaa51a5bc52a6948f74c06d20aaaddb71924eab79b8c97a8c556e942d6a"
 [[package]]
 name = "base64uuid"
 version = "1.0.0"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#ded073c8b043741cec78b9b50a3780817ce4ea7b"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#3ed3a4cbdda3859b7282430b097e69b513089be0"
 dependencies = [
  "base64 0.13.1",
  "serde",
@@ -574,7 +574,7 @@ dependencies = [
 [[package]]
 name = "fiberplane-ci"
 version = "0.1.0"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#ded073c8b043741cec78b9b50a3780817ce4ea7b"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#3ed3a4cbdda3859b7282430b097e69b513089be0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -593,7 +593,7 @@ dependencies = [
 [[package]]
 name = "fiberplane-models"
 version = "1.0.0-beta.2"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#ded073c8b043741cec78b9b50a3780817ce4ea7b"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#3ed3a4cbdda3859b7282430b097e69b513089be0"
 dependencies = [
  "base64 0.13.1",
  "base64uuid",
@@ -645,7 +645,7 @@ dependencies = [
 [[package]]
 name = "fiberplane-provider-bindings"
 version = "2.0.0-beta.2"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#ded073c8b043741cec78b9b50a3780817ce4ea7b"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#3ed3a4cbdda3859b7282430b097e69b513089be0"
 dependencies = [
  "bytes",
  "fiberplane-models",
@@ -913,9 +913,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.3.16"
+version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5be7b54589b581f624f566bf5d8eb2bab1db736c51528720b6bd36b96b55924d"
+checksum = "66b91535aa35fea1523ad1b86cb6b53c28e0ae566ba4a460f4457e936cad7c6f"
 dependencies = [
  "bytes",
  "fnv",
