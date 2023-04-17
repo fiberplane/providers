@@ -40,5 +40,5 @@ jobs:
           command: login
           args: ${{ secrets.CRATES_TOKEN }}
 
-      - name: Publish crates
+      - name: Publish PDK crates
         run: cargo xtask publish
