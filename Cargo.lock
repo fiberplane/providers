@@ -134,7 +134,7 @@ checksum = "a4a4ddaa51a5bc52a6948f74c06d20aaaddb71924eab79b8c97a8c556e942d6a"
 [[package]]
 name = "base64uuid"
 version = "1.0.0"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#ded073c8b043741cec78b9b50a3780817ce4ea7b"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#d1e239fc4abbb3dddf9f9357c1ecf40c246d13dd"
 dependencies = [
  "base64 0.13.1",
  "serde",
@@ -593,7 +593,7 @@ dependencies = [
 [[package]]
 name = "fiberplane-models"
 version = "1.0.0-beta.2"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#ded073c8b043741cec78b9b50a3780817ce4ea7b"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#d1e239fc4abbb3dddf9f9357c1ecf40c246d13dd"
 dependencies = [
  "base64 0.13.1",
  "base64uuid",
@@ -645,7 +645,7 @@ dependencies = [
 [[package]]
 name = "fiberplane-provider-bindings"
 version = "2.0.0-beta.2"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#ded073c8b043741cec78b9b50a3780817ce4ea7b"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#d1e239fc4abbb3dddf9f9357c1ecf40c246d13dd"
 dependencies = [
  "bytes",
  "fiberplane-models",
@@ -696,9 +696,9 @@ dependencies = [
 
 [[package]]
 name = "fp-bindgen"
-version = "3.0.0-beta.1"
+version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1df83e081ff9983fbd545d63b8474a50fff8cd5a0cfb59a845dbe5e2f171b49e"
+checksum = "b744e2a1f5bfd3e75983abddb8cfe59179a573be3f672b2755f0a25aec8660d7"
 dependencies = [
  "Inflector",
  "bytes",
@@ -716,9 +716,9 @@ dependencies = [
 
 [[package]]
 name = "fp-bindgen-macros"
-version = "3.0.0-beta.1"
+version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "179a9f9fba8f20b7f76643df3cdbf31c10dfba79197fc774fe1bbc3a73251cff"
+checksum = "42a0086f6f4c63aca5b1b9447ee0470141d8ed1ce268430328395324e552363c"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -728,9 +728,9 @@ dependencies = [
 
 [[package]]
 name = "fp-bindgen-support"
-version = "3.0.0-beta.1"
+version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d72ed0c94d00685155d7ebd626c76f4f33105010cf26e0a911935bd5f111b77"
+checksum = "d0215a44a7cd16a69a5b7e93802a8ccd83e7f6d84cd464fbdabb604770daf087"
 dependencies = [
  "fp-bindgen-macros",
  "once_cell",

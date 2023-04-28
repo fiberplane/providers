@@ -114,16 +114,8 @@ fn extract_identifier(query: &str) -> (&str, Option<u32>) {
     }
 }
 
-fn is_letter(c: char) -> bool {
-    ('A'..='Z').contains(&c) || ('a'..='z').contains(&c)
-}
-
-fn is_number(c: char) -> bool {
-    ('0'..='9').contains(&c)
-}
-
 fn is_identifier_char(c: char) -> bool {
-    is_letter(c) || is_number(c) || c == '_'
+    c.is_ascii_alphanumeric() || c == '_'
 }
 
 #[cfg(test)]

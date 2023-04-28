@@ -44,7 +44,7 @@ impl Client {
         let init_request = GetTagKeysRequest {
             pagination_token: None,
         };
-        return paginate_vec(
+        paginate_vec(
             &self.common,
             init_request,
             |response: SdkResponse| {
@@ -63,7 +63,7 @@ impl Client {
             },
             limit,
         )
-        .await;
+        .await
     }
 
     /// List all tag values associated with a given key, up to an optional limit
@@ -76,7 +76,7 @@ impl Client {
             key,
             pagination_token: None,
         };
-        return paginate_vec(
+        paginate_vec(
             &self.common,
             init_request,
             |response: SdkResponse| {
@@ -95,7 +95,7 @@ impl Client {
             },
             limit,
         )
-        .await;
+        .await
     }
 
     /// List all visible resources matching the optional type filter.
@@ -129,7 +129,7 @@ impl Client {
             resource_type_filters,
             tag_filters,
         };
-        return paginate_vec(
+        paginate_vec(
             &self.common,
             init_request,
             |response: SdkResponse| {
@@ -152,7 +152,7 @@ impl Client {
             },
             limit,
         )
-        .await;
+        .await
     }
 }
 
