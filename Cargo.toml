@@ -15,8 +15,8 @@ fiberplane-models = { version = "1.0.0-beta.1" }
 fiberplane-pdk = { version = "1.0.0-beta.1", path = "fiberplane-pdk" }
 fiberplane-pdk-macros = { version = "1.0.0-beta.1", path = "fiberplane-pdk-macros" }
 fiberplane-provider-bindings = { version = "2.0.0-beta.1" }
-fp-bindgen = { version = "3.0.0-beta.1" }
-fp-bindgen-support = { version = "3.0.0-beta.1" }
+fp-bindgen = { version = "3.0.0" }
+fp-bindgen-support = { version = "3.0.0" }
 rmpv = { version = "1", features = ["with-serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -34,13 +34,13 @@ vergen = { version = "7.4.2", default-features = false, features = [
 
 [patch.crates-io]
 #fiberplane-models = { path = "../fiberplane/fiberplane-models" }
-fiberplane-models = { git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "main" }
+fiberplane-models = { git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "fp-bindgen-3.0.0" }
 #fiberplane-provider-bindings = { path = "../fiberplane/fiberplane-provider-protocol/fiberplane-provider-bindings" }
-fiberplane-provider-bindings = { git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "main" }
+fiberplane-provider-bindings = { git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "fp-bindgen-3.0.0" }
 #fp-bindgen = { path = "../fp-bindgen/fp-bindgen" }
 #fp-bindgen-support = { path = "../fp-bindgen/fp-bindgen-support" }
-#fp-bindgen = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
-#fp-bindgen-support = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "main" }
+fp-bindgen = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "release-3.0.0" }
+fp-bindgen-support = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "release-3.0.0" }
 
 [patch.'ssh://git@github.com/fiberplane/fiberplane.git']
 #fiberplane-models = { path = "../fiberplane/fiberplane-models" }
