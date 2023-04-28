@@ -124,18 +124,17 @@ pub(crate) async fn query_series(query: TimeseriesQuery, config: Config) -> Resu
                 err => err,
             })?;
 
-    let PrometheusData::Matrix(matrix) = response.data;
+    let PrometheusData::Matrix(matrix) = response.data else {
+        return Err(Error::Data {
+            message: "Expected a matrix response".to_string(),
+        })
+    };
 
     matrix
         .into_iter()
         .map(RangeVector::into_series)
-        .collect::<core::result::Result<Vec<_>, Error>>()
-        .and_then(|series_vector| {
-            Ok(Blob::builder()
-                .data(rmp_serde::to_vec_named(&series_vector)?)
-                .mime_type(TIMESERIES_MSGPACK_MIME_TYPE.to_owned())
-                .build())
-        })
+        .collect::<Result<Vec<_>>>()
+        .and_then(|series_vector| TimeseriesVector(series_vector).to_blob())
 }
 
 pub fn create_graph_cell() -> Result<Vec<Cell>> {
