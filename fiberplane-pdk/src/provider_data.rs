@@ -43,9 +43,9 @@ pub fn parse_blob<T: DeserializeOwned>(mime_type: &str, blob: Blob) -> Result<T>
         });
     }
 
-    return Err(Error::Data {
+    Err(Error::Data {
         message: format!("Incorrect MIME type: {}", blob.mime_type),
-    });
+    })
 }
 
 /// Serializes a custom struct and stores the result in a `Blob`.

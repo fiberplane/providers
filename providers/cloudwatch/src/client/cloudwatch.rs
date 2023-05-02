@@ -44,7 +44,7 @@ impl Client {
             namespace: namespace.clone(),
             next_token: None,
         };
-        return paginate_vec(
+        paginate_vec(
             &self.common,
             init_request,
             |response: SdkResponse| {
@@ -74,7 +74,7 @@ impl Client {
             },
             limit,
         )
-        .await;
+        .await
     }
 
     pub async fn get_metric_data(
@@ -112,7 +112,7 @@ impl Client {
             start_time: start_time.into(),
         };
 
-        return paginate(
+        paginate(
             &self.common,
             init_request,
             |metric_data: GetMetricDataResponse| Some(metric_data.metric_data_results.into_iter()),
@@ -164,7 +164,7 @@ impl Client {
             None,
         )
         .await
-        .map(|metrics| metrics.into_values().collect());
+        .map(|metrics| metrics.into_values().collect())
     }
 }
 

@@ -1,4 +1,4 @@
-use super::{constants::*, prometheus::*};
+use super::prometheus::*;
 use fiberplane_pdk::prelude::*;
 use grafana_common::{query_direct_and_proxied, Config};
 
@@ -94,10 +94,7 @@ pub async fn query_suggestions(query: AutoSuggestRequest, config: Config) -> Res
         }
     }
 
-    Ok(Blob::builder()
-        .data(rmp_serde::to_vec_named(&suggestions)?)
-        .mime_type(SUGGESTIONS_MSGPACK_MIME_TYPE.to_owned())
-        .build())
+    Suggestions(suggestions).to_blob()
 }
 
 /// Extracts the identifier and starting offset that is currently being typed from the query. This
@@ -117,16 +114,8 @@ fn extract_identifier(query: &str) -> (&str, Option<u32>) {
     }
 }
 
-fn is_letter(c: char) -> bool {
-    ('A'..='Z').contains(&c) || ('a'..='z').contains(&c)
-}
-
-fn is_number(c: char) -> bool {
-    ('0'..='9').contains(&c)
-}
-
 fn is_identifier_char(c: char) -> bool {
-    is_letter(c) || is_number(c) || c == '_'
+    c.is_ascii_alphanumeric() || c == '_'
 }
 
 #[cfg(test)]

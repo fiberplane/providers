@@ -35,7 +35,7 @@ impl Client {
             log_group_name_prefix: None,
             next_token: None,
         };
-        return paginate_vec(
+        paginate_vec(
             &self.common,
             init_request,
             |log_groups_payload: DescribeLogGroupsResponse| {
@@ -44,7 +44,7 @@ impl Client {
             |log_groups_payload| log_groups_payload.next_token.clone(),
             limit,
         )
-        .await;
+        .await
     }
 
     pub async fn describe_queries(
@@ -59,14 +59,14 @@ impl Client {
             max_results: limit.and_then(|l| l.try_into().ok()),
             status,
         };
-        return paginate_vec(
+        paginate_vec(
             &self.common,
             init_request,
             |queries_payload: DescribeQueriesResponse| Some(queries_payload.queries.into_iter()),
             |queries_payload: &DescribeQueriesResponse| queries_payload.next_token.clone(),
             limit,
         )
-        .await;
+        .await
     }
 
     pub async fn start_query(

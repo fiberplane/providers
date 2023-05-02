@@ -24,6 +24,7 @@ The main traits and macros you will interact with from this crate are:
 
 */
 
+pub mod panic;
 mod parse_query;
 pub mod prelude;
 pub mod provider_data;

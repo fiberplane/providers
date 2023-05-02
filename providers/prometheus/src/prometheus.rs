@@ -1,3 +1,4 @@
+use super::instants::Instant;
 use fiberplane_pdk::prelude::Timestamp;
 use fiberplane_pdk::providers::*;
 use serde::Deserialize;
@@ -16,7 +17,27 @@ pub struct PrometheusResponse {
 #[derive(Deserialize)]
 #[serde(tag = "resultType", content = "result", rename_all = "snake_case")]
 pub enum PrometheusData {
+    Vector(Vec<InstantVector>),
     Matrix(Vec<RangeVector>),
+}
+
+#[derive(Deserialize)]
+pub struct InstantVector {
+    pub metric: BTreeMap<String, String>,
+    pub value: PrometheusPoint,
+}
+
+impl InstantVector {
+    pub fn into_instant(self) -> Result<Instant, Error> {
+        let mut labels = self.metric;
+        let name = labels.remove("__name__").unwrap_or_else(|| "".to_owned());
+        let metric = self.value.to_metric()?;
+        Ok(Instant {
+            name,
+            labels,
+            metric,
+        })
+    }
 }
 
 #[derive(Deserialize)]
