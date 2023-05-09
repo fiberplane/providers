@@ -176,11 +176,12 @@ fn step_to_seconds(step: StepSize) -> u32 {
 }
 
 /// Returns the step to fetch from the given duration in seconds. We attempt
-/// to maintain roughly 30 steps for whatever the duration is, so that for a
-/// duration of one hour, we fetch per 2 minutes, and for a duration of one
-/// minute, we fetch per 2 seconds.
+/// to maintain roughly 120 steps for whatever the duration is, so that for a
+/// duration of one hour, we fetch per 30 seconds, however for a duration of one
+/// minute, we fetch per 1 seconds (as the step value is rounded up to a 
+/// full unit).
 fn step_for_range(from: f64, to: f64) -> StepSize {
-    let mut step = (to - from) / 30.0;
+    let mut step = (to - from) / 120.0;
     let mut unit = StepUnit::Seconds;
     if step >= 60.0 {
         step /= 60.0;
@@ -192,7 +193,7 @@ fn step_for_range(from: f64, to: f64) -> StepSize {
     }
 
     StepSize {
-        amount: f64::ceil(2.0 * step) as u32,
+        amount: f64::ceil(step) as u32,
         unit,
     }
 }
