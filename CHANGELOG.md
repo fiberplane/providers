@@ -13,11 +13,13 @@ changes if the major version hasn't changed.
 
 ## [Unreleased]
 
+- Prometheus provider: decrease step size in order to add more details to lines in graphs.
+
 ### Added
 
 - Added support for `ArrayField` schema specification. As long as `T` has a
   `QuerySchema` derive, you can use `Vec<T>` in structs that derive
-  `QuerySchema`.  Serialization to URL-encoded query uses the ["bracket"
+  `QuerySchema`. Serialization to URL-encoded query uses the ["bracket"
   notation](https://docs.rs/serde-querystring/0.2.1/serde_querystring/index.html#brackets-mode).
   (#31)
 
