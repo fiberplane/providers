@@ -21,6 +21,5 @@ quote = "1"
 syn = { version = "1", features = ["extra-traits"] }
 
 [dev-dependencies]
-trybuild = "1.0"
-fiberplane-pdk = { workspace = true }
 serde = { workspace = true }
+trybuild = "1.0"
