@@ -16,7 +16,7 @@ changes if the major version hasn't changed.
 - Prometheus provider: decrease step size in order to add more details to lines in graphs.
 
 ### Added
-
+- Added provider for Parseable.
 - Added support for `ArrayField` schema specification. As long as `T` has a
   `QuerySchema` derive, you can use `Vec<T>` in structs that derive
   `QuerySchema`. Serialization to URL-encoded query uses the ["bracket"

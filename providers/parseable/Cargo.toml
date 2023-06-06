@@ -1,0 +1,25 @@
+[package]
+name = "parseable-provider"
+description = "Parseable Query Provider"
+authors = ["Parseable <hi@parseable.io>"]
+edition = "2021"
+version = "1.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# The current PDK beta only works with this exact version of
+# the fiberplane-models crate, this dependency is added to pin
+# fiberplane-models version even if it's not directly imported in
+# code.
+fiberplane-models = { workspace = true }
+fiberplane-pdk = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+url = { workspace = true }
+time = { workspace = true }
+base64 = "0.21.2"
+
+[build-dependencies]
+vergen = { workspace = true }
