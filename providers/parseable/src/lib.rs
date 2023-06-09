@@ -97,8 +97,8 @@ async fn check_status(request: ProviderRequest) -> Result<Blob> {
 async fn run_query(query: &Query, config: &Config) -> Result<Vec<ProviderEvent>> {
     let query = json!({
         "query": query.query,
-        "startTime": query.time_range.from.format(&well_known::Rfc3339).unwrap(),
-        "endTime": query.time_range.to.format(&well_known::Rfc3339).unwrap()
+        "startTime": query.time_range.from.to_string(),
+        "endTime": query.time_range.to.to_string()
     });
 
     let url = get_url(QUERY_API, config)?;
