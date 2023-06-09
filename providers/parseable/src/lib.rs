@@ -132,16 +132,14 @@ async fn run_query(query: &Query, config: &Config) -> Result<Vec<ProviderEvent>>
 fn parse_row(value: Value) -> Result<ProviderEvent> {
     let Value::Object(mut object) = value else { return Err(Error::Other { message: format!("Expected object, found {}", value) }) };
     let timestamp = object.remove("p_timestamp");
-    let timestamp = timestamp
-        .as_ref()
-        .and_then(|value| value.as_str())
-        .ok_or(Error::Other {
-            message: "Did not find any valid timestamp field".to_string(),
-        })?;
+    let timestamp = timestamp.as_ref().and_then(|value| value.as_str());
 
-    let timestamp = parse_time(timestamp).map_err(|err| Error::Other {
-        message: format!("Failed to parse timestamp: {}", err),
-    })?;
+    let timestamp = match timestamp {
+        Some(timestamp) => parse_time(timestamp).map_err(|err| Error::Other {
+            message: format!("Failed to parse timestamp: {}", err),
+        })?,
+        None => Timestamp::from(OffsetDateTime::UNIX_EPOCH),
+    };
 
     let otel = OtelMetadata::builder()
         .attributes(BTreeMap::from_iter(object))
