@@ -113,7 +113,7 @@ async fn run_query(query: &Query, config: &Config) -> Result<Vec<ProviderEvent>>
     let response = make_http_request(request).await?;
 
     let body: Value = serde_json::from_slice(&response.body)?;
-    let Value::Array(arr) = body  else {
+    let Value::Array(arr) = body else {
         return Err(Error::Other { message: String::from_utf8_lossy(&response.body).to_string() })
     };
 
