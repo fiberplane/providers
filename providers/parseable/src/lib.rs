@@ -114,7 +114,7 @@ async fn run_query(query: &Query, config: &Config) -> Result<Vec<ProviderEvent>>
         let Value::Array(arr) = body else { return Err(Error::Other {
             message: format!(
                 "Expected an array, received: {}",
-                body.to_string()
+                body
             )
         })};
         let mut rows = Vec::with_capacity(arr.len());
@@ -123,9 +123,9 @@ async fn run_query(query: &Query, config: &Config) -> Result<Vec<ProviderEvent>>
         }
         Ok(rows)
     } else {
-        return Err(Error::Other {
+        Err(Error::Other {
             message: String::from_utf8_lossy(&response.body).to_string(),
-        });
+        })
     }
 }
 
