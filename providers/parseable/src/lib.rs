@@ -126,7 +126,7 @@ async fn run_query(query: &Query, config: &Config) -> Result<Vec<ProviderEvent>>
 }
 
 fn parse_row(value: Value) -> ProviderEvent {
-    let Value::Object(mut object) = value  else { panic!("object is of type {:?}", &value) };
+    let Value::Object(mut object) = value else { panic!("object is of type {:?}", &value) };
 
     let timestamp = object.remove("p_timestamp").unwrap();
     let timestamp = Timestamp::from(parse_time(timestamp.as_str().unwrap()));
