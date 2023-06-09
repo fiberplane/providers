@@ -108,18 +108,25 @@ async fn run_query(query: &Query, config: &Config) -> Result<Vec<ProviderEvent>>
 
     let request = HttpRequest::post(url, query.to_string()).with_headers(headers);
     let response = make_http_request(request).await?;
-
     let body: Value = serde_json::from_slice(&response.body)?;
-    let Value::Array(arr) = body else {
-        return Err(Error::Other { message: String::from_utf8_lossy(&response.body).to_string() })
-    };
 
-    let mut rows = Vec::with_capacity(arr.len());
-    for value in arr {
-        rows.push(parse_row(value)?)
+    if response.status_code == 200 {
+        let Value::Array(arr) = body else { return Err(Error::Other {
+            message: format!(
+                "Expected an array, received: {}",
+                body.to_string()
+            )
+        })};
+        let mut rows = Vec::with_capacity(arr.len());
+        for value in arr {
+            rows.push(parse_row(value)?)
+        }
+        Ok(rows)
+    } else {
+        return Err(Error::Other {
+            message: String::from_utf8_lossy(&response.body).to_string(),
+        });
     }
-
-    Ok(rows)
 }
 
 fn parse_row(value: Value) -> Result<ProviderEvent> {
