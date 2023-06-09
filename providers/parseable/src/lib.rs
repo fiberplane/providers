@@ -114,30 +114,40 @@ async fn run_query(query: &Query, config: &Config) -> Result<Vec<ProviderEvent>>
         return Err(Error::Other { message: String::from_utf8_lossy(&response.body).to_string() })
     };
 
-    let mut rows = Vec::new();
+    let mut rows = Vec::with_capacity(arr.len());
     for value in arr {
-        rows.push(parse_row(value))
+        rows.push(parse_row(value)?)
     }
 
     Ok(rows)
 }
 
-fn parse_row(value: Value) -> ProviderEvent {
-    let Value::Object(mut object) = value else { panic!("object is of type {:?}", &value) };
+fn parse_row(value: Value) -> Result<ProviderEvent> {
+    let Value::Object(mut object) = value else { return Err(Error::Other { message: format!("Expected object, found {}", value) }) };
+    let timestamp = object.remove("p_timestamp");
+    let timestamp = timestamp
+        .as_ref()
+        .and_then(|value| value.as_str())
+        .ok_or(Error::Other {
+            message: "Did not find any valid timestamp field".to_string(),
+        })?;
 
-    let timestamp = object.remove("p_timestamp").unwrap();
-    let timestamp = Timestamp::from(parse_time(timestamp.as_str().unwrap()));
+    let timestamp = parse_time(timestamp).map_err(|err| Error::Other {
+        message: format!("Failed to parse timestamp: {}", err),
+    })?;
 
     let otel = OtelMetadata::builder()
         .attributes(BTreeMap::from_iter(object))
         .resource(BTreeMap::default())
         .build();
 
-    ProviderEvent::builder()
+    let event = ProviderEvent::builder()
         .otel(otel)
         .time(timestamp)
         .title("".to_string())
-        .build()
+        .build();
+
+    Ok(event)
 }
 
 fn get_url(api: &str, config: &Config) -> Result<Url> {
@@ -161,15 +171,15 @@ fn basic_auth_header(username: &str, password: &str) -> String {
 
 // Parseable's p_timestamp value is not sufficient for time parser.
 // Offset is missing though it is understood as UTC. So we add it manually
-fn parse_time(time: &str) -> OffsetDateTime {
+fn parse_time(time: &str) -> std::result::Result<Timestamp, time::Error> {
     const TIME_FORMAT: &[FormatItem<'_>] =
         format_description!("[year]-[month]-[day]T[hour]:[minute]:[second].[subsecond]");
 
     let mut parser = Parsed::new();
-    parser.parse_items(time.as_bytes(), TIME_FORMAT).unwrap();
-
+    parser.parse_items(time.as_bytes(), TIME_FORMAT)?;
     parser.set_offset_hour(0);
     parser.set_offset_minute_signed(0);
 
-    OffsetDateTime::try_from(parser).unwrap()
+    let datetime = OffsetDateTime::try_from(parser)?;
+    Ok(Timestamp::from(datetime))
 }
