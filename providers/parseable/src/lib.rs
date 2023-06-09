@@ -123,6 +123,7 @@ async fn run_query(query: &Query, config: &Config) -> Result<Vec<ProviderEvent>>
         }
         Ok(rows)
     } else {
+        // Return error message returned by Parseable API.
         Err(Error::Other {
             message: String::from_utf8_lossy(&response.body).to_string(),
         })
