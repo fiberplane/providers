@@ -11,6 +11,10 @@ pub struct BuildArgs {
     #[clap(short, long)]
     pub debug: bool,
 
+    /// Providers to exclude from the build.
+    #[clap(long)]
+    exclude: Vec<String>,
+
     /// Provider to build.
     #[clap(default_value = "all")]
     provider: String,
@@ -26,6 +30,10 @@ pub(crate) fn handle_build_command(args: BuildArgs) -> TaskResult {
     };
 
     for provider in providers {
+        if args.exclude.contains(&provider) {
+            continue;
+        }
+
         println!(
             "{BUILD}Building {} provider...",
             style(&provider).cyan().bold()
