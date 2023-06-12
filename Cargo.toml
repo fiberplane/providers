@@ -6,15 +6,15 @@ exclude = ["providers/.cargo"]
 authors = ["Fiberplane <info@fiberplane.com>"]
 edition = "2021"
 rust-version = "1.65"
-version = "1.0.0-beta.3"
+version = "1.0.0-beta.4"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/fiberplane/providers"
 
 [workspace.dependencies]
-fiberplane-models = { version = "1.0.0-beta.1" }
-fiberplane-pdk = { version = "1.0.0-beta.1", path = "fiberplane-pdk" }
-fiberplane-pdk-macros = { version = "1.0.0-beta.1", path = "fiberplane-pdk-macros" }
-fiberplane-provider-bindings = { version = "2.0.0-beta.1" }
+fiberplane-models = { version = "1.0.0-beta.3" }
+fiberplane-pdk = { version = "1.0.0-beta.4", path = "fiberplane-pdk" }
+fiberplane-pdk-macros = { version = "1.0.0-beta.4", path = "fiberplane-pdk-macros" }
+fiberplane-provider-bindings = { version = "2.0.0-beta.3" }
 fp-bindgen = { version = "3.0.0" }
 fp-bindgen-support = { version = "3.0.0" }
 rmpv = { version = "1", features = ["with-serde"] }
