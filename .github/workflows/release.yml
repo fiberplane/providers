@@ -46,6 +46,7 @@ jobs:
       - name: Attach providers to release
         uses: meeDamian/github-release@2.0
         with:
+          allow_override: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: >
             artifacts/cloudwatch.wasm
