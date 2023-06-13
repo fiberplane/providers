@@ -18,22 +18,14 @@ jobs:
         with:
           credentials: "https://fiberplanebot:${{ secrets.PRIVATE_GITHUB_TOKEN }}@github.com/"
 
-      - name: Cache Rust dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-
       - name: Install latest stable
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
           components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: Check format
         # Skip formatting on main, since it's not critical and should've already
@@ -54,7 +46,7 @@ jobs:
         run: cargo test --verbose
 
   providers:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-8-cores
     steps:
       - uses: actions/checkout@v3
 
@@ -63,22 +55,14 @@ jobs:
         with:
           credentials: "https://fiberplanebot:${{ secrets.PRIVATE_GITHUB_TOKEN }}@github.com/"
 
-      - name: Cache Rust dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-
       - name: Install latest stable
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
           target: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: Compile providers
         run: |

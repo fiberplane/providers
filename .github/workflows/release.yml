@@ -2,14 +2,14 @@ name: Release
 
 on:
   release:
-    type: [published]
+    types: [published]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-8-cores
     steps:
       - uses: actions/checkout@v3
 
@@ -17,16 +17,6 @@ jobs:
         uses: de-vri-es/setup-git-credentials@v2
         with:
           credentials: "https://fiberplanebot:${{ secrets.PRIVATE_GITHUB_TOKEN }}@github.com/"
-
-      - name: Cache Rust dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
 
       - name: Install latest stable
         uses: actions-rs/toolchain@v1
@@ -36,16 +26,19 @@ jobs:
           target: wasm32-unknown-unknown
           components: rustfmt, clippy
 
+      - uses: Swatinem/rust-cache@v2
+
       - name: Run tests
         run: cargo test --verbose
 
       - name: Compile providers
         run: |
-          cargo xtask build all
+          cargo xtask build all --exclude=sample
 
       - name: Attach providers to release
         uses: meeDamian/github-release@2.0
         with:
+          allow_override: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: >
             artifacts/cloudwatch.wasm
