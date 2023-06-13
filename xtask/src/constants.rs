@@ -13,6 +13,7 @@ pub(crate) const PROVIDERS: &[&str] = &[
     "elasticsearch",
     "https",
     "loki",
+    "parseable",
     "prometheus",
     "sample",
     "sentry",
