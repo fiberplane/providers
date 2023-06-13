@@ -6,6 +6,7 @@ This directory contains all our providers:
 - [Elasticsearch](elasticsearch)
 - [HTTPS Provider](https)
 - [Loki](loki)
+- [Parseable](parseable)
 - [Prometheus](prometheus)
 - [Sample Provider](sample)
 - [Sentry](sentry) (WIP)
