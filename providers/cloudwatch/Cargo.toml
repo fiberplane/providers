@@ -1,17 +1,17 @@
 [package]
 name = "cloudwatch-provider"
 description = "Fiberplane Cloudwatch provider"
-authors.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-version.workspace = true
+authors = { workspace = true }
+edition = { workspace = true }
+rust-version = { workspace = true }
+version = { workspace = true }
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
 base64 = "0.13"
-bytes = { version = "1", features = [ "serde" ] }
+bytes = { version = "1", features = ["serde"] }
 const_format = "0.2"
 fiberplane-pdk = { workspace = true }
 flatten-json-object = "0.6.1"

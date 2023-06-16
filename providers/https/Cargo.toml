@@ -1,9 +1,9 @@
 [package]
 name = "https-provider"
-version = "0.1.0"
 authors = { workspace = true }
 edition = { workspace = true }
 rust-version = { workspace = true }
+version = { workspace = true }
 
 [lib]
 crate-type = ["cdylib"]

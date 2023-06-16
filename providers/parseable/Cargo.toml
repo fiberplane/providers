@@ -2,8 +2,9 @@
 name = "parseable-provider"
 description = "Parseable Query Provider"
 authors = ["Parseable <hi@parseable.io>"]
-edition = "2021"
-version = "1.0.0"
+edition = { workspace = true }
+rust-version = { workspace = true }
+version = { workspace = true }
 
 [lib]
 crate-type = ["cdylib"]

@@ -1010,7 +1010,7 @@ checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
 
 [[package]]
 name = "https-provider"
-version = "0.1.0"
+version = "1.0.0-beta.4"
 dependencies = [
  "base64 0.13.1",
  "const_format",
@@ -1473,7 +1473,7 @@ dependencies = [
 
 [[package]]
 name = "parseable-provider"
-version = "1.0.0"
+version = "1.0.0-beta.4"
 dependencies = [
  "base64 0.21.2",
  "fiberplane-models",
@@ -1651,7 +1651,7 @@ dependencies = [
 
 [[package]]
 name = "prometheus-provider"
-version = "0.1.0"
+version = "1.0.0-beta.4"
 dependencies = [
  "const_format",
  "fiberplane-models",
@@ -1904,7 +1904,7 @@ dependencies = [
 
 [[package]]
 name = "sentry-provider"
-version = "0.1.0"
+version = "1.0.0-beta.4"
 dependencies = [
  "const_format",
  "fiberplane-models",
