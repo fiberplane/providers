@@ -13,6 +13,10 @@ changes if the major version hasn't changed.
 
 ## [Unreleased]
 
+TBD
+
+## [1.0.0-beta.4]
+
 ### Added
 
 - Added provider for Parseable.
