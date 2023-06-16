@@ -40,13 +40,7 @@ jobs:
         with:
           allow_override: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: >
-            artifacts/cloudwatch.wasm
-            artifacts/elasticsearch.wasm
-            artifacts/https.wasm
-            artifacts/loki.wasm
-            artifacts/prometheus.wasm
-            artifacts/sentry.wasm
+          files: providers:artifacts/
 
       - name: Cargo login
         uses: actions-rs/cargo@v1
