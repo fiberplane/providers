@@ -13,6 +13,12 @@ changes if the major version hasn't changed.
 
 ## [Unreleased]
 
+### Added
+
+- Added provider for Parseable.
+
+## [1.0.0-beta.3] - 2023-06-14
+
 - Prometheus provider: decrease step size in order to add more details to lines in graphs.
 
 ### Added
