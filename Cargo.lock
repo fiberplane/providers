@@ -271,7 +271,7 @@ dependencies = [
 
 [[package]]
 name = "cloudwatch-provider"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.6"
 dependencies = [
  "base64 0.13.1",
  "bytes",
@@ -487,7 +487,7 @@ dependencies = [
 
 [[package]]
 name = "elasticsearch-provider"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.6"
 dependencies = [
  "elasticsearch-dsl",
  "fiberplane-pdk",
@@ -616,7 +616,7 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-pdk"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.6"
 dependencies = [
  "fiberplane-models",
  "fiberplane-pdk-macros",
@@ -633,7 +633,7 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-pdk-macros"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.6"
 dependencies = [
  "Inflector",
  "fiberplane-models",
@@ -1010,7 +1010,7 @@ checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
 
 [[package]]
 name = "https-provider"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.6"
 dependencies = [
  "base64 0.13.1",
  "const_format",
@@ -1298,7 +1298,7 @@ dependencies = [
 
 [[package]]
 name = "loki-provider"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.6"
 dependencies = [
  "fiberplane-pdk",
  "grafana-common",
@@ -1473,7 +1473,7 @@ dependencies = [
 
 [[package]]
 name = "parseable-provider"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.6"
 dependencies = [
  "base64 0.21.2",
  "fiberplane-models",
@@ -1651,7 +1651,7 @@ dependencies = [
 
 [[package]]
 name = "prometheus-provider"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.6"
 dependencies = [
  "const_format",
  "fiberplane-models",
@@ -1868,7 +1868,7 @@ checksum = "7b4b9743ed687d4b4bcedf9ff5eaa7398495ae14e61cba0a295704edbc7decde"
 
 [[package]]
 name = "sample-provider"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.6"
 dependencies = [
  "fiberplane-pdk",
  "serde",
@@ -1904,7 +1904,7 @@ dependencies = [
 
 [[package]]
 name = "sentry-provider"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.6"
 dependencies = [
  "const_format",
  "fiberplane-models",
