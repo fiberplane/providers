@@ -111,12 +111,11 @@ async fn run_query(query: &Query, config: &Config) -> Result<Vec<ProviderEvent>>
     let body: Value = serde_json::from_slice(&response.body)?;
 
     if response.status_code == 200 {
-        let Value::Array(arr) = body else { return Err(Error::Other {
-            message: format!(
-                "Expected an array, received: {}",
-                body
-            )
-        })};
+        let Value::Array(arr) = body else {
+            return Err(Error::Other {
+                message: format!("Expected an array, received: {}", body),
+            });
+        };
         let mut rows = Vec::with_capacity(arr.len());
         for value in arr {
             rows.push(parse_row(value)?)
@@ -131,7 +130,11 @@ async fn run_query(query: &Query, config: &Config) -> Result<Vec<ProviderEvent>>
 }
 
 fn parse_row(value: Value) -> Result<ProviderEvent> {
-    let Value::Object(mut object) = value else { return Err(Error::Other { message: format!("Expected object, found {}", value) }) };
+    let Value::Object(mut object) = value else {
+        return Err(Error::Other {
+            message: format!("Expected object, found {}", value),
+        });
+    };
     let timestamp = object.remove("p_timestamp");
     let timestamp = timestamp.as_ref().and_then(|value| value.as_str());
 

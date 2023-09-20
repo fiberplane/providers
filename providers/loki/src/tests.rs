@@ -60,8 +60,8 @@ fn test_deserialization() {
 fn test_data_mapper() {
     let value = QueryResponse::deserialize(&mut Deserializer::from_str(DATA)).unwrap();
     let QueryData::Streams(data) = &value.data else {
-      panic!("unexpected query data type");
-  };
+        panic!("unexpected query data type");
+    };
 
     let mapped = data_mapper(&data[0]).collect::<Result<Vec<_>>>().unwrap();
     let metadata = OtelMetadata::builder()

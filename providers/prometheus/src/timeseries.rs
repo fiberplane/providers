@@ -127,7 +127,7 @@ pub(crate) async fn query_series(query: TimeseriesQuery, config: Config) -> Resu
     let PrometheusData::Matrix(matrix) = response.data else {
         return Err(Error::Data {
             message: "Expected a matrix response".to_string(),
-        })
+        });
     };
 
     matrix
