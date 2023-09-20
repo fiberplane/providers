@@ -174,7 +174,7 @@ fn get_url(api: &str, config: &Config) -> Result<Url> {
 fn basic_auth_header(username: &str, password: &str) -> String {
     format!(
         "Basic {}",
-        BASE64_STANDARD.encode(&format!("{}:{}", username, password))
+        BASE64_STANDARD.encode(format!("{}:{}", username, password))
     )
 }
 

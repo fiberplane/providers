@@ -1,4 +1,5 @@
 [workspace]
+resolver = "2"
 members = ["fiberplane-pdk", "fiberplane-pdk-macros", "providers/*", "xtask"]
 exclude = ["providers/.cargo"]
 
