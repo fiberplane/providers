@@ -1,5 +1,5 @@
 [package]
-name = "xtask"
+name = "providers-xtask"
 authors = { workspace = true }
 edition = { workspace = true }
 rust-version = { workspace = true }
