@@ -1,6 +1,7 @@
-use vergen::{vergen, Config};
+use std::error::Error;
+use vergen::EmitBuilder;
 
-fn main() {
-    // Generate the default 'cargo:' instruction output
-    vergen(Config::default()).unwrap();
+fn main() -> Result<(), Box<dyn Error>> {
+    EmitBuilder::builder().emit()?;
+    Ok(())
 }

@@ -28,7 +28,7 @@ time = { version = "0.3.15", features = [
 ] }
 tracing = "0.1.36"
 url = { version = "2.2.2", features = ["serde"] }
-vergen = { version = "7.4.2", default-features = false, features = [
+vergen = { version = "8.2.5", default-features = false, features = [
   "build",
   "git",
 ] }
