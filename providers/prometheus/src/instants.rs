@@ -31,7 +31,7 @@ pub async fn query_instants(request: ProviderRequest) -> Result<Blob> {
     let PrometheusData::Vector(instants) = response.data else {
         return Err(Error::Data {
             message: "Expected a vector of instants".to_string(),
-        })
+        });
     };
 
     instants

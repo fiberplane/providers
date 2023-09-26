@@ -1,4 +1,5 @@
 [workspace]
+resolver = "2"
 members = ["fiberplane-pdk", "fiberplane-pdk-macros", "providers/*", "xtask"]
 exclude = ["providers/.cargo"]
 
@@ -11,6 +12,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/fiberplane/providers"
 
 [workspace.dependencies]
+fiberplane-ci = { git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "main" }
 fiberplane-models = { version = "1.0.0-beta.3" }
 fiberplane-pdk = { version = "1.0.0-beta.6", path = "fiberplane-pdk" }
 fiberplane-pdk-macros = { version = "1.0.0-beta.6", path = "fiberplane-pdk-macros" }
@@ -28,10 +30,7 @@ time = { version = "0.3.15", features = [
 ] }
 tracing = "0.1.36"
 url = { version = "2.2.2", features = ["serde"] }
-vergen = { version = "7.4.2", default-features = false, features = [
-  "build",
-  "git",
-] }
+vergen = { version = "8.2.5", features = ["build", "git", "git2"] }
 
 [patch.crates-io]
 #fiberplane-models = { path = "../fiberplane/fiberplane-models" }
