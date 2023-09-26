@@ -12,6 +12,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/fiberplane/providers"
 
 [workspace.dependencies]
+fiberplane-ci = { git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "main" }
 fiberplane-models = { version = "1.0.0-beta.3" }
 fiberplane-pdk = { version = "1.0.0-beta.6", path = "fiberplane-pdk" }
 fiberplane-pdk-macros = { version = "1.0.0-beta.6", path = "fiberplane-pdk-macros" }
