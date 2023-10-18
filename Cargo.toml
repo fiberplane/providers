@@ -33,15 +33,11 @@ url = { version = "2.2.2", features = ["serde"] }
 vergen = { version = "8.2.5", features = ["build", "git", "git2"] }
 
 [patch.crates-io]
-#fiberplane-models = { path = "../fiberplane/fiberplane-models" }
 fiberplane-models = { git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "main" }
-#fiberplane-provider-bindings = { path = "../fiberplane/fiberplane-provider-protocol/fiberplane-provider-bindings" }
 fiberplane-provider-bindings = { git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "main" }
-#fp-bindgen = { path = "../fp-bindgen/fp-bindgen" }
-#fp-bindgen-support = { path = "../fp-bindgen/fp-bindgen-support" }
 #fp-bindgen = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "release-3.0.0" }
 #fp-bindgen-support = { git = "ssh://git@github.com/fiberplane/fp-bindgen.git", branch = "release-3.0.0" }
 
-[patch.'ssh://git@github.com/fiberplane/fiberplane.git']
+#[patch.'ssh://git@github.com/fiberplane/fiberplane.git']
 #fiberplane-models = { path = "../fiberplane/fiberplane-models" }
 #fiberplane-provider-bindings = { path = "../fiberplane/fiberplane-provider-protocol/fiberplane-provider-bindings" }
