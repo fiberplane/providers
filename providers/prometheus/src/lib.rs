@@ -1,10 +1,14 @@
 mod auto_suggest;
+mod autometrics;
+mod config;
 mod constants;
 mod instants;
 mod prometheus;
 mod timeseries;
 
 use auto_suggest::query_suggestions;
+use autometrics::*;
+use config::*;
 use constants::{INSTANTS_MIME_TYPE, INSTANTS_QUERY_TYPE};
 use fiberplane_pdk::prelude::*;
 use grafana_common::{query_direct_and_proxied, Config};
@@ -13,10 +17,19 @@ use serde_json::Value;
 use std::env;
 use timeseries::{create_graph_cell, query_series, TimeseriesQuery};
 
-static COMMIT_HASH: &str = env!("VERGEN_GIT_SHA");
-static BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
+const COMMIT_HASH: &str = env!("VERGEN_GIT_SHA");
+const BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
 
 pdk_query_types! {
+    ALL_FUNCTIONS_QUERY => {
+        handler: query_all_functions(FunctionsQuery, Config).await,
+        supported_mime_types: [AUTOMETRICS_FUNCTIONS_MIME_TYPE]
+    },
+    CONFIG_QUERY => {
+        handler: query_config(ConfigQuery, Config).await,
+        label: "Prometheus config",
+        supported_mime_types: [YAML_MIME_TYPE]
+    },
     INSTANTS_QUERY_TYPE => {
         handler: query_instants(ProviderRequest).await,
         supported_mime_types: [INSTANTS_MIME_TYPE]

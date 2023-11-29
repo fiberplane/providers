@@ -1,23 +1,31 @@
 use super::instants::Instant;
-use fiberplane_models::MaybeSerializable;
 use fiberplane_pdk::prelude::Timestamp;
 use fiberplane_pdk::providers::*;
-use fp_bindgen::prelude::Serializable;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::{
     collections::BTreeMap,
     num::ParseFloatError,
     time::{Duration, SystemTime},
 };
 
-#[derive(Clone, Deserialize, PartialEq, Serialize, Serializable)]
-#[fp(rust_module = "crate::prometheus")]
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PrometheusResponse {
+    pub data: PrometheusData,
+}
+
+#[derive(Deserialize)]
+#[serde(tag = "resultType", content = "result", rename_all = "snake_case")]
+pub enum PrometheusData {
+    Vector(Vec<InstantVector>),
+    Matrix(Vec<RangeVector>),
+}
+
+#[derive(Deserialize)]
 pub struct InstantVector {
     pub metric: BTreeMap<String, String>,
     pub value: PrometheusPoint,
 }
-
-impl MaybeSerializable for InstantVector {}
 
 impl InstantVector {
     pub fn into_instant(self) -> Result<Instant, Error> {
@@ -43,11 +51,8 @@ pub struct PrometheusMetadataResponse {
     pub data: BTreeMap<String, Vec<Metadata>>,
 }
 
-#[derive(Clone, Deserialize, PartialEq, Serialize, Serializable)]
-#[fp(rust_module = "crate::prometheus")]
+#[derive(Deserialize)]
 pub struct PrometheusPoint(f64, String);
-
-impl MaybeSerializable for PrometheusPoint {}
 
 impl PrometheusPoint {
     pub fn to_metric(&self) -> Result<Metric, ParseFloatError> {
@@ -60,14 +65,11 @@ impl PrometheusPoint {
     }
 }
 
-#[derive(Clone, Deserialize, PartialEq, Serialize, Serializable)]
-#[fp(rust_module = "crate::prometheus")]
+#[derive(Deserialize)]
 pub struct RangeVector {
     pub metric: BTreeMap<String, String>,
     pub values: Vec<PrometheusPoint>,
 }
-
-impl MaybeSerializable for RangeVector {}
 
 impl RangeVector {
     pub fn into_series(self) -> Result<Timeseries, Error> {

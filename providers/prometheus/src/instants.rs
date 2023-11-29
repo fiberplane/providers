@@ -1,4 +1,5 @@
 use super::{constants::*, prometheus::*};
+use fiberplane_models::autometrics::PrometheusResponse;
 use fiberplane_models::blobs::Blob;
 use fiberplane_models::providers::Metric;
 use fiberplane_pdk::prelude::*;
@@ -20,7 +21,7 @@ pub struct Instant {
 }
 
 pub async fn query_instants(request: ProviderRequest) -> Result<Blob> {
-    let response: PrometheusResponse = query_direct_and_proxied(
+    let response: PrometheusResponse<Vec<InstantVector>> = query_direct_and_proxied(
         &Config::parse(request.config)?,
         "prometheus",
         "api/v1/query",
@@ -28,15 +29,11 @@ pub async fn query_instants(request: ProviderRequest) -> Result<Blob> {
     )
     .await?;
 
-    let PrometheusData::Vector(instants) = response.data else {
-        return Err(Error::Data {
-            message: "Expected a vector of instants".to_string(),
-        });
-    };
-
-    instants
+    let instants = response
+        .data
         .into_iter()
         .map(InstantVector::into_instant)
-        .collect::<Result<Vec<_>>>()
-        .and_then(|instants| Instants(instants).to_blob())
+        .collect::<Result<Vec<_>>>()?;
+
+    Instants(instants).to_blob()
 }

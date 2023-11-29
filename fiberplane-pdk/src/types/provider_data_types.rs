@@ -7,18 +7,38 @@ use crate::providers::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Deserialize, ProviderData, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, ProviderData, Serialize)]
+#[cfg_attr(
+    feature = "fp-bindgen",
+    derive(Serializable),
+    fp(rust_module = "fiberplane_pdk::prelude")
+)]
 #[pdk(mime_type = CELLS_MIME_TYPE)]
 pub struct Cells(pub Vec<Cell>);
 
-#[derive(Clone, Debug, Deserialize, ProviderData, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, ProviderData, Serialize)]
+#[cfg_attr(
+    feature = "fp-bindgen",
+    derive(Serializable),
+    fp(rust_module = "fiberplane_pdk::prelude")
+)]
 #[pdk(mime_type = EVENTS_MIME_TYPE)]
 pub struct Events(pub Vec<ProviderEvent>);
 
-#[derive(Clone, Debug, Deserialize, ProviderData, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, ProviderData, Serialize)]
+#[cfg_attr(
+    feature = "fp-bindgen",
+    derive(Serializable),
+    fp(rust_module = "fiberplane_pdk::prelude")
+)]
 #[pdk(mime_type = SUGGESTIONS_MIME_TYPE)]
 pub struct Suggestions(pub Vec<Suggestion>);
 
-#[derive(Clone, Debug, Deserialize, ProviderData, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, ProviderData, Serialize)]
+#[cfg_attr(
+    feature = "fp-bindgen",
+    derive(Serializable),
+    fp(rust_module = "fiberplane_pdk::prelude")
+)]
 #[pdk(mime_type = TIMESERIES_MIME_TYPE)]
 pub struct TimeseriesVector(pub Vec<Timeseries>);

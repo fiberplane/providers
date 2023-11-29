@@ -1,4 +1,5 @@
 use super::{constants::*, prometheus::*};
+use fiberplane_models::autometrics::PrometheusResponse;
 use fiberplane_pdk::prelude::*;
 use grafana_common::{query_direct_and_proxied, Config};
 use serde::Deserialize;
@@ -98,25 +99,22 @@ fn validate_or_parse_message(query: &str, message: &str) -> Error {
 pub(crate) async fn query_series(query: TimeseriesQuery, config: Config) -> Result<Blob> {
     validate_query(&query)?;
 
-    let from = to_float(query.time_range.from);
-    let to = to_float(query.time_range.to);
-    let step = step_for_range(from, to);
-    let start = to_iso_date(round_to_grid(from, step, RoundToGridEdge::Start));
-    let end = to_iso_date(round_to_grid(to, step, RoundToGridEdge::End));
+    let body = Blob::from({
+        let from = to_float(query.time_range.from);
+        let to = to_float(query.time_range.to);
+        let step = step_for_range(from, to);
+        let start = to_iso_date(round_to_grid(from, step, RoundToGridEdge::Start));
+        let end = to_iso_date(round_to_grid(to, step, RoundToGridEdge::End));
 
-    let mut form_data = form_urlencoded::Serializer::new(String::new());
-    form_data.append_pair("query", &query.query);
-    form_data.append_pair("start", &start);
-    form_data.append_pair("end", &end);
-    form_data.append_pair("step", &step.to_string());
-    let query_string = form_data.finish();
+        let mut form_data = form_urlencoded::Serializer::new(String::new());
+        form_data.append_pair("query", &query.query);
+        form_data.append_pair("start", &start);
+        form_data.append_pair("end", &end);
+        form_data.append_pair("step", &step.to_string());
+        form_data
+    });
 
-    let body = Blob::builder()
-        .data(query_string.into_bytes())
-        .mime_type(FORM_ENCODED_MIME_TYPE.to_owned())
-        .build();
-
-    let response: PrometheusResponse =
+    let response: PrometheusResponse<Vec<RangeVector>> =
         query_direct_and_proxied(&config, "prometheus", "api/v1/query_range", Some(body))
             .await
             .map_err(|err| match err {
@@ -124,17 +122,13 @@ pub(crate) async fn query_series(query: TimeseriesQuery, config: Config) -> Resu
                 err => err,
             })?;
 
-    let PrometheusData::Matrix(matrix) = response.data else {
-        return Err(Error::Data {
-            message: "Expected a matrix response".to_string(),
-        });
-    };
-
-    matrix
+    let timeseries_vector = response
+        .data
         .into_iter()
         .map(RangeVector::into_series)
-        .collect::<Result<Vec<_>>>()
-        .and_then(|series_vector| TimeseriesVector(series_vector).to_blob())
+        .collect::<Result<Vec<_>>>()?;
+
+    TimeseriesVector(timeseries_vector).to_blob()
 }
 
 pub fn create_graph_cell() -> Result<Vec<Cell>> {
