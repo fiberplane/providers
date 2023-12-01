@@ -50,11 +50,12 @@ pdk_query_types! {
 }
 
 #[pdk_export]
-fn create_cells(query_type: String, _response: Blob) -> Result<Vec<Cell>> {
+fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
     log(format!("Creating cells for query type: {query_type}"));
 
     match query_type.as_str() {
         TIMESERIES_QUERY_TYPE => create_graph_cell(),
+        YAML_MIME_TYPE => create_code_cell(response),
         _ => Err(Error::UnsupportedRequest),
     }
 }

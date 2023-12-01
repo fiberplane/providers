@@ -29,3 +29,18 @@ pub(crate) async fn query_config(_query: ConfigQuery, config: Config) -> Result<
 
     Yaml(response.data.yaml).to_blob()
 }
+
+pub fn create_code_cell(response: Blob) -> Result<Vec<Cell>> {
+    let code_cell = Cell::Code(
+        CodeCell::builder()
+            .id("config".to_owned())
+            .content(String::from_utf8(response.data.into()).map_err(|err| {
+                Error::Deserialization {
+                    message: err.to_string(),
+                }
+            })?)
+            .syntax("yaml")
+            .build(),
+    );
+    Ok(vec![code_cell])
+}
