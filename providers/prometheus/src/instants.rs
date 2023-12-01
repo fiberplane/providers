@@ -7,6 +7,15 @@ use grafana_common::{query_direct_and_proxied, Config};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+#[derive(Deserialize, QuerySchema)]
+pub(crate) struct InstantsQuery {
+    #[pdk(label = "Enter your Prometheus query", supports_suggestions)]
+    query: String,
+
+    #[pdk(label = "Specify a time")]
+    time: Option<Timestamp>,
+}
+
 #[derive(Clone, Debug, Deserialize, ProviderData, Serialize)]
 #[pdk(mime_type = INSTANTS_MIME_TYPE)]
 pub struct Instants(pub Vec<Instant>);
@@ -20,14 +29,19 @@ pub struct Instant {
     pub metric: Metric,
 }
 
-pub async fn query_instants(request: ProviderRequest) -> Result<Blob> {
-    let response: PrometheusResponse<Vec<InstantVector>> = query_direct_and_proxied(
-        &Config::parse(request.config)?,
-        "prometheus",
-        "api/v1/query",
-        Some(request.query_data),
-    )
-    .await?;
+pub async fn query_instants(query: InstantsQuery, config: Config) -> Result<Blob> {
+    let body = Blob::from({
+        let mut form_data = form_urlencoded::Serializer::new(String::new());
+        form_data.append_pair("query", &query.query);
+        form_data.append_pair(
+            "time",
+            &query.time.unwrap_or_else(Timestamp::now_utc).to_string(),
+        );
+        form_data
+    });
+
+    let response: PrometheusResponse<Vec<InstantVector>> =
+        query_direct_and_proxied(&config, "prometheus", "api/v1/query", Some(body)).await?;
 
     let instants = response
         .data

@@ -10,13 +10,14 @@ use crate::casing::Casing;
 
 /// All the possible field types we can generate.
 pub enum SchemaField {
+    Array(ArrayField),
     Checkbox(CheckboxField),
     DateTimeRange(DateTimeRangeField),
     Integer(IntegerField),
     Label(LabelField),
     Select(SelectField),
     Text(TextField),
-    Array(ArraySchema),
+    Timestamp(TimestampField),
 }
 
 /// A compile-time representation of an ArrayField schema,
@@ -28,7 +29,7 @@ pub enum SchemaField {
 ///
 /// This is why all fields are only exposed to the crate,
 /// and no public method is available either.
-pub struct ArraySchema {
+pub struct ArrayField {
     pub(crate) name: String,
     pub(crate) label: String,
     pub(crate) element_struct_type_name: String,
@@ -40,16 +41,17 @@ impl SchemaField {
     pub fn required(self) -> Self {
         use SchemaField::*;
         match self {
+            Array(schema) => Array(ArrayField {
+                minimum_length: 1,
+                ..schema
+            }),
             Checkbox(field) => Checkbox(field.required()),
             DateTimeRange(field) => DateTimeRange(field.required()),
             Integer(field) => Integer(field.required()),
             Label(field) => Label(field.required()),
             Select(field) => Select(field.required()),
             Text(field) => Text(field.required()),
-            Array(schema) => Array(ArraySchema {
-                minimum_length: 1,
-                ..schema
-            }),
+            Timestamp(field) => Timestamp(field.required()),
         }
     }
 
@@ -66,26 +68,28 @@ impl SchemaField {
         use SchemaField::*;
 
         let field_variant = match &self {
+            Array(_) => quote! { Array },
             Checkbox(_) => quote! { Checkbox },
             DateTimeRange(_) => quote! { DateTimeRange },
             Integer(_) => quote! { Integer },
             Label(_) => quote! { Label },
             Select(_) => quote! { Select },
             Text(_) => quote! { Text },
-            Array(_) => quote! { Array },
+            Timestamp(_) => quote! { Timestamp },
         };
         let enum_ident = Ident::new(field_enum, Span::call_site());
         let field_ident = Ident::new(&format!("{field_variant}Field"), Span::call_site());
 
         let name = serde_field_attrs.rename.unwrap_or_else(|| {
             let name = match &self {
+                Array(field) => &field.name,
                 Checkbox(field) => &field.name,
                 DateTimeRange(field) => &field.name,
                 Integer(field) => &field.name,
                 Label(field) => &field.name,
                 Select(field) => &field.name,
                 Text(field) => &field.name,
-                Array(field) => &field.name,
+                Timestamp(field) => &field.name,
             };
             serde_struct_attrs.rename_all.format_string(name)
         });
@@ -97,13 +101,14 @@ impl SchemaField {
         };
 
         let label = match &self {
+            Array(field) => &field.label,
             Checkbox(field) => &field.label,
             DateTimeRange(field) => &field.label,
             Integer(field) => &field.label,
             Label(field) => &field.label,
             Select(field) => &field.label,
             Text(field) => &field.label,
-            Array(field) => &field.label,
+            Timestamp(field) => &field.label,
         };
         let label = match label.is_empty() {
             true => quote! {},
@@ -112,7 +117,7 @@ impl SchemaField {
 
         let max = match &self {
             Integer(IntegerField { max: Some(max), .. }) => quote! { .with_max(#max) },
-            Array(ArraySchema {
+            Array(ArrayField {
                 maximum_length: Some(maximum_length),
                 ..
             }) => quote! { .with_maximum_length(#maximum_length) },
@@ -121,7 +126,7 @@ impl SchemaField {
 
         let min = match &self {
             Integer(IntegerField { min: Some(min), .. }) => quote! { .with_min(#min) },
-            Array(ArraySchema { minimum_length, .. }) if *minimum_length != 0 => {
+            Array(ArrayField { minimum_length, .. }) if *minimum_length != 0 => {
                 quote! { .with_minimum_length(#minimum_length) }
             }
             _ => quote! {},
@@ -170,13 +175,14 @@ impl SchemaField {
         };
 
         let required = match &self {
+            Array(_) => false,
             Checkbox(field) => field.required,
             DateTimeRange(field) => field.required,
             Integer(field) => field.required,
             Label(field) => field.required,
             Select(field) => field.required,
             Text(field) => field.required,
-            Array(_) => false,
+            Timestamp(field) => field.required,
         };
         let required = match required {
             true => quote! { .required() },
@@ -212,7 +218,7 @@ impl SchemaField {
         };
 
         let element_schema = match &self {
-            Array(ArraySchema {
+            Array(ArrayField {
                 element_struct_type_name,
                 ..
             }) => {
@@ -247,45 +253,46 @@ impl SchemaField {
     pub fn with_label(self, label: &str) -> Self {
         use SchemaField::*;
         match self {
+            Array(field) => Array(ArrayField {
+                label: label.to_string(),
+                ..field
+            }),
             Checkbox(field) => Checkbox(field.with_label(label)),
             DateTimeRange(field) => DateTimeRange(field.with_label(label)),
             Integer(field) => Integer(field.with_label(label)),
             Label(field) => Label(field.with_label(label)),
             Select(field) => Select(field.with_label(label)),
             Text(field) => Text(field.with_label(label)),
-            Array(field) => Array(ArraySchema {
-                label: label.to_string(),
-                ..field
-            }),
+            Timestamp(field) => Timestamp(field.with_label(label)),
         }
     }
 
     pub fn with_name(self, name: &str) -> Self {
         use SchemaField::*;
         match self {
+            Array(field) => Array(ArrayField {
+                name: name.to_string(),
+                ..field
+            }),
             Checkbox(field) => Checkbox(field.with_name(name)),
             DateTimeRange(field) => DateTimeRange(field.with_name(name)),
             Integer(field) => Integer(field.with_name(name)),
             Label(field) => Label(field.with_name(name)),
             Select(field) => Select(field.with_name(name)),
             Text(field) => Text(field.with_name(name)),
-            Array(field) => Array(ArraySchema {
-                name: name.to_string(),
-                ..field
-            }),
+            Timestamp(field) => Timestamp(field.with_name(name)),
         }
     }
 
     pub fn with_placeholder(self, name: &str) -> Self {
         use SchemaField::*;
         match self {
-            Checkbox(_) => self,
+            Array(_) | Checkbox(_) | Timestamp(_) => self,
             DateTimeRange(field) => DateTimeRange(field.with_placeholder(name)),
             Integer(_) => self,
             Label(field) => Label(field.with_placeholder(name)),
             Select(field) => Select(field.with_placeholder(name)),
             Text(field) => Text(field.with_placeholder(name)),
-            Array(_) => self,
         }
     }
 }

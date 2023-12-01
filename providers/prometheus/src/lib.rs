@@ -12,7 +12,7 @@ use config::*;
 use constants::{INSTANTS_MIME_TYPE, INSTANTS_QUERY_TYPE};
 use fiberplane_pdk::prelude::*;
 use grafana_common::{query_direct_and_proxied, Config};
-use instants::query_instants;
+use instants::{query_instants, InstantsQuery};
 use serde_json::Value;
 use std::env;
 use timeseries::{create_graph_cell, query_series, TimeseriesQuery};
@@ -31,7 +31,7 @@ pdk_query_types! {
         supported_mime_types: [YAML_MIME_TYPE]
     },
     INSTANTS_QUERY_TYPE => {
-        handler: query_instants(ProviderRequest).await,
+        handler: query_instants(InstantsQuery, Config).await,
         supported_mime_types: [INSTANTS_MIME_TYPE]
     },
     TIMESERIES_QUERY_TYPE => {
