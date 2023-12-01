@@ -5,7 +5,7 @@ use fp_bindgen::prelude::Serializable;
 use grafana_common::{query_direct_and_proxied, Config};
 use serde::{Deserialize, Serialize};
 
-pub const CONFIG_QUERY: &str = "x-prometheus-config";
+pub const CONFIG_QUERY_TYPE: &str = "x-prometheus-config";
 
 pub const YAML_MIME_TYPE: &str = "text/yaml";
 
@@ -31,14 +31,12 @@ pub(crate) async fn query_config(_query: ConfigQuery, config: Config) -> Result<
 }
 
 pub fn create_code_cell(response: Blob) -> Result<Vec<Cell>> {
+    let config_yaml = Yaml::parse_blob(response)?;
+
     let code_cell = Cell::Code(
         CodeCell::builder()
             .id("config".to_owned())
-            .content(String::from_utf8(response.data.into()).map_err(|err| {
-                Error::Deserialization {
-                    message: err.to_string(),
-                }
-            })?)
+            .content(config_yaml.0)
             .syntax("yaml")
             .build(),
     );

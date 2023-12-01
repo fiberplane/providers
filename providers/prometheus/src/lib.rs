@@ -21,11 +21,11 @@ const COMMIT_HASH: &str = env!("VERGEN_GIT_SHA");
 const BUILD_TIMESTAMP: &str = env!("VERGEN_BUILD_TIMESTAMP");
 
 pdk_query_types! {
-    ALL_FUNCTIONS_QUERY => {
+    ALL_FUNCTIONS_QUERY_TYPE => {
         handler: query_all_functions(FunctionsQuery, Config).await,
         supported_mime_types: [AUTOMETRICS_FUNCTIONS_MIME_TYPE]
     },
-    CONFIG_QUERY => {
+    CONFIG_QUERY_TYPE => {
         handler: query_config(ConfigQuery, Config).await,
         label: "Prometheus config",
         supported_mime_types: [YAML_MIME_TYPE]
@@ -55,7 +55,7 @@ fn create_cells(query_type: String, response: Blob) -> Result<Vec<Cell>> {
 
     match query_type.as_str() {
         TIMESERIES_QUERY_TYPE => create_graph_cell(),
-        YAML_MIME_TYPE => create_code_cell(response),
+        CONFIG_QUERY_TYPE => create_code_cell(response),
         _ => Err(Error::UnsupportedRequest),
     }
 }
