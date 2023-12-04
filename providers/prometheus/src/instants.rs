@@ -40,11 +40,16 @@ pub async fn query_instants(query: InstantsQuery, config: Config) -> Result<Blob
         form_data
     });
 
-    let response: PrometheusResponse<Vec<InstantVector>> =
+    let response: PrometheusResponse<PrometheusData> =
         query_direct_and_proxied(&config, "prometheus", "api/v1/query", Some(body)).await?;
 
-    let instants = response
-        .data
+    let PrometheusData::Vector(instants) = response.data else {
+        return Err(Error::Data {
+            message: "Expected a vector of instants".to_string(),
+        });
+    };
+
+    let instants = instants
         .into_iter()
         .map(InstantVector::into_instant)
         .collect::<Result<Vec<_>>>()?;

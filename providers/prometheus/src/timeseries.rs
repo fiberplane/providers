@@ -114,7 +114,7 @@ pub(crate) async fn query_series(query: TimeseriesQuery, config: Config) -> Resu
         form_data
     });
 
-    let response: PrometheusResponse<Vec<RangeVector>> =
+    let response: PrometheusResponse<PrometheusData> =
         query_direct_and_proxied(&config, "prometheus", "api/v1/query_range", Some(body))
             .await
             .map_err(|err| match err {
@@ -122,8 +122,13 @@ pub(crate) async fn query_series(query: TimeseriesQuery, config: Config) -> Resu
                 err => err,
             })?;
 
-    let timeseries_vector = response
-        .data
+    let PrometheusData::Matrix(matrix) = response.data else {
+        return Err(Error::Data {
+            message: "Expected a matrix response".to_string(),
+        });
+    };
+
+    let timeseries_vector = matrix
         .into_iter()
         .map(RangeVector::into_series)
         .collect::<Result<Vec<_>>>()?;

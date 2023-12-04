@@ -12,6 +12,16 @@ use std::{
 
 #[derive(Clone, Deserialize, PartialEq, Serialize, Serializable)]
 #[fp(rust_module = "crate::prometheus")]
+#[serde(tag = "resultType", content = "result", rename_all = "snake_case")]
+pub enum PrometheusData {
+    Vector(Vec<InstantVector>),
+    Matrix(Vec<RangeVector>),
+}
+
+impl MaybeSerializable for PrometheusData {}
+
+#[derive(Clone, Deserialize, PartialEq, Serialize, Serializable)]
+#[fp(rust_module = "crate::prometheus")]
 pub struct InstantVector {
     pub metric: BTreeMap<String, String>,
     pub value: PrometheusPoint,
