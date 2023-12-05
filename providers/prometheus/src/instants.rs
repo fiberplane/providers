@@ -33,10 +33,7 @@ pub async fn query_instants(query: InstantsQuery, config: Config) -> Result<Blob
     let body = Blob::from({
         let mut form_data = form_urlencoded::Serializer::new(String::new());
         form_data.append_pair("query", &query.query);
-        form_data.append_pair(
-            "time",
-            &query.time.unwrap_or_else(Timestamp::now_utc).to_string(),
-        );
+        form_data.append_pair("time", &query.time.unwrap_or_else(now).to_string());
         form_data
     });
 
