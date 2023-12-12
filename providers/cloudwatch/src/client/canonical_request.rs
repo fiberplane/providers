@@ -118,6 +118,8 @@ impl CanonicalRequest<{ request_state::READY_TO_SIGN_V4 }> {
 
 impl std::fmt::Display for CanonicalRequest<{ request_state::READY_TO_SIGN_V4 }> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use std::fmt::Write;
+
         let method = match self.method {
             Method::GET => "GET",
             Method::POST => "POST",
@@ -132,8 +134,10 @@ impl std::fmt::Display for CanonicalRequest<{ request_state::READY_TO_SIGN_V4 }>
         let headers: String = self
             .headers
             .iter()
-            .map(|(k, v)| format!("{k}:{v}\n"))
-            .collect::<String>()
+            .try_fold(String::new(), |mut acc, (k, v)| {
+                writeln!(acc, "{k}:{v}")?;
+                Ok(acc)
+            })?
             .trim_end()
             .to_string();
         let signed_headers = self.signed_headers();
