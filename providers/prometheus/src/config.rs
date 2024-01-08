@@ -1,5 +1,4 @@
 use fiberplane_models::autometrics::PrometheusResponse;
-use fiberplane_models::MaybeSerializable;
 use fiberplane_pdk::prelude::*;
 use fp_bindgen::prelude::Serializable;
 use grafana_common::{query_direct_and_proxied, Config};
@@ -16,8 +15,6 @@ pub(crate) struct ConfigQuery;
 pub struct ConfigYaml {
     yaml: String,
 }
-
-impl MaybeSerializable for ConfigYaml {}
 
 #[derive(Clone, Debug, Deserialize, PartialEq, ProviderData, Serialize)]
 #[pdk(mime_type = YAML_MIME_TYPE)]

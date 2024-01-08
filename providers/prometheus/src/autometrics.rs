@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
 pub const ALL_FUNCTIONS_QUERY_TYPE: &str = "x-autometrics-functions";
-pub const CHILD_FUNCTIONS_QUERY: &str = "x-autometrics-child-functions";
 
 pub const AUTOMETRICS_FUNCTIONS_MIME_TYPE: &str = "application/vnd.autometrics.functions";
 

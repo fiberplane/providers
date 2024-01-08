@@ -1,5 +1,4 @@
 use super::instants::Instant;
-use fiberplane_models::MaybeSerializable;
 use fiberplane_pdk::prelude::Timestamp;
 use fiberplane_pdk::providers::*;
 use fp_bindgen::prelude::Serializable;
@@ -18,16 +17,12 @@ pub enum PrometheusData {
     Matrix(Vec<RangeVector>),
 }
 
-impl MaybeSerializable for PrometheusData {}
-
 #[derive(Clone, Deserialize, PartialEq, Serialize, Serializable)]
 #[fp(rust_module = "crate::prometheus")]
 pub struct InstantVector {
     pub metric: BTreeMap<String, String>,
     pub value: PrometheusPoint,
 }
-
-impl MaybeSerializable for InstantVector {}
 
 impl InstantVector {
     pub fn into_instant(self) -> Result<Instant, Error> {
@@ -57,8 +52,6 @@ pub struct PrometheusMetadataResponse {
 #[fp(rust_module = "crate::prometheus")]
 pub struct PrometheusPoint(f64, String);
 
-impl MaybeSerializable for PrometheusPoint {}
-
 impl PrometheusPoint {
     pub fn to_metric(&self) -> Result<Metric, ParseFloatError> {
         let time = SystemTime::UNIX_EPOCH + Duration::from_millis((self.0 * 1000.0) as u64);
@@ -76,8 +69,6 @@ pub struct RangeVector {
     pub metric: BTreeMap<String, String>,
     pub values: Vec<PrometheusPoint>,
 }
-
-impl MaybeSerializable for RangeVector {}
 
 impl RangeVector {
     pub fn into_series(self) -> Result<Timeseries, Error> {
