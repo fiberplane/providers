@@ -616,7 +616,7 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-pdk"
-version = "1.0.0-beta.8"
+version = "1.0.0-beta.7"
 dependencies = [
  "fiberplane-models",
  "fiberplane-pdk-macros",
@@ -633,7 +633,7 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-pdk-macros"
-version = "1.0.0-beta.8"
+version = "1.0.0-beta.7"
 dependencies = [
  "Inflector",
  "fiberplane-models",
