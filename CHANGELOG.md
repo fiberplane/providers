@@ -13,9 +13,11 @@ crates do not strictly follow _SemVer_ although their versioning remains
 _compatible with_ SemVer, i.e. they will not contain breaking changes if the
 major version hasn't changed.
 
-## [Unreleased]
+## [1.0.0-beta.8]
 
-TBD
+## [1.0.0-beta.7] - 2024-01-05
+
+- Fix new clippy warnings to pass a stricter CI
 
 ## [1.0.0-beta.6]
 
