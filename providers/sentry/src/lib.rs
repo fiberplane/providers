@@ -5,13 +5,14 @@ mod sentry;
 use config::SentryConfig;
 use const_format::formatcp;
 use fiberplane_models::{
+    notebooks::{TableColumnId, TableRow, TableRowId, TableRowValue},
     providers::{STATUS_MIME_TYPE, STATUS_QUERY_TYPE},
     utils::content_writer::ContentWriter,
 };
 use fiberplane_pdk::prelude::*;
 use percent_encode::encode_uri_component;
 use sentry::*;
-use std::{collections::BTreeMap, fmt::Write};
+use std::{fmt::Write, str::FromStr};
 
 const OVERVIEW_QUERY_TYPE: &str = "x-issues-overview";
 
@@ -129,7 +130,7 @@ fn get_overview_query(query_data: &Blob) -> Result<String> {
     Ok(query)
 }
 
-fn create_name_cell(issue: &SentryIssue) -> Cell {
+fn create_name_value(issue: &SentryIssue) -> TableRowValue {
     let mut writer = ContentWriter::new();
 
     if let Some(issue_type) = issue.metadata.issue_type.to_owned() {
@@ -165,54 +166,41 @@ fn create_name_cell(issue: &SentryIssue) -> Cell {
             .write_text(" ");
     }
 
-    let mut text_cell = writer.to_text_cell();
-    text_cell.id = format!("name_{}", issue.id);
-    Cell::Text(text_cell)
+    writer.to_table_value()
 }
 
 fn create_overview_cells(issues: Vec<SentryIssue>) -> Result<Vec<Cell>> {
-    let rows = issues
-        .into_iter()
-        .map(|issue| -> BTreeMap<String, TableCellValue> {
-            let name_cell = create_name_cell(&issue);
+    let mut table_cell = TableCell::builder()
+        .id("table".to_owned())
+        .column_defs(vec![
+            TableColumnDefinition::builder()
+                .id(TableColumnId::from_str("name")?)
+                .title("Name".to_owned())
+                .build(),
+            TableColumnDefinition::builder()
+                .id(TableColumnId::from_str("events")?)
+                .title("Events".to_owned())
+                .build(),
+        ])
+        .build();
 
-            let id = format!("events_{}", issue.id);
+    table_cell.rows = issues
+        .iter()
+        .map(|issue| {
+            let name_value = create_name_value(issue);
 
-            let mut events_cell = ContentWriter::new()
+            let events_value = ContentWriter::new()
                 .write_bold_text(issue.user_count.to_string())
-                .to_text_cell();
-            events_cell.id = id;
+                .to_table_value();
 
-            BTreeMap::from([
-                ("name".to_string(), TableCellValue::Cell { cell: name_cell }),
-                (
-                    "events".to_string(),
-                    TableCellValue::Cell {
-                        cell: Cell::Text(events_cell),
-                    },
-                ),
-            ])
+            Ok(TableRow::builder()
+                .id(table_row_id_from_sentry_id(&issue.id)?)
+                .values(vec![name_value, events_value])
+                .build())
         })
-        .collect();
+        .collect::<Result<Vec<TableRow>>>()?;
 
-    let cell = Cell::Table(
-        TableCell::builder()
-            .id("table".to_owned())
-            .column_defs(vec![
-                TableColumnDefinition::builder()
-                    .key("name".to_owned())
-                    .title("Name".to_owned())
-                    .build(),
-                TableColumnDefinition::builder()
-                    .key("events".to_owned())
-                    .title("Events".to_owned())
-                    .build(),
-            ])
-            .rows(rows)
-            .build(),
-    );
-
-    Ok(vec![cell])
+    Ok(vec![Cell::Table(table_cell)])
 }
 
 fn serialize_cells(cells: Vec<Cell>) -> Result<Blob> {
@@ -220,4 +208,14 @@ fn serialize_cells(cells: Vec<Cell>) -> Result<Blob> {
         .data(rmp_serde::to_vec_named(&cells)?)
         .mime_type(CELLS_MSGPACK_MIME_TYPE.to_owned())
         .build())
+}
+
+fn table_row_id_from_sentry_id(sentry_id: &str) -> Result<TableRowId> {
+    TableRowId::from_str(
+        &sentry_id
+            .chars()
+            .filter(|c| c.is_alphanumeric())
+            .collect::<String>(),
+    )
+    .map_err(Error::from)
 }
