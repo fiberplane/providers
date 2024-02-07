@@ -123,8 +123,8 @@ pub fn derive_config_schema(input: TokenStream) -> TokenStream {
 /// Used to automatically generate conversion methods to convert your data to
 /// and from the `Blob` type.
 ///
-/// The macro extends the struct to which it is applied with `parse()` and
-/// `serialize()` methods.
+/// The macro extends the struct to which it is applied with `parse_blob()` and
+/// `to_blob()` methods.
 ///
 /// # Example
 ///

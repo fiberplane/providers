@@ -1,27 +1,24 @@
 use super::instants::Instant;
 use fiberplane_pdk::prelude::Timestamp;
 use fiberplane_pdk::providers::*;
-use serde::Deserialize;
+use fp_bindgen::prelude::Serializable;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     num::ParseFloatError,
     time::{Duration, SystemTime},
 };
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PrometheusResponse {
-    pub data: PrometheusData,
-}
-
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize, PartialEq, Serialize, Serializable)]
+#[fp(rust_module = "crate::prometheus")]
 #[serde(tag = "resultType", content = "result", rename_all = "snake_case")]
 pub enum PrometheusData {
     Vector(Vec<InstantVector>),
     Matrix(Vec<RangeVector>),
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize, PartialEq, Serialize, Serializable)]
+#[fp(rust_module = "crate::prometheus")]
 pub struct InstantVector {
     pub metric: BTreeMap<String, String>,
     pub value: PrometheusPoint,
@@ -51,7 +48,8 @@ pub struct PrometheusMetadataResponse {
     pub data: BTreeMap<String, Vec<Metadata>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize, PartialEq, Serialize, Serializable)]
+#[fp(rust_module = "crate::prometheus")]
 pub struct PrometheusPoint(f64, String);
 
 impl PrometheusPoint {
@@ -65,7 +63,8 @@ impl PrometheusPoint {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize, PartialEq, Serialize, Serializable)]
+#[fp(rust_module = "crate::prometheus")]
 pub struct RangeVector {
     pub metric: BTreeMap<String, String>,
     pub values: Vec<PrometheusPoint>,

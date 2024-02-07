@@ -1,5 +1,5 @@
 use crate::schema_field::SchemaField;
-use crate::{field_attrs::FieldAttrs, schema_field::ArraySchema};
+use crate::{field_attrs::FieldAttrs, schema_field::ArrayField};
 use fiberplane_models::providers::*;
 use proc_macro::TokenStream;
 use proc_macro_error::abort;
@@ -99,7 +99,8 @@ fn determine_field_type(field: &Field) -> SchemaField {
                 SchemaField::Text(field)
             }
         }
-        (struct_name, true) => SchemaField::Array(ArraySchema {
+        ("Timestamp", false) => SchemaField::Timestamp(TimestampField::new()),
+        (struct_name, true) => SchemaField::Array(ArrayField {
             element_struct_type_name: struct_name.to_string(),
             name: name.clone(),
             label: String::new(),
