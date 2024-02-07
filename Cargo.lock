@@ -128,7 +128,7 @@ checksum = "604178f6c5c21f02dc555784810edfb88d34ac2c73b2eae109655649ee73ce3d"
 [[package]]
 name = "base64uuid"
 version = "1.1.0"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=table-cell-data-type#9d131a57b8386eb9738eac69c1d08793a3756c66"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=table-cell-data-type#141c8638977cb47125c1d4cc5c2793ae0cefd15f"
 dependencies = [
  "base64 0.13.1",
  "serde",
@@ -591,15 +591,14 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-models"
-version = "1.0.0-beta.9"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=table-cell-data-type#9d131a57b8386eb9738eac69c1d08793a3756c66"
+version = "1.0.0-beta.10"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=table-cell-data-type#141c8638977cb47125c1d4cc5c2793ae0cefd15f"
 dependencies = [
  "base64 0.13.1",
  "base64uuid",
  "bytes",
  "form_urlencoded",
  "ordered-float",
- "rand",
  "rmp-serde",
  "rmpv",
  "serde",
@@ -644,8 +643,8 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-provider-bindings"
-version = "2.0.0-beta.9"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=table-cell-data-type#9d131a57b8386eb9738eac69c1d08793a3756c66"
+version = "2.0.0-beta.10"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=table-cell-data-type#141c8638977cb47125c1d4cc5c2793ae0cefd15f"
 dependencies = [
  "bytes",
  "fiberplane-models",
@@ -1631,12 +1630,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 
 [[package]]
-name = "ppv-lite86"
-version = "0.2.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
-
-[[package]]
 name = "pretty_assertions"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1743,20 +1736,8 @@ version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
 dependencies = [
- "libc",
- "rand_chacha",
  "rand_core",
  "serde",
-]
-
-[[package]]
-name = "rand_chacha"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88"
-dependencies = [
- "ppv-lite86",
- "rand_core",
 ]
 
 [[package]]
@@ -1765,7 +1746,6 @@ version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
- "getrandom",
  "serde",
 ]
 
