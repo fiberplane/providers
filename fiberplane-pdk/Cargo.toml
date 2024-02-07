@@ -17,7 +17,6 @@ fiberplane-models = { workspace = true }
 fiberplane-pdk-macros = { workspace = true }
 fiberplane-provider-bindings = { workspace = true }
 fp-bindgen = { workspace = true }
-getrandom = { version = "0.2", features = ["js"] }
 rmp-serde = "1"
 rmpv = { workspace = true }
 serde = { workspace = true }
