@@ -35,10 +35,13 @@ jobs:
         run: |
           cargo xtask build all --exclude=sample
 
+      - name: Create archive
+        run: tar -cvzf providers.tgz artifacts/
+
       - name: Attach providers to release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/*
+          files: providers.tgz
           fail_on_unmatched_files: true
 
       - name: Cargo login
