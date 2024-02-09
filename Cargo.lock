@@ -127,8 +127,9 @@ checksum = "604178f6c5c21f02dc555784810edfb88d34ac2c73b2eae109655649ee73ce3d"
 
 [[package]]
 name = "base64uuid"
-version = "1.0.0"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#bfe121ad1a1eab2c626fcc13d6b260f782c92c74"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57b5b1071f0de9672aa0a20b854892e32f6b690ee522a932c416bd8446b26bca"
 dependencies = [
  "base64 0.13.1",
  "serde",
@@ -270,7 +271,7 @@ dependencies = [
 
 [[package]]
 name = "cloudwatch-provider"
-version = "1.0.0-beta.6"
+version = "1.0.0-beta.8"
 dependencies = [
  "base64 0.13.1",
  "bytes",
@@ -505,7 +506,7 @@ dependencies = [
 
 [[package]]
 name = "elasticsearch-provider"
-version = "1.0.0-beta.6"
+version = "1.0.0-beta.8"
 dependencies = [
  "elasticsearch-dsl",
  "fiberplane-pdk",
@@ -591,13 +592,15 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-models"
-version = "1.0.0-beta.6"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#bfe121ad1a1eab2c626fcc13d6b260f782c92c74"
+version = "1.0.0-beta.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "370d1dea212a27462f6d13cce0d7aae87d52f7981ab4c53d4bab9ea50c5829ab"
 dependencies = [
  "base64 0.13.1",
  "base64uuid",
  "bytes",
  "form_urlencoded",
+ "ordered-float",
  "rmp-serde",
  "rmpv",
  "serde",
@@ -613,7 +616,7 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-pdk"
-version = "1.0.0-beta.8"
+version = "1.0.0-beta.10"
 dependencies = [
  "fiberplane-models",
  "fiberplane-pdk-macros",
@@ -630,7 +633,7 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-pdk-macros"
-version = "1.0.0-beta.8"
+version = "1.0.0-beta.10"
 dependencies = [
  "Inflector",
  "fiberplane-models",
@@ -642,8 +645,9 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-provider-bindings"
-version = "2.0.0-beta.6"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#bfe121ad1a1eab2c626fcc13d6b260f782c92c74"
+version = "2.0.0-beta.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8b981a520c2e0d2b13d5b9a6f80be9ff0cd11c42af8e08d11f17b28b412387b"
 dependencies = [
  "bytes",
  "fiberplane-models",
@@ -1000,7 +1004,7 @@ checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
 
 [[package]]
 name = "https-provider"
-version = "1.0.0-beta.6"
+version = "1.0.0-beta.8"
 dependencies = [
  "base64 0.13.1",
  "const_format",
@@ -1282,7 +1286,7 @@ dependencies = [
 
 [[package]]
 name = "loki-provider"
-version = "1.0.0-beta.6"
+version = "1.0.0-beta.8"
 dependencies = [
  "fiberplane-pdk",
  "grafana-common",
@@ -1454,6 +1458,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
+name = "ordered-float"
+version = "4.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a76df7075c7d4d01fdcb46c912dd17fba5b60c78ea480b475f2b6ab6f666584e"
+dependencies = [
+ "num-traits",
+ "rand",
+ "serde",
+]
+
+[[package]]
 name = "os_pipe"
 version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1480,7 +1495,7 @@ dependencies = [
 
 [[package]]
 name = "parseable-provider"
-version = "1.0.0-beta.6"
+version = "1.0.0-beta.8"
 dependencies = [
  "base64 0.21.2",
  "fiberplane-models",
@@ -1678,7 +1693,7 @@ dependencies = [
 
 [[package]]
 name = "prometheus-provider"
-version = "1.0.0-beta.6"
+version = "1.0.0-beta.8"
 dependencies = [
  "const_format",
  "fiberplane-models",
@@ -1716,6 +1731,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5267fca4496028628a95160fc423a33e8b2e6af8a5302579e322e4b520293cae"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "rand"
+version = "0.8.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
+dependencies = [
+ "rand_core",
+ "serde",
+]
+
+[[package]]
+name = "rand_core"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -1943,7 +1977,7 @@ checksum = "7b4b9743ed687d4b4bcedf9ff5eaa7398495ae14e61cba0a295704edbc7decde"
 
 [[package]]
 name = "sample-provider"
-version = "1.0.0-beta.6"
+version = "1.0.0-beta.8"
 dependencies = [
  "fiberplane-pdk",
  "serde",
@@ -2011,7 +2045,7 @@ dependencies = [
 
 [[package]]
 name = "sentry-provider"
-version = "1.0.0-beta.6"
+version = "1.0.0-beta.8"
 dependencies = [
  "const_format",
  "fiberplane-models",
@@ -2975,3 +3009,13 @@ name = "zeroize"
 version = "1.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c394b5bd0c6f669e7275d9c20aa90ae064cb22e75a1cad54e1b34088034b149f"
+
+[[patch.unused]]
+name = "fiberplane-models"
+version = "1.0.0-beta.6"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#bfe121ad1a1eab2c626fcc13d6b260f782c92c74"
+
+[[patch.unused]]
+name = "fiberplane-provider-bindings"
+version = "2.0.0-beta.6"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#bfe121ad1a1eab2c626fcc13d6b260f782c92c74"
