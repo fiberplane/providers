@@ -35,12 +35,14 @@ jobs:
         run: |
           cargo xtask build all --exclude=sample
 
+      - name: Create archive
+        run: tar -cvzf providers.tgz artifacts/
+
       - name: Attach providers to release
-        uses: meeDamian/github-release@2.0
+        uses: softprops/action-gh-release@v1
         with:
-          allow_override: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: providers:artifacts/
+          files: providers.tgz
+          fail_on_unmatched_files: true
 
       - name: Cargo login
         uses: actions-rs/cargo@v1
