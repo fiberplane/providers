@@ -128,8 +128,7 @@ checksum = "604178f6c5c21f02dc555784810edfb88d34ac2c73b2eae109655649ee73ce3d"
 [[package]]
 name = "base64uuid"
 version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57b5b1071f0de9672aa0a20b854892e32f6b690ee522a932c416bd8446b26bca"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=table-cell-data-type#141c8638977cb47125c1d4cc5c2793ae0cefd15f"
 dependencies = [
  "base64 0.13.1",
  "serde",
@@ -592,9 +591,8 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-models"
-version = "1.0.0-beta.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "370d1dea212a27462f6d13cce0d7aae87d52f7981ab4c53d4bab9ea50c5829ab"
+version = "1.0.0-beta.10"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=table-cell-data-type#141c8638977cb47125c1d4cc5c2793ae0cefd15f"
 dependencies = [
  "base64 0.13.1",
  "base64uuid",
@@ -645,9 +643,8 @@ dependencies = [
 
 [[package]]
 name = "fiberplane-provider-bindings"
-version = "2.0.0-beta.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8b981a520c2e0d2b13d5b9a6f80be9ff0cd11c42af8e08d11f17b28b412387b"
+version = "2.0.0-beta.10"
+source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=table-cell-data-type#141c8638977cb47125c1d4cc5c2793ae0cefd15f"
 dependencies = [
  "bytes",
  "fiberplane-models",
@@ -3009,13 +3006,3 @@ name = "zeroize"
 version = "1.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c394b5bd0c6f669e7275d9c20aa90ae064cb22e75a1cad54e1b34088034b149f"
-
-[[patch.unused]]
-name = "fiberplane-models"
-version = "1.0.0-beta.6"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#bfe121ad1a1eab2c626fcc13d6b260f782c92c74"
-
-[[patch.unused]]
-name = "fiberplane-provider-bindings"
-version = "2.0.0-beta.6"
-source = "git+ssh://git@github.com/fiberplane/fiberplane.git?branch=main#bfe121ad1a1eab2c626fcc13d6b260f782c92c74"
