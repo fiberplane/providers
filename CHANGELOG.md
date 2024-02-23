@@ -13,7 +13,13 @@ crates do not strictly follow _SemVer_ although their versioning remains
 _compatible with_ SemVer, i.e. they will not contain breaking changes if the
 major version hasn't changed.
 
-## [1.0.0-beta.9]
+## [1.0.0-beta.12] - 2024-02-23
+
+- Updated dependencies
+
+## [1.0.0-beta.11] - 2024-02-09
+
+- Updated dependencies
 
 ## [1.0.0-beta.8] - 2024-02-05
 
