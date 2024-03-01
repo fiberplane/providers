@@ -14,8 +14,8 @@ repository = "https://github.com/fiberplane/providers"
 [workspace.dependencies]
 fiberplane-ci = { git = "ssh://git@github.com/fiberplane/fiberplane.git", branch = "main" }
 fiberplane-models = { version = "1.0.0-beta.11" }
-fiberplane-pdk = { version = "1.0.0-beta.12", path = "fiberplane-pdk" }
-fiberplane-pdk-macros = { version = "1.0.0-beta.12", path = "fiberplane-pdk-macros" }
+fiberplane-pdk = { version = "1.0.0-beta.13", path = "fiberplane-pdk" }
+fiberplane-pdk-macros = { version = "1.0.0-beta.13", path = "fiberplane-pdk-macros" }
 fiberplane-provider-bindings = { version = "2.0.0-beta.11" }
 fp-bindgen = { version = "3.0.0" }
 fp-bindgen-support = { version = "3.0.0" }
