@@ -100,6 +100,7 @@ pub struct SentryStackframe {
 
 /// Tuple of line number and line content.
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct SentryStackframeContext(u32, String);
 
 #[derive(Deserialize)]
