@@ -138,7 +138,7 @@ async fn send_query(
     log(format!("Sending {method:?} request to {url}"));
 
     let mut request = HttpRequest::default();
-    request.url = url.clone();
+    request.url.clone_from(&url);
     request.method = method;
     request.headers = Some(headers);
     request.body = body.map(|blob| blob.data);
