@@ -8,7 +8,7 @@ use std::collections::{BTreeMap, HashMap};
 pub trait Paginate: Into<CanonicalRequest<{ request_state::STEM }>> {
     /// Forge a subsequent request for the next page.
     /// Return None if the pagination_token is absent or empty.
-    #[must_use("nothing will happen unless this request is sent by a client.")]
+    #[must_use = "nothing will happen unless this request is sent by a client."]
     fn next_page(self, pagination_token: Option<String>) -> Option<Self>;
 }
 
