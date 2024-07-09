@@ -1,6 +1,6 @@
 use const_format::formatcp;
 
-pub use fiberplane_pdk::prelude::{CELLS_MIME_TYPE, STATUS_QUERY_TYPE};
+pub use fiberplane_pdk::prelude::CELLS_MIME_TYPE;
 
 pub const PERFORM_QUERY_TYPE: &str = "x-https-query";
 

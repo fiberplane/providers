@@ -3,6 +3,7 @@ use fiberplane_pdk::prelude::*;
 use grafana_common::{query_direct_and_proxied, Config};
 use serde::Deserialize;
 use serde_json::Result as SerdeResult;
+use std::fmt::Display;
 use std::time::SystemTime;
 use time::ext::NumericalDuration;
 
@@ -26,9 +27,9 @@ struct StepSize {
     unit: StepUnit,
 }
 
-impl ToString for StepSize {
-    fn to_string(&self) -> String {
-        format!("{}{}", self.amount, self.unit.to_str())
+impl Display for StepSize {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}{}", self.amount, self.unit.to_str())
     }
 }
 

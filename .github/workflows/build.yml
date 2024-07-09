@@ -37,10 +37,12 @@ jobs:
         # Skip linting on main, since it's not critical and should've already
         # been checked before merging
         if: ${{ github.ref != 'refs/heads/main' }}
-        uses: actions-rs/clippy-check@v1
+        uses: giraffate/clippy-action@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features --workspace
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          filter_mode: nofilter
+          fail_on_error: true
+          clippy_flags: --all-features --workspace
 
       - name: Run tests
         run: cargo test --verbose
@@ -70,7 +72,7 @@ jobs:
 
       - name: Save providers
         if: ${{ github.ref == 'refs/heads/main' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fiberplane-providers
           path: artifacts/*.wasm
