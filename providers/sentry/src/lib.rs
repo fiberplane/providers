@@ -11,7 +11,7 @@ use fiberplane_models::{
 };
 use fiberplane_pdk::prelude::*;
 use percent_encode::encode_uri_component;
-use sentry::*;
+pub use sentry::*;
 use std::{fmt::Write, str::FromStr};
 
 const OVERVIEW_QUERY_TYPE: &str = "x-issues-overview";
